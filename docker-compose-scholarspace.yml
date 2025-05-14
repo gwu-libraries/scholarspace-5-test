@@ -1,0 +1,156 @@
+# Requires Docker Compose v2
+name: scholarspace
+services:
+  web:
+    build:
+      context: .
+      args:
+        - EXTRA_APK_PACKAGES=git less
+        - BUNDLE_GEMFILE=Gemfile
+    command: sh -c 'bundle exec puma -v -b tcp://0.0.0.0:3000'
+    stdin_open: true
+    tty: true
+    user: root
+    env_file:
+      - .env
+    environment:
+      - RAILS_ROOT=/app/samvera/hyrax-webapp
+    depends_on:
+      - worker
+      - chrome
+      - fits
+      - memcached
+      - postgres
+      - redis
+      - solr
+    ports:
+      - 3001:3000
+      - 9877:9876
+      - 1049:1048
+    volumes:
+      - bundle:/app/bundle
+      - hyrax-storage:/app/samvera/hyrax-webapp/storage
+      - hyrax-derivatives:/app/samvera/hyrax-webapp/derivatives
+      - hyrax-uploads:/app/samvera/hyrax-webapp/uploads
+      - rails-public:/app/samvera/hyrax-webapp/public
+      - rails-tmp:/app/samvera/hyrax-webapp/tmp
+    networks:
+      - scholarspace
+
+  worker:
+    build:
+      context: .
+      args:
+        - EXTRA_APK_PACKAGES=git less
+        - BUNDLE_GEMFILE=Gemfile
+    command: sh -c 'bundle exec sidekiq'
+    user: root
+    env_file:
+      - .env
+    depends_on:
+      - fits
+      - memcached
+      - postgres
+      - redis
+      - solr
+    volumes:
+      - bundle:/app/bundle
+      - hyrax-storage:/app/samvera/hyrax-webapp/storage
+      - hyrax-derivatives:/app/samvera/hyrax-webapp/derivatives
+      - hyrax-uploads:/app/samvera/hyrax-webapp/uploads
+      - rails-public:/app/samvera/hyrax-webapp/public
+      - rails-tmp:/app/samvera/hyrax-webapp/tmp
+    networks:
+      - scholarspace
+
+  chrome:
+    image: selenium/standalone-chromium:4
+    environment:
+#      - START_XVFB=false
+      - SE_NODE_SESSION_TIMEOUT=800
+      - SE_ENABLE_TRACING=false
+      - SE_ENABLE_BROWSER_LEFTOVERS_CLEANUP=true
+      - SE_BROWSER_ARGS_DISABLE_DSHM=--disable-dev-shm-usage
+      - SE_BROWSER_ARGS_HEADLESS=--headless=new
+#    logging:
+#      driver: none
+    volumes:
+      - /dev/shm:/dev/shm
+    shm_size: 2g
+    ports:
+      - "4446:4444"
+      - "5961:5900"
+      - "7961:7900"
+    networks:
+      - scholarspace
+
+  postgres:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - scholarspace
+
+  fits:
+    image: ghcr.io/samvera/fitsservlet:1.6.0
+    ports:
+      - 8080
+    networks:
+      - scholarspace
+
+  memcached:
+    image: bitnami/memcached
+    ports:
+      - '11212:11211'
+    networks:
+      - scholarspace
+
+  redis:
+    image: bitnami/redis:6.2
+    env_file:
+      - .env
+    volumes:
+      - redis:/bitnami/redis/data
+    networks:
+      - scholarspace
+
+  solr:
+    image: solr:8.11
+    ports:
+      - 8984:8983
+    command:
+      - sh
+      - "-c"
+      - "precreate-core scholarspace-test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace /opt/solr/server/configsets/hyraxconf"
+    volumes:
+      - solr_home:/var/solr/data:cached
+      - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 524288
+    networks:
+      - scholarspace
+
+volumes:
+  bundle:
+  db:
+  hyrax-storage:
+  hyrax-derivatives:
+  hyrax-uploads:
+  rails-public:
+  rails-tmp:
+  redis:
+  sidekiq-public:
+  sidekiq-tmp:
+  solr_home:
+
+networks:
+  scholarspace:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-scholarspace
