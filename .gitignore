@@ -50,3 +50,6 @@ fits.log
 .env
 
 /.vscode
+
+nginx/certs/*
+!nginx/certs/.keep

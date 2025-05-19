@@ -63,9 +63,9 @@ Rails.application.configure do
 
   # Allowlist container IP for web-console
   # FIXME: Update next line to use `allowed_ips` once web-console is upgraded to 4.0.3+
-  config.web_console.whitelisted_ips = Socket.getifaddrs.select { |ifa|
-    ifa.addr.ipv4_private?
-  }.map { |ifa|
-    IPAddr.new(ifa.addr.ip_address + '/' + ifa.netmask.ip_address)
-  }
+  # config.web_console.whitelisted_ips = Socket.getifaddrs.select { |ifa|
+  #   ifa.addr.ipv4_private?
+  # }.map { |ifa|
+  #   IPAddr.new(ifa.addr.ip_address + '/' + ifa.netmask.ip_address)
+  # }
 end

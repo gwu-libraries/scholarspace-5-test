@@ -1,14 +1,14 @@
 ARG ALPINE_VERSION=3.21
 ARG RUBY_VERSION=3.3.6
 
-FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS hyrax-base
+FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-base
 
 ARG DATABASE_APK_PACKAGE="postgresql-dev"
 ARG EXTRA_APK_PACKAGES="git"
 ARG RUBYGEMS_VERSION=""
 
 RUN addgroup -S --gid 101 app && \
-  adduser -S -G app -u 1001 -s /bin/sh -h /app app
+    adduser -S -G app -u 1001 -s /bin/sh -h /app app
 
 RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
@@ -37,29 +37,32 @@ RUN setfacl -d -m o::rwx /usr/local/bundle && \
 
 USER app
 
-RUN mkdir -p /app/samvera/hyrax-webapp
-WORKDIR /app/samvera/hyrax-webapp
+RUN mkdir -p /app/scholarspace
+WORKDIR /app/scholarspace
+# COPY --chown=1001:101 ./bin/*.sh /scholarspace/bin
 
-COPY --chown=1001:101 ./bin/*.sh /app/samvera/
-ENV PATH="/app/samvera:$PATH" \
-    RAILS_ROOT="/app/samvera/hyrax-webapp" \
-    RAILS_SERVE_STATIC_FILES="1" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+ENV PATH="/app/scholarspace:$PATH" \
+RAILS_ROOT="/app/scholarspace" \
+RAILS_SERVE_STATIC_FILES="1" \
+LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
-CMD ["bundle", "exec", "puma", "-v", "-b", "tcp://0.0.0.0:3000"]
+COPY Gemfile ./
 
+RUN bundle config set without development test 
 
-FROM hyrax-base AS hyrax
+RUN bundle install
 
-ARG APP_PATH=.
-ARG BUNDLE_WITHOUT="development test"
+COPY . ./
 
-ONBUILD COPY --chown=1001:101 $APP_PATH /app/samvera/hyrax-webapp
-ONBUILD RUN bundle install --jobs "$(nproc)"
-ONBUILD RUN RAILS_ENV=production SECRET_KEY_BASE=`bin/rake secret` DATABASE_URL='nulldb://nulldb' bundle exec rake assets:precompile
+COPY --chmod=755 ./bin/scholarspace-entrypoint.sh ./
 
+FROM scholarspace-base AS scholarspace
 
-FROM hyrax-base AS hyrax-worker-base
+ENTRYPOINT ["./scholarspace-entrypoint.sh"]
+ONBUILD RUN RAILS_ENV=production SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
+CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+
+FROM scholarspace-base AS scholarspace-worker
 
 USER root
 RUN apk --no-cache add bash \
@@ -79,30 +82,3 @@ RUN mkdir -p /app/fits && \
 ENV PATH="${PATH}:/app/fits"
 
 CMD ["bundle", "exec", "sidekiq"]
-
-
-FROM hyrax-worker-base AS hyrax-worker
-
-ARG APP_PATH=.
-ARG BUNDLE_WITHOUT="development test"
-
-ONBUILD COPY --chown=1001:101 $APP_PATH /app/samvera/hyrax-webapp
-ONBUILD RUN bundle install --jobs "$(nproc)"
-ONBUILD RUN RAILS_ENV=production SECRET_KEY_BASE=`bin/rake secret` DATABASE_URL='nulldb://nulldb' bundle exec rake assets:precompile
-
-
-FROM hyrax-worker-base AS hyrax-engine-dev
-
-USER app
-ARG BUNDLE_WITHOUT=
-ENV HYRAX_ENGINE_PATH=/app/samvera/hyrax-engine
-
-COPY --chown=1001:101 . /app/samvera/hyrax-webapp
-COPY --chown=1001:101 . /app/samvera/hyrax-engine
-
-RUN bundle -v && \
-  BUNDLE_GEMFILE=Gemfile bundle install --jobs "$(nproc)" && yarn && \
-  cd $HYRAX_ENGINE_PATH && bundle install --jobs "$(nproc)" && yarn && \
-  yarn cache clean
-
-CMD ["bundle", "exec", "puma", "-v", "-b", "tcp://0.0.0.0:3000"]

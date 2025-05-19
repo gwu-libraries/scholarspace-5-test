@@ -1,45 +1,43 @@
 # Requires Docker Compose v2
 name: scholarspace
 services:
-  web:
+  rails:
+    container_name: rails
+    hostname: rails
     build:
       context: .
+      target: scholarspace
       args:
         - EXTRA_APK_PACKAGES=git less
         - BUNDLE_GEMFILE=Gemfile
-    command: sh -c 'bundle exec puma -v -b tcp://0.0.0.0:3000'
+    command: "bundle exec rails s -p 3000 -b 0.0.0.0"
     stdin_open: true
     tty: true
     user: root
     env_file:
       - .env
     environment:
-      - RAILS_ROOT=/app/samvera/hyrax-webapp
-    depends_on:
-      - worker
-      - chrome
-      - fits
-      - memcached
-      - postgres
-      - redis
-      - solr
+      - RAILS_ROOT=/app/scholarspace
     ports:
-      - 3001:3000
-      - 9877:9876
-      - 1049:1048
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - bundle:/app/bundle
-      - hyrax-storage:/app/samvera/hyrax-webapp/storage
-      - hyrax-derivatives:/app/samvera/hyrax-webapp/derivatives
-      - hyrax-uploads:/app/samvera/hyrax-webapp/uploads
-      - rails-public:/app/samvera/hyrax-webapp/public
-      - rails-tmp:/app/samvera/hyrax-webapp/tmp
+      - scholarspace-storage:/app/scholarspace/storage
+      - scholarspace-derivatives:/app/scholarspace/derivatives
+      - scholarspace-uploads:/app/scholarspace/uploads
+      - scholarspace-public:/app/scholarspace/public
+      - scholarspace-tmp:/app/scholarspace/tmp
     networks:
       - scholarspace
 
   worker:
+    container_name: worker
+    hostname: worker
     build:
       context: .
+      target: scholarspace-worker
       args:
         - EXTRA_APK_PACKAGES=git less
         - BUNDLE_GEMFILE=Gemfile
@@ -54,48 +52,50 @@ services:
       - redis
       - solr
     volumes:
-      - bundle:/app/bundle
-      - hyrax-storage:/app/samvera/hyrax-webapp/storage
-      - hyrax-derivatives:/app/samvera/hyrax-webapp/derivatives
-      - hyrax-uploads:/app/samvera/hyrax-webapp/uploads
-      - rails-public:/app/samvera/hyrax-webapp/public
-      - rails-tmp:/app/samvera/hyrax-webapp/tmp
+      - scholarspace-storage:/app/scholarspace/storage
+      - scholarspace-derivatives:/app/scholarspace/derivatives
+      - scholarspace-uploads:/app/scholarspace/uploads
+      - scholarspace-public:/app/scholarspace/public
+      - scholarspace-tmp:/app/scholarspace/tmp
     networks:
       - scholarspace
-
-  chrome:
-    image: selenium/standalone-chromium:4
-    environment:
-#      - START_XVFB=false
-      - SE_NODE_SESSION_TIMEOUT=800
-      - SE_ENABLE_TRACING=false
-      - SE_ENABLE_BROWSER_LEFTOVERS_CLEANUP=true
-      - SE_BROWSER_ARGS_DISABLE_DSHM=--disable-dev-shm-usage
-      - SE_BROWSER_ARGS_HEADLESS=--headless=new
-#    logging:
-#      driver: none
-    volumes:
-      - /dev/shm:/dev/shm
-    shm_size: 2g
+  nginx:
+    container_name: nginx
+    hostname: nginx
+    image: "nginx:latest"
     ports:
-      - "4446:4444"
-      - "5961:5900"
-      - "7961:7900"
+      - 443:443
+      - 80:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/ssl
+    restart: unless-stopped
+    depends_on:
+      - rails
     networks:
       - scholarspace
 
   postgres:
     image: postgres:15-alpine
+    container_name: postgres
+    hostname: postgres
     env_file:
       - .env
-    ports:
-      - "5433:5432"
     volumes:
       - db:/var/lib/postgresql/data
     networks:
       - scholarspace
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USERNAME"]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5432:5432"
 
   fits:
+    container_name: fits
+    hostname: fits
     image: ghcr.io/samvera/fitsservlet:1.6.0
     ports:
       - 8080
@@ -104,12 +104,12 @@ services:
 
   memcached:
     image: bitnami/memcached
-    ports:
-      - '11212:11211'
     networks:
       - scholarspace
 
   redis:
+    container_name: redis
+    hostname: redis
     image: bitnami/redis:6.2
     env_file:
       - .env
@@ -117,11 +117,13 @@ services:
       - redis:/bitnami/redis/data
     networks:
       - scholarspace
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
 
   solr:
+    container_name: solr
+    hostname: solr
     image: solr:8.11
-    ports:
-      - 8984:8983
     command:
       - sh
       - "-c"
@@ -135,20 +137,23 @@ services:
         hard: 524288
     networks:
       - scholarspace
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 20
 
 volumes:
-  bundle:
   db:
-  hyrax-storage:
-  hyrax-derivatives:
-  hyrax-uploads:
-  rails-public:
-  rails-tmp:
+  scholarspace-storage:
+  scholarspace-derivatives:
+  scholarspace-uploads:
+  scholarspace-public:
+  scholarspace-tmp:
   redis:
   sidekiq-public:
   sidekiq-tmp:
   solr_home:
-
 networks:
   scholarspace:
     driver: bridge
