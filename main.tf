@@ -160,8 +160,8 @@ resource "aws_ecr_repository" "ecr" {
 }
 
 resource "aws_instance" "prod_web_server" {
-  ami               = "ami-084568db4383264d4"
-  instance_type     = "t2.micro"
+  ami               = "ami-0953476d60561c955"
+  instance_type     = "t2.medium"
   availability_zone = var.aws_availability_zone
   key_name          = "main-key"
 
@@ -193,9 +193,9 @@ resource "aws_instance" "prod_web_server" {
 
   git clone https://github.com/gwu-libraries/scholarspace-5-test.git
 
-  sudo chown -R ubuntu:ubuntu /opt/scholarspace/scholarspace
+  sudo chown -R ubuntu:ubuntu /opt/scholarspace/scholarspace-5-test
 
-  cd /opt/scholarspace/scholarspace
+  cd /opt/scholarspace/scholarspace-5-test
 
   openssl req -x509 -newkey rsa:4096 -keyout /opt/scholarspace/scholarspace/nginx/certs/key.pem -out /opt/scholarspace/scholarspace/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
 
