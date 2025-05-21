@@ -160,7 +160,7 @@ resource "aws_ecr_repository" "ecr" {
 }
 
 resource "aws_instance" "prod_web_server" {
-  ami               = "ami-0953476d60561c955"
+  ami               = "ami-084568db4383264d4"
   instance_type     = "t2.medium"
   availability_zone = var.aws_availability_zone
   key_name          = "main-key"
@@ -168,6 +168,10 @@ resource "aws_instance" "prod_web_server" {
   network_interface {
     device_index         = 0
     network_interface_id = aws_network_interface.web_server_nic.id
+  }
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp2"
   }
 
   user_data = <<-EOF
@@ -197,11 +201,15 @@ resource "aws_instance" "prod_web_server" {
 
   cd /opt/scholarspace/scholarspace-5-test
 
-  openssl req -x509 -newkey rsa:4096 -keyout /opt/scholarspace/scholarspace/nginx/certs/key.pem -out /opt/scholarspace/scholarspace/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+  sudo cp .env.example .env
+
+  sudo chown ubuntu:ubuntu .env
+
+  openssl req -x509 -newkey rsa:4096 -keyout /opt/scholarspace/scholarspace-5-test/nginx/certs/key.pem -out /opt/scholarspace/scholarspace-5-test/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
 
   docker compose up -d
 
-  docker exec -d scholarspace_rails sh -c "bundle exec rails db:create; bundle exec rails db:migrate; bundle exec rails db:seed"
+  docker exec -d rails sh -c "bundle exec rails db:create; bundle exec rails db:migrate; bundle exec rails db:seed"
   EOF
 
   tags = {

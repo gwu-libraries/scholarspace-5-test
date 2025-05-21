@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'boot'
 
 require 'rails/all'
@@ -21,7 +23,7 @@ module Scholarspace
     # use SideKiq by default
     config.active_job.queue_adapter = :sidekiq
 
-    if ENV["RAILS_LOG_TO_STDOUT"]
+    if ENV['RAILS_LOG_TO_STDOUT']
       logger = ActiveSupport::Logger.new($stdout)
       logger.formatter = config.log_formatter
       config.logger = ActiveSupport::TaggedLogging.new(logger)

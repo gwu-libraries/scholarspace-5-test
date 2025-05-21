@@ -1,2 +1,6 @@
-class Qa::LocalAuthority < ApplicationRecord
+# frozen_string_literal: true
+
+module Qa
+  class LocalAuthority < ApplicationRecord
+  end
 end

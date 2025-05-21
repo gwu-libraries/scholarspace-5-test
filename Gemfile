@@ -24,6 +24,7 @@ gem 'devise-guests', '~> 0.8'
 # end
 
 # gemspec name: 'hyrax', path: ENV.fetch('HYRAX_ENGINE_PATH', '..')
+gem 'activerecord-nulldb-adapter', '~> 1.1'
 gem 'hyrax'
 gem 'jbuilder', '~> 2.5'
 gem 'jquery-rails'
@@ -36,10 +37,8 @@ gem 'sass-rails', '~> 6.0'
 gem 'sidekiq', '~> 6.4'
 gem 'turbolinks', '~> 5'
 gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 gem 'uglifier', '>= 1.3.0'
-gem 'activerecord-nulldb-adapter', '~> 1.1'
-
 
 group :development do
   gem 'better_errors' # add command line in browser when errors
@@ -47,20 +46,25 @@ group :development do
 
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem 'web-console', '>= 3.3.0'
+  gem 'rubocop', require: false
+  gem 'rubocop-capybara', require: false
+  gem 'rubocop-factory_bot', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec_rails', require: false
 end
 
 group :development, :test do
-  gem 'factory_bot_rails'
-  gem 'debug', '>= 1.0.0'
-  gem 'pry-doc'
-  gem 'pry-rails'
-  gem 'pry-rescue'
   gem 'capybara'
   gem 'database_cleaner'
+  gem 'debug', '>= 1.0.0'
+  gem 'factory_bot_rails'
   gem 'launchy'
   gem 'orderly'
   gem 'prettier_print'
   gem 'pry'
+  gem 'pry-doc'
+  gem 'pry-rails'
+  gem 'pry-rescue'
   gem 'rspec-rails'
   gem 'shoulda-matchers'
   gem 'simplecov'

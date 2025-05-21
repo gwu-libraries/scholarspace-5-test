@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource Monograph`
   config.register_curation_concern :monograph
@@ -139,7 +140,7 @@ Hyrax.config do |config|
   config.iiif_image_server = true
 
   # Returns a URL that resolves to an image provided by a IIIF image server
-  config.iiif_image_url_builder = lambda do |file_id, base_url, size, format|
+  config.iiif_image_url_builder = lambda do |file_id, base_url, size, _format|
     Riiif::Engine.routes.url_helpers.image_url(file_id, host: base_url, size: size)
   end
   # config.iiif_image_url_builder = lambda do |file_id, base_url, size, format|
@@ -279,7 +280,7 @@ Hyrax.config do |config|
     if defined? BrowseEverything
       config.browse_everything = BrowseEverything.config
     else
-      Rails.logger.warn "BrowseEverything is not installed"
+      Rails.logger.warn 'BrowseEverything is not installed'
     end
   rescue Errno::ENOENT
     config.browse_everything = nil
@@ -311,7 +312,7 @@ Hyrax.config do |config|
   # config.identifier_registrars = {}
 end
 
-Date::DATE_FORMATS[:standard] = "%m/%d/%Y"
+Date::DATE_FORMATS[:standard] = '%m/%d/%Y'
 
 Qa::Authorities::Local.register_subauthority('subjects', 'Qa::Authorities::Local::TableBasedAuthority')
 Qa::Authorities::Local.register_subauthority('languages', 'Qa::Authorities::Local::TableBasedAuthority')
@@ -338,5 +339,4 @@ Rails.application.reloader.to_prepare do
   end
 end
 
-
-ActiveFedora.init(solr_config_path: Rails.root.join('config', 'solr.yml'))
+ActiveFedora.init(solr_config_path: Rails.root.join('config/solr.yml'))

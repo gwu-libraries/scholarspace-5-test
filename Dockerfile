@@ -39,12 +39,12 @@ USER app
 
 RUN mkdir -p /app/scholarspace
 WORKDIR /app/scholarspace
-# COPY --chown=1001:101 ./bin/*.sh /scholarspace/bin
 
 ENV PATH="/app/scholarspace:$PATH" \
-RAILS_ROOT="/app/scholarspace" \
-RAILS_SERVE_STATIC_FILES="1" \
-LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+    RAILS_ENV="production" \
+    RAILS_ROOT="/app/scholarspace" \
+    RAILS_SERVE_STATIC_FILES="1" \
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
 COPY Gemfile ./
 
@@ -54,12 +54,17 @@ RUN bundle install
 
 COPY . ./
 
-COPY --chmod=755 ./bin/scholarspace-entrypoint.sh ./
+COPY --chmod=755 ./bin/docker-entrypoint .
+
+USER root
+
+RUN chmod 755 -R ./log/
 
 FROM scholarspace-base AS scholarspace
 
-ENTRYPOINT ["./scholarspace-entrypoint.sh"]
-ONBUILD RUN RAILS_ENV=production SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
+RUN SECRET_KEY_BASE_DUMMY=1 RAILS_ENV=production ./bin/rails assets:precompile
+
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
 
 FROM scholarspace-base AS scholarspace-worker

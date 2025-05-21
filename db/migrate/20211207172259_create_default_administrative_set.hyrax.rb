@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateDefaultAdministrativeSet < ActiveRecord::Migration[5.2]
   def change
     create_table :hyrax_default_administrative_set do |t|

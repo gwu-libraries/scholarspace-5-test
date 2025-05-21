@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
   mount Riiif::Engine => 'images', as: :riiif if Hyrax.config.iiif_image_server?
-        mount BrowseEverything::Engine => '/browse'
+  mount BrowseEverything::Engine => '/browse'
 
   mount Blacklight::Engine => '/'
 

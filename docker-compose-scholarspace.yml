@@ -18,6 +18,9 @@ services:
       - .env
     environment:
       - RAILS_ROOT=/app/scholarspace
+      - SECRET_KEY_BASE_DUMMY=1
+      - RAILS_ENV=production
+      - SEED_SCHOLARSPACE=true
     ports:
       - "3000:3000"
     depends_on:
@@ -34,7 +37,6 @@ services:
 
   worker:
     container_name: worker
-    hostname: worker
     build:
       context: .
       target: scholarspace-worker
@@ -45,9 +47,12 @@ services:
     user: root
     env_file:
       - .env
+    environment:
+      - RAILS_ROOT=/app/scholarspace
+      - SECRET_KEY_BASE_DUMMY=1
+      - RAILS_ENV=production
     depends_on:
       - fits
-      - memcached
       - postgres
       - redis
       - solr
@@ -61,7 +66,6 @@ services:
       - scholarspace
   nginx:
     container_name: nginx
-    hostname: nginx
     image: "nginx:latest"
     ports:
       - 443:443
@@ -76,9 +80,8 @@ services:
       - scholarspace
 
   postgres:
-    image: postgres:15-alpine
     container_name: postgres
-    hostname: postgres
+    image: postgres:15-alpine
     env_file:
       - .env
     volumes:
@@ -90,26 +93,15 @@ services:
       interval: 30s
       timeout: 5s
       retries: 20
-    ports:
-      - "5432:5432"
 
   fits:
     container_name: fits
-    hostname: fits
     image: ghcr.io/samvera/fitsservlet:1.6.0
-    ports:
-      - 8080
     networks:
       - scholarspace
-
-  memcached:
-    image: bitnami/memcached
-    networks:
-      - scholarspace
-
+  
   redis:
     container_name: redis
-    hostname: redis
     image: bitnami/redis:6.2
     env_file:
       - .env
@@ -122,15 +114,14 @@ services:
 
   solr:
     container_name: solr
-    hostname: solr
     image: solr:8.11
     command:
       - sh
       - "-c"
-      - "precreate-core scholarspace-test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace /opt/solr/server/configsets/hyraxconf"
+      - "precreate-core scholarspace-test /opt/solr/server/configsets/scholarspaceconf; solr-precreate scholarspace /opt/solr/server/configsets/scholarspaceconf"
     volumes:
       - solr_home:/var/solr/data:cached
-      - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+      - ./solr/conf:/opt/solr/server/configsets/scholarspaceconf
     ulimits:
       nofile:
         soft: 65536
@@ -151,8 +142,6 @@ volumes:
   scholarspace-public:
   scholarspace-tmp:
   redis:
-  sidekiq-public:
-  sidekiq-tmp:
   solr_home:
 networks:
   scholarspace:

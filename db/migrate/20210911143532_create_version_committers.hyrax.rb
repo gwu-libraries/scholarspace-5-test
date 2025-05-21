@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateVersionCommitters < ActiveRecord::Migration[5.2]
   def self.up
     create_table :version_committers do |t|

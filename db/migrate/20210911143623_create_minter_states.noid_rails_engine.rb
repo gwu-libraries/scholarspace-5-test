@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # This migration comes from noid_rails_engine (originally 20160610010003)
 
 class CreateMinterStates < ActiveRecord::Migration[4.2]

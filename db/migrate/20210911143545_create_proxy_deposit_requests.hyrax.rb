@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateProxyDepositRequests < ActiveRecord::Migration[5.2]
   def change
     create_table :proxy_deposit_requests do |t|
@@ -10,6 +12,5 @@ class CreateProxyDepositRequests < ActiveRecord::Migration[5.2]
       t.text :receiver_comment
       t.timestamps null: false
     end
-    
   end
 end
