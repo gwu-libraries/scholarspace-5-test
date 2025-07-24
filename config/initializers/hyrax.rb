@@ -4,6 +4,10 @@ Hyrax.config do |config|
   config.register_curation_concern :monograph
   # Injected via `rails g hyrax:work_resource GenericWork`
   config.register_curation_concern :generic_work
+  # Injected via `rails g hyrax:work_resource ArchivalDocument`
+  config.register_curation_concern :archival_document
+  # Injected via `rails g hyrax:work_resource AcademicDocument`
+  config.register_curation_concern :academic_document
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
