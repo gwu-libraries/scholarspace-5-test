@@ -43,7 +43,7 @@ Valkyrie::MetadataAdapter.register(
 Valkyrie.config.metadata_adapter = ENV.fetch('VALKYRIE_METADATA_ADAPTER') { :pg_metadata }.to_sym
 
 # shrine_s3_options = {
-#   bucket: ENV.fetch("REPOSITORY_S3_BUCKET") { "nurax_pg#{Rails.env}" },
+#   bucket: ENV.fetch("REPOSITORY_S3_BUCKET") { "scholarspace_pg#{Rails.env}" },
 #   region: ENV.fetch("REPOSITORY_S3_REGION", "us-east-1"),
 #   access_key_id: (ENV["REPOSITORY_S3_ACCESS_KEY"] || ENV["MINIO_ACCESS_KEY"]),
 #   secret_access_key: (ENV["REPOSITORY_S3_SECRET_KEY"] || ENV["MINIO_SECRET_KEY"])
