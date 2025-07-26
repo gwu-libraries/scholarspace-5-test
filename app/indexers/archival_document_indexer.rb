@@ -2,9 +2,11 @@
 
 # Generated via
 #  `rails generate hyrax:work_resource ArchivalDocument`
-class ArchivalDocumentIndexer < Hyrax::Indexers::PcdmObjectIndexer(ArchivalDocument)
-  include Hyrax::Indexer(:basic_metadata)
-  include Hyrax::Indexer(:archival_document)
+class ArchivalDocumentIndexer < Hyrax::Indexers.PcdmObjectIndexer(
+  ArchivalDocument
+)
+  include Hyrax.Indexer(:basic_metadata)
+  include Hyrax.Indexer(:archival_document)
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr
