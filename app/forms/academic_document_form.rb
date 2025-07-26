@@ -5,9 +5,9 @@
 #
 # @see https://github.com/samvera/hyrax/wiki/Hyrax-Valkyrie-Usage-Guide#forms
 # @see https://github.com/samvera/valkyrie/wiki/ChangeSets-and-Dirty-Tracking
-class AcademicDocumentForm < Hyrax::Forms::PcdmObjectForm(AcademicDocument)
-  include Hyrax::FormFields(:basic_metadata)
-  include Hyrax::FormFields(:academic_document)
+class AcademicDocumentForm < Hyrax::Forms.PcdmObjectForm(AcademicDocument)
+  include Hyrax.FormFields(:basic_metadata)
+  include Hyrax.FormFields(:academic_document)
 
   # Define custom form fields using the Valkyrie::ChangeSet interface
   #
