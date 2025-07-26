@@ -1,27 +1,34 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
-require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
-require File.expand_path('../config/environment', __dir__)
+require "spec_helper"
+ENV["RAILS_ENV"] ||= "test"
+require File.expand_path("../config/environment", __dir__)
 # Prevent database truncation if the environment is production
-abort("The Rails environment is running in production mode!") if Rails.env.production?
-require 'rspec/rails'
+if Rails.env.production?
+  abort("The Rails environment is running in production mode!")
+end
+require "rspec/rails"
 # Add additional requires below this line. Rails is not loaded until this point!
-
-require 'valkyrie'
-Valkyrie::MetadataAdapter.register(Valkyrie::Persistence::Memory::MetadataAdapter.new, :test_adapter)
+require "hyrax"
+require "valkyrie"
+Valkyrie::MetadataAdapter.register(
+  Valkyrie::Persistence::Memory::MetadataAdapter.new,
+  :test_adapter
+)
 Valkyrie::StorageAdapter.register(Valkyrie::Storage::Memory.new, :memory)
 
 query_registration_target =
   Valkyrie::MetadataAdapter.find(:test_adapter).query_service.custom_queries
-custom_queries = [Hyrax::CustomQueries::Navigators::CollectionMembers,
-                  Hyrax::CustomQueries::Navigators::ChildFilesetsNavigator,
-                  Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
-                  Hyrax::CustomQueries::FindAccessControl,
-                  Hyrax::CustomQueries::FindCollectionsByType,
-                  Hyrax::CustomQueries::FindManyByAlternateIds,
-                  Hyrax::CustomQueries::FindIdsByModel,
-                  Hyrax::CustomQueries::FindFileMetadata,
-                  Hyrax::CustomQueries::Navigators::FindFiles]
+custom_queries = [
+  Hyrax::CustomQueries::Navigators::CollectionMembers,
+  Hyrax::CustomQueries::Navigators::ChildFilesetsNavigator,
+  Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
+  Hyrax::CustomQueries::FindAccessControl,
+  Hyrax::CustomQueries::FindCollectionsByType,
+  Hyrax::CustomQueries::FindManyByAlternateIds,
+  Hyrax::CustomQueries::FindIdsByModel,
+  Hyrax::CustomQueries::FindFileMetadata,
+  Hyrax::CustomQueries::Navigators::FindFiles
+]
 custom_queries.each do |handler|
   query_registration_target.register_query_handler(handler)
 end

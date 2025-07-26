@@ -1,0 +1,202 @@
+# Requires Docker Compose v2
+name: scholarspace-dev
+services:
+  rails:
+    container_name: rails
+    hostname: rails
+    build:
+      dockerfile: Dockerfile-dev
+      context: .
+      target: scholarspace-dev
+      args:
+        - EXTRA_APK_PACKAGES=git less
+        - BUNDLE_GEMFILE=Gemfile
+        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+    command: "bundle exec rails s -p 3000 -b 0.0.0.0"
+    stdin_open: true
+    tty: true
+    user: root
+    env_file:
+      - .env
+    environment:
+      - RAILS_ROOT=/app/scholarspace
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - dev-storage:/app/scholarspace/storage
+      - dev-derivatives:/app/scholarspace/derivatives
+      - dev-uploads:/app/scholarspace/uploads
+      - dev-public:/app/scholarspace/public
+      - dev-tmp:/app/scholarspace/tmp
+      # - .:/app/scholarspace
+    networks:
+      - ss-dev
+
+  worker:
+    container_name: worker
+    hostname: worker
+    build:
+      dockerfile: Dockerfile-dev
+      context: .
+      target: scholarspace-dev-worker
+      args:
+        - EXTRA_APK_PACKAGES=git less
+        - BUNDLE_GEMFILE=Gemfile
+        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+    command: sh -c 'bundle exec sidekiq'
+    user: root
+    env_file:
+      - .env
+    depends_on:
+      - fits
+      - memcached
+      - postgres
+      - redis
+      - solr
+      - fedora
+    volumes:
+      - dev-storage:/app/scholarspace/storage
+      - dev-derivatives:/app/scholarspace/derivatives
+      - dev-uploads:/app/scholarspace/uploads
+      - dev-public:/app/scholarspace/public
+      - dev-tmp:/app/scholarspace/tmp
+      # - .:/app/scholarspace
+    networks:
+      - ss-dev
+  nginx:
+    container_name: nginx
+    hostname: nginx
+    image: "nginx:latest"
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/ssl
+    restart: unless-stopped
+    depends_on:
+      - rails
+    networks:
+      - ss-dev
+
+  fedora:
+    container_name: fedora
+    hostname: fedora
+    image: fcrepo/fcrepo:6.5.1-tomcat9
+    environment:
+      - >-
+        CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
+        -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
+        -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
+        -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
+        -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
+      - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+    volumes:
+      - dev-fedora:/fcrepo-home
+    ports:
+      - 8080:8080
+    networks:
+      - ss-dev
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    hostname: postgres
+    env_file:
+      - .env
+    volumes:
+      - dev-db:/var/lib/postgresql/data
+    networks:
+      - ss-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USERNAME"]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  fits:
+    container_name: fits
+    hostname: fits
+    image: ghcr.io/samvera/fitsservlet:1.6.0
+    ports:
+      - 8081
+    networks:
+      - ss-dev
+
+  memcached:
+    image: bitnami/memcached
+    networks:
+      - ss-dev
+
+  redis:
+    container_name: redis
+    hostname: redis
+    image: bitnami/redis:6.2
+    env_file:
+      - .env
+    volumes:
+      - dev-redis:/bitnami/redis/data
+    networks:
+      - ss-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  solr:
+    container_name: solr
+    hostname: solr
+    image: solr:8.11
+    command:
+      - sh
+      - "-c"
+      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
+    volumes:
+      - dev-solr_home:/var/solr/data:cached
+      - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+      - ./solr/plugins:/opt/solr/lib
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 524288
+    networks:
+      - ss-dev
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+  # tesseract:
+  #   container_name: tesseract
+  #   hostname: tesseract
+  #   image: jitesoft/tesseract-ocr:latest-alpine
+  #   networks:
+  #     - ss-dev
+
+volumes:
+  dev-db:
+  dev-storage:
+  dev-derivatives:
+  dev-uploads:
+  dev-public:
+  dev-tmp:
+  dev-redis:
+  dev-fedora:
+  sidekiq-public:
+  sidekiq-tmp:
+  dev-solr_home:
+networks:
+  ss-dev:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-ss-dev
