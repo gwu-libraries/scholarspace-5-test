@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-Bundler.ui.info '[Scholarspace] Adding global rubygems source.'
-source 'https://rubygems.org'
+Bundler.ui.info "[Scholarspace] Adding global rubygems source."
+source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-gem 'bootsnap', '>= 1.1.0', require: false
-gem 'bootstrap', '~> 4.0'
-gem 'coffee-rails', '~> 4.2'
-gem 'dalli'
-gem 'devise'
-gem 'devise-guests', '~> 0.8'
+gem "bootsnap", ">= 1.1.0", require: false
+gem "bootstrap", "~> 4.0"
+gem "coffee-rails", "~> 4.2"
+gem "dalli"
+gem "devise"
+gem "devise-guests", "~> 0.8"
 
 # Required because grpc and google-protobuf gem's binaries are not compatible with Alpine Linux.
 # To install the package in Alpine: `apk add ruby-grpc`
@@ -24,49 +24,51 @@ gem 'devise-guests', '~> 0.8'
 # end
 
 # gemspec name: 'hyrax', path: ENV.fetch('HYRAX_ENGINE_PATH', '..')
-gem 'hyrax'
-gem 'jbuilder', '~> 2.5'
-gem 'jquery-rails'
-gem 'pg', '~> 1.3'
-gem 'puma'
-gem 'rails', '~> 7.2', '< 8.0'
-gem 'riiif', '~> 2.1'
-gem 'rsolr', '>= 1.0', '< 3'
-gem 'sass-rails', '~> 6.0'
-gem 'sidekiq', '~> 6.4'
-gem 'turbolinks', '~> 5'
-gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
-gem 'uglifier', '>= 1.3.0'
-gem 'activerecord-nulldb-adapter', '~> 1.1'
-
+gem "hyrax", "~> 5.2"
+gem "jbuilder", "~> 2.5"
+gem "jquery-rails"
+gem "pg", "~> 1.3"
+gem "puma"
+gem "rails", "~> 7.2", "< 8.0"
+gem "riiif", "~> 2.1"
+gem "rsolr", ">= 1.0", "< 3"
+gem "sass-rails", "~> 6.0"
+gem "sidekiq", "~> 6.4"
+gem "turbolinks", "~> 5"
+gem "twitter-typeahead-rails", "0.11.1.pre.corejavascript"
+gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
+gem "uglifier", ">= 1.3.0"
+gem "activerecord-nulldb-adapter", "~> 1.1"
+gem "rtesseract"
 
 group :development do
-  gem 'better_errors' # add command line in browser when errors
-  gem 'binding_of_caller' # deeper stack trace used by better errors
+  gem "better_errors" # add command line in browser when errors
+  gem "binding_of_caller" # deeper stack trace used by better errors
 
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
-  gem 'web-console', '>= 3.3.0'
+  gem "web-console", ">= 3.3.0"
 end
 
 group :development, :test do
-  gem 'factory_bot_rails'
-  gem 'debug', '>= 1.0.0'
-  gem 'pry-doc'
-  gem 'pry-rails'
-  gem 'pry-rescue'
-  gem 'capybara'
-  gem 'database_cleaner'
-  gem 'launchy'
-  gem 'orderly'
-  gem 'prettier_print'
-  gem 'pry'
-  gem 'rspec-rails'
-  gem 'shoulda-matchers'
-  gem 'simplecov'
-  gem 'syntax_tree'
-  gem 'syntax_tree-haml'
-  gem 'syntax_tree-rbs'
-  gem 'vcr'
-  gem 'webmock'
+  gem "factory_bot_rails"
+  gem "debug", ">= 1.0.0"
+  gem "pry-doc"
+  gem "pry-rails"
+  gem "pry-rescue"
+  gem "capybara"
+  gem "database_cleaner"
+  gem "launchy"
+  gem "orderly"
+  gem "prettier_print"
+  gem "pry"
+  gem "awesome_print"
+  gem "rspec-rails"
+  gem "shoulda-matchers"
+  gem "simplecov"
+  gem "syntax_tree"
+  gem "syntax_tree-haml"
+  gem "syntax_tree-rbs"
+  gem "vcr"
+  gem "webmock"
+  gem "faker"
 end
