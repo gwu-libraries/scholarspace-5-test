@@ -3,6 +3,6 @@
 # Generated via
 #  `rails generate hyrax:work_resource ArchivalDocument`
 class ArchivalDocument < Hyrax::Work
-  include Hyrax::Schema(:basic_metadata)
-  include Hyrax::Schema(:archival_document)
+  include Hyrax.Schema(:basic_metadata)
+  include Hyrax.Schema(:archival_document)
 end
