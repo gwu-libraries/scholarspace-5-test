@@ -34,6 +34,7 @@
   <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs" />
   <lib dir="${solr.install.dir:../../../..}/contrib/extraction/lib" regex=".*\.jar" />
   <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-cell-\d.*\.jar" />
+  <!-- <lib dir="${solr.install.dir:../../../..}/lib/" regex=".*\.jar" /> -->
 
   <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}">
@@ -72,6 +73,11 @@
     </autoSoftCommit>
   </updateHandler>
 
+  <!--  solr OCR highlighting -->
+  <!-- <searchComponent
+      class="solrocr.OcrHighlightComponent"
+      name="ocrHighlight" /> -->
+
   <!-- SearchHandler
 
        http://wiki.apache.org/solr/SearchHandler
@@ -85,6 +91,11 @@
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
       -->
+     <!-- <lst name="components">
+       <str>query</str>
+       <str>ocrHighlight</str>
+       <str>highlight</str>
+     </lst> -->
      <lst name="defaults">
        <str name="defType">edismax</str>
        <str name="echoParams">explicit</str>
