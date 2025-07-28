@@ -4,7 +4,7 @@
 class CreateMinterStates < ActiveRecord::Migration[4.2]
   def change
     create_table :minter_states do |t|
-      t.string :namespace, null: false, default: 'default'
+      t.string :namespace, null: false, default: "default"
       t.string :template, null: false
       t.text :counters
       t.bigint :seq, default: 0

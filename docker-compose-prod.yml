@@ -1,12 +1,12 @@
 # Requires Docker Compose v2
-name: scholarspace
+name: scholarspace-prod
 services:
   rails:
     container_name: rails
     hostname: rails
     build:
       context: .
-      target: scholarspace
+      target: scholarspace-prod
       args:
         - EXTRA_APK_PACKAGES=git less
         - BUNDLE_GEMFILE=Gemfile
@@ -24,11 +24,12 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - scholarspace-storage:/app/scholarspace/storage
-      - scholarspace-derivatives:/app/scholarspace/derivatives
-      - scholarspace-uploads:/app/scholarspace/uploads
-      - scholarspace-public:/app/scholarspace/public
-      - scholarspace-tmp:/app/scholarspace/tmp
+      - prod-storage:/app/scholarspace/storage
+      - prod-derivatives:/app/scholarspace/derivatives
+      - prod-uploads:/app/scholarspace/uploads
+      - prod-public:/app/scholarspace/public
+      - prod-tmp:/app/scholarspace/tmp
+      # - .:/app/scholarspace
     networks:
       - scholarspace
 
@@ -52,11 +53,12 @@ services:
       - redis
       - solr
     volumes:
-      - scholarspace-storage:/app/scholarspace/storage
-      - scholarspace-derivatives:/app/scholarspace/derivatives
-      - scholarspace-uploads:/app/scholarspace/uploads
-      - scholarspace-public:/app/scholarspace/public
-      - scholarspace-tmp:/app/scholarspace/tmp
+      - prod-storage:/app/scholarspace/storage
+      - prod-derivatives:/app/scholarspace/derivatives
+      - prod-uploads:/app/scholarspace/uploads
+      - prod-public:/app/scholarspace/public
+      - prod-tmp:/app/scholarspace/tmp
+      # - .:/app/scholarspace
     networks:
       - scholarspace
   nginx:
@@ -74,7 +76,6 @@ services:
       - rails
     networks:
       - scholarspace
-
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -82,11 +83,11 @@ services:
     env_file:
       - .env
     volumes:
-      - db:/var/lib/postgresql/data
+      - prod-db:/var/lib/postgresql/data
     networks:
       - scholarspace
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USERNAME"]
+      test: ["CMD-SHELL", "pg_isready -d $$APP_DB_NAME -U $$DB_USERNAME"]
       interval: 30s
       timeout: 5s
       retries: 20
@@ -100,7 +101,7 @@ services:
     ports:
       - 8080
     networks:
-      - scholarspace
+      - ss-prod
 
   memcached:
     image: bitnami/memcached
@@ -118,7 +119,7 @@ services:
     networks:
       - scholarspace
     healthcheck:
-      test: ["CMD", "redis-cli","ping"]
+      test: ["CMD", "redis-cli", "ping"]
 
   solr:
     container_name: solr
@@ -127,7 +128,7 @@ services:
     command:
       - sh
       - "-c"
-      - "precreate-core scholarspace-test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace /opt/solr/server/configsets/hyraxconf"
+      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
     volumes:
       - solr_home:/var/solr/data:cached
       - ./solr/conf:/opt/solr/server/configsets/hyraxconf
@@ -138,18 +139,22 @@ services:
     networks:
       - scholarspace
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       retries: 20
 
 volumes:
-  db:
-  scholarspace-storage:
-  scholarspace-derivatives:
-  scholarspace-uploads:
-  scholarspace-public:
-  scholarspace-tmp:
+  prod-db:
+  prod-storage:
+  prod-derivatives:
+  prod-uploads:
+  prod-public:
+  prod-tmp:
   redis:
   sidekiq-public:
   sidekiq-tmp:

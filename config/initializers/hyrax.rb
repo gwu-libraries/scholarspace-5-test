@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 Hyrax.config do |config|
-  # Injected via `rails g hyrax:work_resource Monograph`
-  config.register_curation_concern :monograph
-  # Injected via `rails g hyrax:work_resource GenericWork`
-  config.register_curation_concern :generic_work
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
   config.register_curation_concern :archival_document
   # Injected via `rails g hyrax:work_resource AcademicDocument`
@@ -11,7 +7,9 @@ Hyrax.config do |config|
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
-  config.characterization_options = { ch12n_tool: ENV.fetch('CH12N_TOOL', 'fits').to_sym }
+  config.characterization_options = {
+    ch12n_tool: ENV.fetch("CH12N_TOOL", "fits").to_sym
+  }
 
   # Register roles that are expected by your implementation.
   # @see Hyrax::RoleRegistry for additional details.
@@ -45,7 +43,7 @@ Hyrax.config do |config|
   # config.max_notifications_for_dashboard = 5
 
   # How frequently should a file be fixity checked
-  # config.max_days_between_fixity_checks = 7
+  config.max_days_between_fixity_checks = 7
 
   # Options to control the file uploader
   # config.uploader = {
@@ -89,7 +87,7 @@ Hyrax.config do |config|
   # config.redis_namespace = "hyrax"
 
   # Path to the file characterization tool
-  config.fits_path = ENV.fetch('FITS_PATH', 'fits.sh')
+  config.fits_path = ENV.fetch("FITS_PATH", "fits.sh")
 
   # Path to the file derivatives creation tool
   # config.libreoffice_path = "soffice"
@@ -110,7 +108,7 @@ Hyrax.config do |config|
 
   # Location autocomplete uses geonames to search for named regions
   # Username for connecting to geonames
-  config.geonames_username = ENV['GEONAMES_USERNAME'] || ''
+  config.geonames_username = ENV["GEONAMES_USERNAME"] || ""
 
   # Should the acceptance of the licence agreement be active (checkbox), or
   # implied when the save button is pressed? Set to true for active
@@ -143,18 +141,24 @@ Hyrax.config do |config|
   config.iiif_image_server = true
 
   # Returns a URL that resolves to an image provided by a IIIF image server
-  config.iiif_image_url_builder = lambda do |file_id, base_url, size, format|
-    Riiif::Engine.routes.url_helpers.image_url(file_id, host: base_url, size: size)
-  end
+  config.iiif_image_url_builder =
+    lambda do |file_id, base_url, size, format|
+      Riiif::Engine.routes.url_helpers.image_url(
+        file_id,
+        host: base_url,
+        size: size
+      )
+    end
   # config.iiif_image_url_builder = lambda do |file_id, base_url, size, format|
   #   "#{base_url}/downloads/#{file_id.split('/').first}"
   # end
 
   # Returns a URL that resolves to an info.json file provided by a IIIF image server
-  config.iiif_info_url_builder = lambda do |file_id, base_url|
-    uri = Riiif::Engine.routes.url_helpers.info_url(file_id, host: base_url)
-    uri.sub(%r{/info\.json\Z}, '')
-  end
+  config.iiif_info_url_builder =
+    lambda do |file_id, base_url|
+      uri = Riiif::Engine.routes.url_helpers.info_url(file_id, host: base_url)
+      uri.sub(%r{/info\.json\Z}, "")
+    end
   # config.iiif_info_url_builder = lambda do |_, _|
   #   ""
   # end
@@ -255,12 +259,12 @@ Hyrax.config do |config|
   # config.collection_model = '::Collection'
   # config.collection_model = 'Hyrax::PcdmCollection'
   # Injected via `rails g hyrax:collection_resource CollectionResource`
-  config.collection_model = 'CollectionResource'
+  config.collection_model = "CollectionResource"
 
   # Identify the model class name that will be used for Admin Sets in your app
   # (i.e. AdminSet for ActiveFedora, Hyrax::AdministrativeSet for Valkyrie)
-  # config.admin_set_model = 'AdminSet'
-  config.admin_set_model = 'Hyrax::AdministrativeSet'
+  config.admin_set_model = "AdminSet"
+  # config.admin_set_model = "Hyrax::AdministrativeSet"
 
   # When your application is ready to use the valkyrie index instead of the one
   # maintained by active fedora, you will need to set this to true. You will
@@ -280,7 +284,7 @@ Hyrax.config do |config|
 
   # If browse-everything has been configured, load the configs.  Otherwise, set to nil.
   begin
-    if defined? BrowseEverything
+    if defined?(BrowseEverything)
       config.browse_everything = BrowseEverything.config
     else
       Rails.logger.warn "BrowseEverything is not installed"
@@ -317,30 +321,40 @@ end
 
 Date::DATE_FORMATS[:standard] = "%m/%d/%Y"
 
-Qa::Authorities::Local.register_subauthority('subjects', 'Qa::Authorities::Local::TableBasedAuthority')
-Qa::Authorities::Local.register_subauthority('languages', 'Qa::Authorities::Local::TableBasedAuthority')
-Qa::Authorities::Local.register_subauthority('genres', 'Qa::Authorities::Local::TableBasedAuthority')
+Qa::Authorities::Local.register_subauthority(
+  "subjects",
+  "Qa::Authorities::Local::TableBasedAuthority"
+)
+Qa::Authorities::Local.register_subauthority(
+  "languages",
+  "Qa::Authorities::Local::TableBasedAuthority"
+)
+Qa::Authorities::Local.register_subauthority(
+  "genres",
+  "Qa::Authorities::Local::TableBasedAuthority"
+)
 
 Rails.application.reloader.to_prepare do
-  custom_queries = [Hyrax::CustomQueries::Navigators::CollectionMembers,
-                    Hyrax::CustomQueries::Navigators::ChildCollectionsNavigator,
-                    Hyrax::CustomQueries::Navigators::ParentCollectionsNavigator,
-                    Hyrax::CustomQueries::Navigators::ChildFileSetsNavigator,
-                    Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
-                    Hyrax::CustomQueries::Navigators::ParentWorkNavigator,
-                    Hyrax::CustomQueries::Navigators::FindFiles,
-                    Hyrax::CustomQueries::FindAccessControl,
-                    Hyrax::CustomQueries::FindCollectionsByType,
-                    Hyrax::CustomQueries::FindFileMetadata,
-                    Hyrax::CustomQueries::FindIdsByModel,
-                    Hyrax::CustomQueries::FindManyByAlternateIds,
-                    Hyrax::CustomQueries::FindModelsByAccess,
-                    Hyrax::CustomQueries::FindCountBy,
-                    Hyrax::CustomQueries::FindByDateRange]
+  custom_queries = [
+    Hyrax::CustomQueries::Navigators::CollectionMembers,
+    Hyrax::CustomQueries::Navigators::ChildCollectionsNavigator,
+    Hyrax::CustomQueries::Navigators::ParentCollectionsNavigator,
+    Hyrax::CustomQueries::Navigators::ChildFileSetsNavigator,
+    Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
+    Hyrax::CustomQueries::Navigators::ParentWorkNavigator,
+    Hyrax::CustomQueries::Navigators::FindFiles,
+    Hyrax::CustomQueries::FindAccessControl,
+    Hyrax::CustomQueries::FindCollectionsByType,
+    Hyrax::CustomQueries::FindFileMetadata,
+    Hyrax::CustomQueries::FindIdsByModel,
+    Hyrax::CustomQueries::FindManyByAlternateIds,
+    Hyrax::CustomQueries::FindModelsByAccess,
+    Hyrax::CustomQueries::FindCountBy,
+    Hyrax::CustomQueries::FindByDateRange
+  ]
   custom_queries.each do |handler|
     Hyrax.query_service.custom_queries.register_query_handler(handler)
   end
 end
 
-
-ActiveFedora.init(solr_config_path: Rails.root.join('config', 'solr.yml'))
+ActiveFedora.init(solr_config_path: Rails.root.join("config", "solr.yml"))

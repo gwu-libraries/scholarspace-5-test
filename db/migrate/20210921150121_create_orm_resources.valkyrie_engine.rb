@@ -3,7 +3,7 @@
 class CreateOrmResources < ActiveRecord::Migration[5.0]
   def options
     if ENV["VALKYRIE_ID_TYPE"] == "string"
-      { id: :text, default: -> { '(uuid_generate_v4())::text' } }
+      { id: :text, default: -> { "(uuid_generate_v4())::text" } }
     else
       { id: :uuid }
     end

@@ -1,6 +1,6 @@
-require_relative 'boot'
+require_relative "boot"
 
-require 'rails/all'
+require "rails/all"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -16,7 +16,9 @@ module Scholarspace
     # Application configuration can go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded after loading
     # the framework and any gems in your application.
-    config.session_store :cookie_store, key: "_#{ENV.fetch('APP_NAME', 'scholarspace')}_session"
+    config.session_store :cookie_store,
+                         key:
+                           "_#{ENV.fetch("APP_NAME", "scholarspace")}_session"
 
     # use SideKiq by default
     config.active_job.queue_adapter = :sidekiq
@@ -29,7 +31,7 @@ module Scholarspace
 
     # The locale is set by a query parameter, so if it's not found render 404
     config.action_dispatch.rescue_responses.merge!(
-      'I18n::InvalidLocale' => :not_found
+      "I18n::InvalidLocale" => :not_found
     )
   end
 end

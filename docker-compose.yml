@@ -1,2 +1,2 @@
 include:
-  - docker-compose-scholarspace.yml
+  - docker-compose-dev.yml
