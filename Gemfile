@@ -24,7 +24,7 @@ gem "devise-guests", "~> 0.8"
 # end
 
 # gemspec name: 'hyrax', path: ENV.fetch('HYRAX_ENGINE_PATH', '..')
-gem "hyrax", "~> 5.2"
+gem "hyrax"
 gem "jbuilder", "~> 2.5"
 gem "jquery-rails"
 gem "pg", "~> 1.3"
@@ -44,6 +44,7 @@ gem "rtesseract"
 group :development do
   gem "better_errors" # add command line in browser when errors
   gem "binding_of_caller" # deeper stack trace used by better errors
+  gem "rails_live_reload" # live reloading in development
 
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem "web-console", ">= 3.3.0"
