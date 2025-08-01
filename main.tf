@@ -160,8 +160,8 @@ resource "aws_ecr_repository" "ecr" {
 }
 
 resource "aws_instance" "prod_web_server" {
-  ami               = "ami-0953476d60561c955"
-  instance_type     = "t2.medium"
+  ami               = "ami-020cba7c55df1f615"
+  instance_type     = "t2.small"
   availability_zone = var.aws_availability_zone
   key_name          = "main-key"
 
@@ -193,15 +193,19 @@ resource "aws_instance" "prod_web_server" {
 
   git clone https://github.com/gwu-libraries/scholarspace-5-test.git
 
-  sudo chown -R ubuntu:ubuntu /opt/scholarspace/scholarspace-5-test
+  sudo chown -R ubuntu:ubuntu /opt/scholarspace/scholarspace
 
-  cd /opt/scholarspace/scholarspace-5-test
+  cd /opt/scholarspace/scholarspace
+
+  sudo cp .env.example .env
+
+  sudo chown ubuntu:ubuntu .env
 
   openssl req -x509 -newkey rsa:4096 -keyout /opt/scholarspace/scholarspace/nginx/certs/key.pem -out /opt/scholarspace/scholarspace/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
 
   docker compose up -d
 
-  docker exec -d scholarspace_rails sh -c "bundle exec rails db:create; bundle exec rails db:migrate; bundle exec rails db:seed"
+  docker exec -d rails sh -c "bundle exec rails db:create; bundle exec rails db:migrate; bundle exec rails db:seed"
   EOF
 
   tags = {
