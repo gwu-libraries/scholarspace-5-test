@@ -1,7 +1,7 @@
 ARG ALPINE_VERSION=3.21
 ARG RUBY_VERSION=3.3.6
 
-FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-dev-base
+FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-prod-base
 
 ARG DATABASE_APK_PACKAGE="postgresql-dev"
 ARG EXTRA_APK_PACKAGES="git tesseract-ocr"
@@ -50,19 +50,21 @@ RUN yarn install
 
 COPY Gemfile ./
 
+RUN bundle config set without development test 
+
 RUN bundle install --gemfile Gemfile
 
 COPY --chown=1001:101 . ./
 
-COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
+COPY --chmod=755 ./bin/scholarspace-entrypoint-prod.sh ./
 
-FROM scholarspace-dev-base AS scholarspace-dev
+FROM scholarspace-prod-base AS scholarspace-prod
 
-ENTRYPOINT ["./scholarspace-entrypoint-dev.sh"]
-ONBUILD RUN RAILS_ENV=development SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
-CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0", "RAILS_ENV=development"]
+ENTRYPOINT ["./scholarspace-entrypoint-prod.sh"]
+ONBUILD RUN RAILS_ENV=production SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
+CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0", "RAILS_ENV=production"]
 
-FROM scholarspace-dev-base AS scholarspace-dev-worker
+FROM scholarspace-prod-base AS scholarspace-prod-worker
 
 USER root
 RUN apk --no-cache add bash \
@@ -73,4 +75,4 @@ RUN apk --no-cache add bash \
   tesseract-ocr
 USER app
 
-CMD ["bundle", "exec", "sidekiq", "RAILS_ENV=development"]
+CMD ["bundle", "exec", "sidekiq", "RAILS_ENV=production"]

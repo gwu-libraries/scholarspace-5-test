@@ -1,2 +1,5 @@
+# choose one or the other
+
 include:
-  - docker-compose-dev.yml
+  # - docker-compose-dev.yml
+  # - docker-compose-prod.yml

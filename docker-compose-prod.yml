@@ -5,11 +5,14 @@ services:
     container_name: rails
     hostname: rails
     build:
+      dockerfile: Dockerfile-prod
       context: .
       target: scholarspace-prod
       args:
         - EXTRA_APK_PACKAGES=git less
         - BUNDLE_GEMFILE=Gemfile
+        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
     command: "bundle exec rails s -p 3000 -b 0.0.0.0"
     stdin_open: true
     tty: true
@@ -29,7 +32,7 @@ services:
       - prod-uploads:/app/scholarspace/uploads
       - prod-public:/app/scholarspace/public
       - prod-tmp:/app/scholarspace/tmp
-      # - .:/app/scholarspace
+    restart: unless-stopped
     networks:
       - scholarspace
 
@@ -37,11 +40,14 @@ services:
     container_name: worker
     hostname: worker
     build:
+      dockerfile: Dockerfile-prod
       context: .
-      target: scholarspace-worker
+      target: scholarspace-prod-worker
       args:
         - EXTRA_APK_PACKAGES=git less
         - BUNDLE_GEMFILE=Gemfile
+        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
     command: sh -c 'bundle exec sidekiq'
     user: root
     env_file:
@@ -52,13 +58,13 @@ services:
       - postgres
       - redis
       - solr
+      - fedora
     volumes:
       - prod-storage:/app/scholarspace/storage
       - prod-derivatives:/app/scholarspace/derivatives
       - prod-uploads:/app/scholarspace/uploads
       - prod-public:/app/scholarspace/public
       - prod-tmp:/app/scholarspace/tmp
-      # - .:/app/scholarspace
     networks:
       - scholarspace
   nginx:
@@ -74,6 +80,26 @@ services:
     restart: unless-stopped
     depends_on:
       - rails
+    networks:
+      - scholarspace
+
+  fedora:
+    container_name: fedora
+    hostname: fedora
+    image: fcrepo/fcrepo:6.5.1-tomcat9
+    environment:
+      - >-
+        CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
+        -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
+        -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
+        -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
+        -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
+      - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+    volumes:
+      - fedora:/fcrepo-home
+    ports:
+      - 8080:8080
     networks:
       - scholarspace
   postgres:
@@ -101,7 +127,7 @@ services:
     ports:
       - 8080
     networks:
-      - ss-prod
+      - scholarspace
 
   memcached:
     image: bitnami/memcached
@@ -132,10 +158,13 @@ services:
     volumes:
       - solr_home:/var/solr/data:cached
       - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+      - ./solr/plugins:/opt/solr/lib
     ulimits:
       nofile:
         soft: 65536
         hard: 524288
+    ports:
+      - 8983
     networks:
       - scholarspace
     healthcheck:
@@ -156,6 +185,7 @@ volumes:
   prod-public:
   prod-tmp:
   redis:
+  fedora:
   sidekiq-public:
   sidekiq-tmp:
   solr_home:
