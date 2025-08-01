@@ -198,7 +198,7 @@
     <dynamicField name="*_tsi" type="text" stored="true" indexed="true" multiValued="false"/>
     <dynamicField name="*_tsim" type="text" stored="true" indexed="true" multiValued="true"/>
     <dynamicField name="*_tiv" type="text" stored="false" indexed="true" multiValued="false" termVectors="true" termPositions="true" termOffsets="true"/>
-    <dynamicField name="*_timv" type="text" stored="false" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
+    <dynamicField name="*_timv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
     <dynamicField name="*_tsiv" type="text" stored="true" indexed="true" multiValued="false" termVectors="true" termPositions="true" termOffsets="true"/>
     <dynamicField name="*_tsimv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
 
@@ -325,7 +325,7 @@
     <dynamicField name="*suggest" type="textSuggest" indexed="true" stored="false" multiValued="true" />
 
     <!-- you must define copyField source and dest fields explicity or schemaBrowser doesn't work -->
-    <field name="all_text_timv" type="text" stored="false" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
+    <field name="all_text_timv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
 
 
     <!-- OCR highlighting -->
@@ -348,7 +348,7 @@
     destination field is to use the dynamic field syntax.
     copyField also supports a maxChars to copy setting.  -->
 
-   <!-- <copyField source="*_tesim" dest="all_text_timv" maxChars="3000"/> -->
+   <copyField source="*_timv" dest="all_text_timv" maxChars="3000"/>
    <!-- for suggestions -->
    <copyField source="*_tesim" dest="suggest"/>
    <copyField source="*_ssim" dest="suggest"/>
