@@ -43,6 +43,6 @@ jobs:
           docker exec rails /bin/sh -lc "bundle exec rails db:migrate"
       - name: Run RSpec tests
         run: |
-          docker exec rails /bin/sh bash -lc "bundle exec rspec"
+          docker exec rails /bin/sh -lc "bundle exec rspec"
         
         
