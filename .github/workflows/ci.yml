@@ -27,6 +27,10 @@ jobs:
       - name: cd to scholarspace folder
         run : |
           cd /home/runner/work/scholarspace-5-test/scholarspace-5-test
+      - name: debug
+        run : |
+          pwd
+          ls
       - name: Create env file
         run: |
           cp example.env .env
