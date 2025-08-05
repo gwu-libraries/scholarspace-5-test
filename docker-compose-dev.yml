@@ -13,7 +13,7 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: "bundle exec rails s -p 3000 -b 0.0.0.0" 
+    command: "./bin/rails server -p 3000 -b 0.0.0.0" 
     stdin_open: true
     tty: true
     user: root

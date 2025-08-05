@@ -60,7 +60,7 @@ FROM scholarspace-dev-base AS scholarspace-dev
 
 ENTRYPOINT ["./scholarspace-entrypoint-dev.sh"]
 ONBUILD RUN RAILS_ENV=development SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
-CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0", "RAILS_ENV=development"]
+CMD ["./bin/rails", "server", "-p", "3000", "-b", "0.0.0.0", "RAILS_ENV=development"]
 
 FROM scholarspace-dev-base AS scholarspace-dev-worker
 
