@@ -1,22 +1,17 @@
-if Rails.env == "production"
-  puts "Seeding data for release testing is not for use in production!"
-  exit
-end
+UserSeeder.generate_required_seeds
+# Generates admin user, configured in .env
 
-include FactoryBot::Syntax::Methods
+CollectionTypeSeeder.generate_required_seeds
+# Generates admin set collection type and default user collection type
 
-if ENV["SEED_REQUIRED_RECORDS"]
-  UserSeeder.generate_required_seeds
-  # Generates admin@example.com with admin_password
-
-  CollectionTypeSeeder.generate_required_seeds
-  # Generates admin set collection type and default user collection type
-
-  AdminSetSeeder.generate_required_seeds
-  # Generates default admin set
-end
+AdminSetSeeder.generate_required_seeds
+# Generates default admin set
 
 if ENV["SEED_TESTING_RECORDS"]
+  if Rails.env == "production"
+    puts "Seeding data for testing is not for use in production!"
+    exit
+  end
   # UserSeeder.generate_test_seeds
   # Generates
   #  - basic_user@example.com:password
