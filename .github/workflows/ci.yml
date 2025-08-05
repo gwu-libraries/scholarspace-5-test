@@ -1,4 +1,4 @@
-name: CI w/ cache 
+name: CI
 
 on:
   # allow running action manually
