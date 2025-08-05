@@ -13,7 +13,7 @@ class UserSeeder
 
       logger.info("Adding admin user...")
 
-      add_user("admin@example.com", "admin_password", admin_role)
+      add_user(ENV["ADMIN_USER"], ENV["ADMIN_PASSWORD"], admin_role)
     end
 
     def generate_testing_seeds(logger: Logger.new(STDOUT))
