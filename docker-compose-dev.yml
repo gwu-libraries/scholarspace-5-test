@@ -23,9 +23,6 @@ services:
       - RAILS_ROOT=/app/scholarspace
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - dev-storage:/app/scholarspace/storage
       - dev-derivatives:/app/scholarspace/derivatives
@@ -114,11 +111,6 @@ services:
       - dev-db:/var/lib/postgresql/data
     networks:
       - ss-dev
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USERNAME"]
-      interval: 30s
-      timeout: 5s
-      retries: 20
     ports:
       - "5432:5432"
 

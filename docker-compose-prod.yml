@@ -13,7 +13,8 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: "bundle exec rails s -p 3000 -b 0.0.0.0"
+        - RAILS_ENV=production
+    command: "./bin/rails server -p 3000 -b 0.0.0.0"
     stdin_open: true
     tty: true
     user: root
@@ -23,9 +24,6 @@ services:
       - RAILS_ROOT=/app/scholarspace
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - prod-storage:/app/scholarspace/storage
       - prod-derivatives:/app/scholarspace/derivatives
@@ -48,7 +46,8 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: sh -c 'bundle exec sidekiq'
+        - RAILS_ENV=production
+    command: sh -c 'bundle exec sidekiq RAILS_ENV=production'
     user: root
     env_file:
       - .env
@@ -112,11 +111,6 @@ services:
       - prod-db:/var/lib/postgresql/data
     networks:
       - scholarspace
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $$APP_DB_NAME -U $$DB_USERNAME"]
-      interval: 30s
-      timeout: 5s
-      retries: 20
     ports:
       - "5432:5432"
 
