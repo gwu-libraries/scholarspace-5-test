@@ -1,0 +1,49 @@
+name: CI w/ cache 
+
+on:
+  # allow running action manually
+  workflow_dispatch:
+  # trigger on push to master branch
+  pull_request:
+    branches:
+      - master
+# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
+env:
+  REGISTRY: ghcr.io
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    permissions: 
+      contents: read
+      packages: write
+    steps:
+      - name: Create scholarspace folders
+        run: |
+          mkdir -p /opt/scholarspace
+          cd /opt/scholarspace
+     # Checkout the repository code
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Create self-signed certs for testing
+        run : |
+          openssl req -x509 -newkey rsa:4096 -keyout /opt/scholarspace/scholarspace-5-test/nginx/certs/key.pem -out /opt/scholarspace/scholarspace-5-test/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+      # Copy the pre-filled example.env file to use as the .env file for testing
+      - name: Create env file
+        run: |
+          cp example.env .env
+       # Start all of the docker containers and wait until positive response from healthchecks
+      - name: Start Docker containers
+        run: |
+          docker compose up --wait
+
+      - name: Create dev/test databases
+        run: |
+          docker exec rails /bin/sh -lc "bundle exec rails db:create"
+      - name: Migrate dev/test databases
+        run: |
+          docker exec rails /bin/sh -lc "bundle exec rails db:migrate"
+      - name: Run RSpec tests
+        run: |
+          docker exec /bin/sh bash -lc "bundle exec rspec"
+        
+        
