@@ -1,57 +1,29 @@
-# Koppie
-
-> Isolated granite outcrops in Southern Africa that are a favored habitat for hyraxes.
-
-Koppie is an application used for testing the state of [Hyrax](https://github.com/samvera/hyrax)
-using Postgres as the metadata store for objects. This is similar to the Dassie test application
-that lives in `.dassie`, however in this application Fedora is
-not used for storing object metadata or files. The Hyrax gem is sourced from the local hyrax
-directory one level up from `.koppie` for development purposes.
-
-## Known Issues
-
-Collection model
-
-- `/app/models/collection.rb` - is_a `ActiveFedora::Base`
-- if `Collection` is changed to `Valkyrie::Resource`, there is an infinite loop while loading
-  due to reference to ::Collection in `lib/hyrax/collection_name.rb` in the hyrax engine
-
-Default Admin Set
-
-- creating an admin set as a `Valkyrie::Resource` fails to save ACLs. This is a known issue in Hyrax.
-  See [Hyrax Issue #5108](https://github.com/samvera/hyrax/issues/5108).
-
-## Questions
-
-Please direct questions about this code or the servers where it runs to the `#hyrax-valkyrie`
-channel on Samvera slack.
+# ScholarSpace
 
 ## Contributing
 
 If you're working on a PR for this project, create a feature branch off of `main`.
 
-This repository follows the [Samvera Community Code of Conduct](https://samvera.atlassian.net/wiki/spaces/samvera/pages/405212316/Code+of+Conduct)
-and [language recommendations](https://github.com/samvera/maintenance/blob/master/templates/CONTRIBUTING.md#language).
-Please **_do not_** create a branch called `master` for this repository or as part of your pull request; the branch will
-either need to be removed or renamed before it can be considered for inclusion in the code base and history of this repository.
+## Production Environment
 
-## Running Locally
+- Update environment variables:
+  - RAILS_ENV=production
+  - METADATA_DATABASE_NAME=scholarspace_metadata_production (todo: fix this)
+  - PUMA_ENV=production (todo: fix this)
+- Update `docker-compose.yml` to include `docker-compose-prod.yml` and not `docker-compose-dev.yml`
 
-There are two ways to run locally, with Docker or with the rails server. For both, the first step is to get the repository from GitHub.
+## Development Environment
 
-```
-git clone https://github.com/samvera/hyrax.git
-```
+- Update environment variables:
+- RAILS_ENV=development
+- METADATA_DATABASE_NAME=scholarspace_metadata_development (todo: fix this)
+- PUMA_ENV=development (todo: fix this)
+- Update `docker-compose.yml` to include `docker-compose-dev.yml` and not `docker-compose-prod.yml`
 
-### Docker
+## Tests
 
-Execute the following commands from the hyrax root to start the app using Docker.
+- To run tests, launch the application in development mode. 
+- Connect to the rails container (`docker exec -it rails /bin/sh`)
+- Run `bundle exec rspec`
 
-```
-docker compose -f docker-compose-koppie.yml build
-docker compose -f docker-compose-koppie.yml up
-```
-
-You can find help with additional commands in Hyrax' [FAQ-for-Dassie-Docker-Test-App](https://github.com/samvera/hyrax/wiki/FAQ-for-Dassie-Docker-Test-App).
-Most commands can be used directly as described in the FAQ. A few might require
-a slight adjustment to work with koppie as a Docker app.
+At the moment, there are 8 failing tests. Issue appears to be more with the test setup, so consider 8 failing tests passing for now, but needs to be fixed at some point. 
