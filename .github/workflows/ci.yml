@@ -27,10 +27,6 @@ jobs:
       - name: cd to scholarspace folder
         run : |
           cd /home/runner/work/scholarspace-5-test/scholarspace-5-test
-      - name: debug
-        run : |
-          pwd
-          ls
       - name: Create env file
         run: |
           cp example.env .env
@@ -47,6 +43,6 @@ jobs:
           docker exec rails /bin/sh -lc "bundle exec rails db:migrate"
       - name: Run RSpec tests
         run: |
-          docker exec /bin/sh bash -lc "bundle exec rspec"
+          docker exec rails /bin/sh bash -lc "bundle exec rspec"
         
         
