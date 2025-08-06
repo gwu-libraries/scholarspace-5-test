@@ -11,6 +11,7 @@ If you're working on a PR for this project, create a feature branch off of `main
   - METADATA_DATABASE_NAME=scholarspace_metadata_production (todo: fix this)
   - PUMA_ENV=production (todo: fix this)
 - Update `docker-compose.yml` to include `docker-compose-prod.yml` and not `docker-compose-dev.yml`
+- Once all containers are healthy, run `docker exec rails /bin/sh -lc "bundle exec rails db:seed"` to create default collection types, admin set, and an admin user (email and password set in `.env`)
 
 ## Development Environment
 
