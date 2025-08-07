@@ -15,6 +15,6 @@ include:
   - docker-compose-prod.yml
 EOF
 
-docker-compose stop
+docker compose stop
 echo "Restarting Docker containers"
-docker-compose up -d
+docker compose up -d
