@@ -46,17 +46,19 @@ RAILS_ROOT="/app/scholarspace" \
 RAILS_SERVE_STATIC_FILES="1" \
 LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
-RUN yarn install
-
-COPY Gemfile ./
+COPY Gemfile Gemfile.lock ./
 
 RUN bundle config set without development test 
 
-RUN bundle install --gemfile Gemfile
+RUN bundle config set deployment true 
+
+RUN bundle install
 
 COPY --chown=1001:101 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-prod.sh ./
+
+RUN yarn install
 
 FROM scholarspace-prod-base AS scholarspace-prod
 
