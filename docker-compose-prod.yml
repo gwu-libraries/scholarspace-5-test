@@ -93,7 +93,7 @@ services:
         -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
         -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
         -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
+        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true -Dfcrepo.aws.access-key=${AWS_ACCESS_KEY} -Dfcrepo.aws.secret-key=${AWS_SECRET_KEY} -Dfcrepo.storage=ocfl-s3 -Dfcrepo.aws.region=us-east-1 -Dfcrepo.ocfl.s3.bucket=${S3_BUCKET_NAME} -Dfcrepo.ocfl.s3.prefix=${S3_PREFIX}
       - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
     volumes:
       - fedora:/fcrepo-home
