@@ -13,7 +13,7 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: "./bin/rails server -p 3000 -b 0.0.0.0" 
+    command: sh -c "bundle install && ./bin/rails server -p 3000 -b 0.0.0.0" 
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -46,7 +46,7 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: sh -c 'bundle exec sidekiq'
+    command: sh -c 'bundle install && bundle exec sidekiq'
     user: root
     restart: unless-stopped
     env_file:
@@ -95,12 +95,13 @@ services:
         -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
         -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
         -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
+        -Dfcrepo.jms.enabled=true -Dfcrepo.metrics.enable=true
       - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
     volumes:
       - dev-fedora:/fcrepo-home
     ports:
       - 8080:8080
+      - 61613:61613
     networks:
       - ss-dev
 
@@ -114,8 +115,8 @@ services:
       - dev-db:/var/lib/postgresql/data
     networks:
       - ss-dev
-    ports:
-      - "5432:5432"
+    #ports:
+    #  - "5432:5432"
     restart: unless-stopped
 
   fits:
