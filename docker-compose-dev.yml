@@ -86,7 +86,10 @@ services:
   fedora:
     container_name: fedora
     hostname: fedora
-    image: fcrepo/fcrepo:6.5.1-tomcat9
+    #image: fcrepo/fcrepo:6.5.1-tomcat9
+    build:
+      dockerfile: Dockerfile-fedora
+      context: .
     restart: unless-stopped
     environment:
       - >-
@@ -95,7 +98,9 @@ services:
         -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
         -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
         -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-        -Dfcrepo.jms.enabled=true -Dfcrepo.metrics.enable=true
+        -Dfcrepo.jms.enabled=true -Dfcrepo.metrics.enable=true -Dfcrepo.ocfl.show_path=true
+        -Dfcrepo.jms.destination.type="queue"
+        -Dfcrepo.activemq.configuration=file:///usr/local/tomcat/conf/activemq.xml
       - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
     volumes:
       - dev-fedora:/fcrepo-home

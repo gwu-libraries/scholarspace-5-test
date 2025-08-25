@@ -1,0 +1,3 @@
+FROM fcrepo/fcrepo:6.5.1-tomcat9
+
+COPY ./fedora/config/activemq.xml /usr/local/tomcat/conf/activemq.xml
