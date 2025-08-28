@@ -60,3 +60,5 @@ terraform.tfstate
 terraform.tfstate.backup
 
 .prettierrc
+
+.DS_Store
