@@ -25,6 +25,7 @@ gem "devise-guests", "~> 0.8"
 
 # gemspec name: 'hyrax', path: ENV.fetch('HYRAX_ENGINE_PATH', '..')
 gem "hyrax"
+gem "hydra-role-management"
 gem "jbuilder", "~> 2.5"
 gem "jquery-rails"
 gem "pg", "~> 1.3"
