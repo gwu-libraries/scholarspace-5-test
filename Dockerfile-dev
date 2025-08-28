@@ -48,9 +48,11 @@ LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
 RUN yarn install
 
-COPY Gemfile ./
+COPY Gemfile Gemfile.lock ./
 
-RUN bundle install --gemfile Gemfile
+RUN bundle config set deployment true 
+
+RUN bundle install
 
 COPY --chown=1001:101 . ./
 
