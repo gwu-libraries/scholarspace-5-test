@@ -173,6 +173,26 @@
         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
       </analyzer>
     </fieldType>
+
+    <fieldtype
+        name="text_ocr"
+        class="solr.TextField"
+        storeOffsetsWithPositions="true">
+      <!-- NOTE: When not using the Package Manager, add the `ocrhighlighting:`
+                 prefix to  the `class` attributes -->
+      <analyzer type="index">
+        <!-- For converting OCR to plaintext -->
+        <tokenizer class="solr.KeywordTokenizerFactory" />
+        <charFilter
+          class="solrocr.OcrCharFilterFactory" />
+        <!-- ...rest of your index analysis chain... -->
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory" />
+
+        <!-- query analysis chain, should not include the character filters -->
+      </analyzer>
+    </fieldtype>
   </types>
 
 
@@ -329,8 +349,8 @@
 
 
     <!-- OCR highlighting -->
-    <!-- <field name="ocr_text" type="text_ocr" multiValued="false" indexed="true"
-           stored="true" /> -->
+    <field name="ocr_text" type="text_ocr" multiValued="false" indexed="true"
+           stored="true" />
   </fields>
 
  <!-- Field to use to determine and enforce document uniqueness.

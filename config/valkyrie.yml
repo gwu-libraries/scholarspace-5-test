@@ -1,0 +1,11 @@
+development:
+  metadata_adapter: fedora_metadata
+  storage_adapter: fedora_storage
+
+test:
+  metadata_adapter: test_adapter
+  storage_adapter: memory
+
+production:
+  metadata_adapter: fedora_metadata
+  storage_adapter: fedora_storage

@@ -1,0 +1,14 @@
+<% content_for :head do %>
+  <%= javascript_include_tag 'ableplayer' %>
+  <%= stylesheet_link_tag "ableplayer", "data-turbo-track": "reload" %>
+<% end %>
+
+<video id="video" 
+       data-able-player preload="auto" 
+       width="800" 
+       height="360" 
+       data-skin="2020"
+       poster="<%= hyrax.download_path(file_set, file: 'jpeg')%>"
+       >
+  <source type="video/mp4" src="<%= hyrax.download_path(file_set, file: 'mp4') %>" />
+</video>

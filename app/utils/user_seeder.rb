@@ -16,7 +16,7 @@ class UserSeeder
       add_user(ENV["ADMIN_USER"], ENV["ADMIN_PASSWORD"], admin_role)
     end
 
-    def generate_testing_seeds(logger: Logger.new(STDOUT))
+    def generate_test_seeds(logger: Logger.new(STDOUT))
       @logger = logger
       logger.info("Adding optional users...")
 

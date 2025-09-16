@@ -74,3 +74,11 @@ group :development, :test do
   gem "webmock"
   gem "faker"
 end
+
+group :development, :test do
+  gem "fcrepo_wrapper"
+  gem "rspec-rails"
+end
+
+group :development, :test do
+end

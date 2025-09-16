@@ -13,7 +13,6 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-        - RAILS_ENV=production
     command: "./bin/rails server -p 3000 -b 0.0.0.0"
     stdin_open: true
     tty: true
@@ -46,7 +45,6 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-        - RAILS_ENV=production
     command: sh -c 'bundle exec sidekiq RAILS_ENV=production'
     user: root
     restart: unless-stopped

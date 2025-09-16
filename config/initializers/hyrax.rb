@@ -259,11 +259,15 @@ Hyrax.config do |config|
   # config.collection_model = '::Collection'
   # config.collection_model = 'Hyrax::PcdmCollection'
   # Injected via `rails g hyrax:collection_resource CollectionResource`
-  config.collection_model = "CollectionResource"
+  # config.collection_model = "CollectionResource"
 
+  config.collection_model = "CollectionResource"
+  # config.admin_set_model = "AdminSetResource"
+  config.admin_set_model = "Hyrax::AdministrativeSet"
+  config.file_set_model = "Hyrax::FileSet"
   # Identify the model class name that will be used for Admin Sets in your app
   # (i.e. AdminSet for ActiveFedora, Hyrax::AdministrativeSet for Valkyrie)
-  config.admin_set_model = "AdminSet"
+  # config.admin_set_model = "AdminSet"
   # config.admin_set_model = "Hyrax::AdministrativeSet"
 
   # When your application is ready to use the valkyrie index instead of the one

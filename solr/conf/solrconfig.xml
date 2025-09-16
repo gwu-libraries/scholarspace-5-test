@@ -33,6 +33,8 @@
   <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lib" />
   <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs" />
   <lib dir="${solr.install.dir:../../../..}/contrib/extraction/lib" regex=".*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/contrib/ocrsearch/lib" regex=".*\.jar" />
+  <!-- <lib dir="${solr.install.dir:../../../..}/lib" regex=".*\.jar" /> -->
   <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-cell-\d.*\.jar" />
   <!-- <lib dir="${solr.install.dir:../../../..}/lib/" regex=".*\.jar" /> -->
 
@@ -73,10 +75,6 @@
     </autoSoftCommit>
   </updateHandler>
 
-  <!--  solr OCR highlighting -->
-  <!-- <searchComponent
-      class="solrocr.OcrHighlightComponent"
-      name="ocrHighlight" /> -->
 
   <!-- SearchHandler
 
@@ -199,6 +197,11 @@
   </requestHandler>
 
   <searchComponent name="termsComponent" class="solr.TermsComponent" />
+
+    <!--  solr OCR highlighting -->
+  <searchComponent
+      class="solrocr.OcrHighlightComponent"
+      name="ocrHighlight" />
 
   <requestHandler name="/terms" class="solr.SearchHandler">
     <lst name="defaults">
