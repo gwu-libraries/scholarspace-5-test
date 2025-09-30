@@ -74,5 +74,5 @@ Rails.application.configure do
   # }.map { |ifa|
   #   IPAddr.new(ifa.addr.ip_address + '/' + ifa.netmask.ip_address)
   # }
-  config.active_job.queue_adapter = :inline
+  config.active_job.queue_adapter = :sidekiq
 end

@@ -98,3 +98,12 @@ Valkyrie.config.storage_adapter =
   ENV.fetch("VALKYRIE_STORAGE_ADAPTER") { :fedora_storage }.to_sym
 
 Valkyrie.config.indexing_adapter = :solr_index
+
+# [FindByModelAndPropertyValue].each do |query_handler|
+#   Valkyrie
+#     .config
+#     .metadata_adapter
+#     .query_service
+#     .custom_queries
+#     .register_query_handler(query_handler)
+# end

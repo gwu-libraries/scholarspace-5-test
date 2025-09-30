@@ -27,3 +27,5 @@
 
 //= require_tree .
 //= require hyrax
+//= require iiif_print
+

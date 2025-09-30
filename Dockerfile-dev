@@ -30,7 +30,10 @@ RUN apk --no-cache upgrade && \
   tesseract-ocr \
   tesseract-ocr-data-eng \
   postgresql-dev \
-  git 
+  git \
+  poppler-utils \
+  libxml2 \
+  libxml2-dev
 
 RUN setfacl -d -m o::rwx /usr/local/bundle && \
   gem update --silent --system $RUBYGEMS_VERSION
@@ -48,13 +51,15 @@ LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
 RUN yarn install
 
+COPY --chown=1001:101 . ./
+
+RUN git config --global --add safe.directory /app/scholarspace/vendor/iiif_print
+
 COPY Gemfile Gemfile.lock ./
 
 RUN bundle config set deployment true 
 
 RUN bundle install
-
-COPY --chown=1001:101 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
 

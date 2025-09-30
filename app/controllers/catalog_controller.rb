@@ -14,7 +14,24 @@ class CatalogController < ApplicationController
     "system_modified_dtsi"
   end
 
+  # CatalogController-scope behavior and configuration for BlacklightIiifSearch
+  include BlacklightIiifSearch::Controller
+
   configure_blacklight do |config|
+    # IiifPrint index fields
+    config.add_index_field "all_text_tsimv",
+                           highlight: true,
+                           helper_method: :render_ocr_snippets
+
+    # configuration for Blacklight IIIF Content Search
+    config.iiif_search = {
+      full_text_field: "all_text_timv",
+      object_relation_field: "is_page_of_ssi",
+      supported_params: %w[q page],
+      autocomplete_handler: "iiif_suggest",
+      suggester_name: "iiifSuggester"
+    }
+
     config.view.gallery(
       document_component: Blacklight::Gallery::DocumentComponent
     )
@@ -27,7 +44,8 @@ class CatalogController < ApplicationController
 
     config.show.tile_source_field = :content_metadata_image_iiif_info_ssm
     config.show.partials.insert(1, :openseadragon)
-    config.search_builder_class = Hyrax::CatalogSearchBuilder
+    # config.search_builder_class = Hyrax::CatalogSearchBuilder
+    config.search_builder_class = IiifPrint::CatalogSearchBuilder
 
     # Show gallery view
     config.view.gallery.partials = %i[index_header index]
@@ -209,7 +227,12 @@ class CatalogController < ApplicationController
     # This one uses all the defaults set by the solr request handler. Which
     # solr request handler? The one set in config[:default_solr_parameters][:qt],
     # since we aren't specifying it otherwise.
-    config.add_search_field("all_fields", label: "All Fields") do |field|
+    config.add_search_field(
+      "all_fields",
+      label: "All Fields",
+      include_in_advanced_search: false,
+      advanced_parse: false
+    ) do |field|
       all_names = config.show_fields.values.map(&:field).join(" ")
       title_name = "title_tesim"
       field.solr_parameters = {

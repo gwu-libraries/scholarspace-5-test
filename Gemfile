@@ -37,10 +37,13 @@ gem "sass-rails", "~> 6.0"
 gem "sidekiq", "~> 6.4"
 gem "turbolinks", "~> 5"
 gem "twitter-typeahead-rails", "0.11.1.pre.corejavascript"
-gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
+gem "tzinfo-data", platforms: %i[windows jruby]
 gem "uglifier", ">= 1.3.0"
 gem "activerecord-nulldb-adapter", "~> 1.1"
 gem "rtesseract"
+gem "iiif_print", path: "vendor/iiif_print"
+gem "derivative-rodeo"
+# gem "bulkrax"
 
 group :development do
   gem "better_errors" # add command line in browser when errors
@@ -73,12 +76,4 @@ group :development, :test do
   gem "vcr"
   gem "webmock"
   gem "faker"
-end
-
-group :development, :test do
-  gem "fcrepo_wrapper"
-  gem "rspec-rails"
-end
-
-group :development, :test do
 end

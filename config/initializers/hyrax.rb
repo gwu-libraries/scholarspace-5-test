@@ -1,9 +1,14 @@
 # frozen_string_literal: true
+require "iiif_print/derivative_rodeo_service"
+require "hyrax/file_set_derivatives_service"
+
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
   config.register_curation_concern :archival_document
   # Injected via `rails g hyrax:work_resource AcademicDocument`
   config.register_curation_concern :academic_document
+  # Injected via `rails g hyrax:work_resource Page`
+  config.register_curation_concern :derived_page
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
@@ -159,21 +164,19 @@ Hyrax.config do |config|
       uri = Riiif::Engine.routes.url_helpers.info_url(file_id, host: base_url)
       uri.sub(%r{/info\.json\Z}, "")
     end
-  # config.iiif_info_url_builder = lambda do |_, _|
-  #   ""
-  # end
+  # config.iiif_info_url_builder = lambda { |_, _| "" }
 
   # Returns a URL that indicates your IIIF image server compliance level
   # config.iiif_image_compliance_level_uri = 'http://iiif.io/api/image/2/level2.json'
 
   # Returns a IIIF image size default
-  # config.iiif_image_size_default = '600,'
+  config.iiif_image_size_default = "600"
 
   # Fields to display in the IIIF metadata section; default is the required fields
   # config.iiif_metadata_fields = Hyrax::Forms::WorkForm.required_fields
 
   # Should a button with "Share my work" show on the front page to all users (even those not logged in)?
-  # config.display_share_button_when_not_logged_in = true
+  config.display_share_button_when_not_logged_in = false
 
   # This user is logged as the acting user for jobs and other processes that
   # run without being attributed to a specific user (e.g. creation of the
@@ -321,6 +324,11 @@ Hyrax.config do |config|
   # Add registrar implementations by uncommenting and adding to the hash below.
   # See app/services/hyrax/identifier/registrar.rb for the registrar interface
   # config.identifier_registrars = {}
+
+  config.derivative_services = [
+    IiifPrint::DerivativeRodeoService,
+    Hyrax::FileSetDerivativesService
+  ]
 end
 
 Date::DATE_FORMATS[:standard] = "%m/%d/%Y"
@@ -354,7 +362,8 @@ Rails.application.reloader.to_prepare do
     Hyrax::CustomQueries::FindManyByAlternateIds,
     Hyrax::CustomQueries::FindModelsByAccess,
     Hyrax::CustomQueries::FindCountBy,
-    Hyrax::CustomQueries::FindByDateRange
+    Hyrax::CustomQueries::FindByDateRange,
+    Hyrax::CustomQueries::FindByModelAndPropertyValue
   ]
   custom_queries.each do |handler|
     Hyrax.query_service.custom_queries.register_query_handler(handler)
