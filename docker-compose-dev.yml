@@ -159,7 +159,8 @@ services:
     volumes:
       - dev-solr_home:/var/solr/data:cached
       - ./solr/conf:/opt/solr/server/configsets/hyraxconf
-      - ./solr/plugins:/opt/solr/contrib/ocrsearch/lib
+      - ./solr/plugins:/opt/solr/contrib/plugins
+      - dev-derivatives:/opt/solr/derivatives
     ulimits:
       nofile:
         soft: 65536

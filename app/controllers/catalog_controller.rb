@@ -19,17 +19,18 @@ class CatalogController < ApplicationController
 
   configure_blacklight do |config|
     # IiifPrint index fields
+    # config.add_index_field "all_text_tsimv",
     config.add_index_field "all_text_tsimv",
                            highlight: true,
                            helper_method: :render_ocr_snippets
 
     # configuration for Blacklight IIIF Content Search
     config.iiif_search = {
-      full_text_field: "all_text_timv",
+      full_text_field: "all_text_tsimv",
       object_relation_field: "is_page_of_ssi",
-      supported_params: %w[q page],
-      autocomplete_handler: "iiif_suggest",
-      suggester_name: "iiifSuggester"
+      supported_params: %w[q page]
+      # autocomplete_handler: "iiif_suggest"
+      # suggester_name: "iiifSuggester"
     }
 
     config.view.gallery(
@@ -60,7 +61,7 @@ class CatalogController < ApplicationController
       qt: "search",
       rows: 10,
       qf:
-        "title_tesim description_tesim creator_tesim keyword_tesim all_text_timv"
+        "title_tesim description_tesim creator_tesim keyword_tesim all_text_tsimv"
     }
 
     # solr field configuration for document/show views
@@ -236,7 +237,7 @@ class CatalogController < ApplicationController
       all_names = config.show_fields.values.map(&:field).join(" ")
       title_name = "title_tesim"
       field.solr_parameters = {
-        qf: "#{all_names} file_format_tesim all_text_timv",
+        qf: "#{all_names} file_format_tesim all_text_tsimv",
         pf: title_name.to_s
       }
     end
@@ -335,7 +336,7 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field("all_text") do |field|
-      solr_name = "all_text_timv"
+      solr_name = "all_text_tsimv"
       field.solr_local_parameters = { qf: solr_name, pf: solr_name }
     end
 

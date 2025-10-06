@@ -16,7 +16,7 @@ IiifPrint.config do |config|
       filename = File.basename(original_pdf_path)
       page_suffix =
         "#{(page_number.to_i + 1).to_s.rjust(page_padding.to_i, "0")}"
-      "#{identifier}_#{filename}_#{page_suffix}"
+      "#{parent_work.title.first}_page_#{page_suffix}"
     end
   # Add configurable solr field key for searching,
   # default key is: 'human_readable_type_sim'
@@ -36,6 +36,6 @@ IiifPrint.config do |config|
   IiifPrint::DerivativeRodeoService.preprocessed_location_adapter_name = "file"
 
   config.persistence_adapter = IiifPrint::PersistenceLayer::ValkyrieAdapter
-  config.additional_tesseract_options = "-l eng_best"
+  # config.additional_tesseract_options = "-l eng_best"
 end
 # rubocop:enable Lint/UnusedBlockArgument

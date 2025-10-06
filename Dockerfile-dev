@@ -51,15 +51,17 @@ LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
 RUN yarn install
 
-COPY --chown=1001:101 . ./
+COPY --chown=1001:101 ./vendor/iiif_print ./vendor/iiif_print
+
+COPY --chown=1001:101 Gemfile Gemfile.lock ./
 
 RUN git config --global --add safe.directory /app/scholarspace/vendor/iiif_print
-
-COPY Gemfile Gemfile.lock ./
 
 RUN bundle config set deployment true 
 
 RUN bundle install
+
+COPY --chown=1001:101 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
 

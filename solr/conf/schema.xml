@@ -174,7 +174,39 @@
       </analyzer>
     </fieldType>
 
-  </types>
+    <fieldtype name="text_ocr" class="solr.TextField" storeOffsetsWithPositions="true">
+      <analyzer type="index">
+        <charFilter class="solrocr.ExternalUtf8ContentFilterFactory" />
+        <charFilter class="solrocr.OcrCharFilterFactory" />
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.StopFilterFactory"/>
+        <filter class="solr.PorterStemFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.StopFilterFactory"/>
+        <filter class="solr.PorterStemFilterFactory"/>
+      </analyzer>
+    </fieldtype>
+
+    <!-- BEGIN Blacklight IIIF Search autocomplete config -->
+    <fieldType name="textSuggestTokenizer" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_en.txt"/>
+        <filter class="solr.WordDelimiterGraphFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.HyphenatedWordsFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+        <!-- uncomment below to enable multi-word matches -->
+        <!-- <filter class="solr.ShingleFilterFactory" outputUnigrams="true" outputUnigramsIfNoShingles="true" maxShingleSize="3" /> -->
+      </analyzer>
+    </fieldType>
+    <!-- END Blacklight IIIF Search autocomplete config -->
+
+</types>
 
 
   <fields>
@@ -325,9 +357,15 @@
 
     <dynamicField name="*suggest" type="textSuggest" indexed="true" stored="false" multiValued="true" />
 
+    <field name="ocr_text" type="text_ocr" multiValued="false" indexed="true" stored="true" />
+
     <!-- you must define copyField source and dest fields explicity or schemaBrowser doesn't work -->
-    <field name="all_text_timv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
-  </fields>
+    <field name="all_text_tsimv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
+    <!-- BEGIN Blacklight IIIF Search autocomplete config -->
+   <field name="iiif_suggest" type="textSuggest" indexed="true" stored="true" multiValued="true" />
+   <!-- END Blacklight IIIF Search autocomplete config -->
+
+</fields>
 
  <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
@@ -344,7 +382,7 @@
     destination field is to use the dynamic field syntax.
     copyField also supports a maxChars to copy setting.  -->
 
-   <copyField source="*_timv" dest="all_text_timv" maxChars="3000"/>
+   <copyField source="*_tsimv" dest="all_text_tsimv" maxChars="3000"/>
    <!-- for suggestions -->
    <copyField source="*_tesim" dest="suggest"/>
    <copyField source="*_ssim" dest="suggest"/>
@@ -362,5 +400,9 @@
    <str name="paramkey">param value</str>
  </similarity>
  -->
+
+  <!-- BEGIN Blacklight IIIF Search autocomplete config -->
+  <copyField source="all_text_tsimv" dest="iiif_suggest"/>
+  <!-- END Blacklight IIIF Search autocomplete config -->
 
 </schema>

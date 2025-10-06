@@ -43,6 +43,7 @@ gem "activerecord-nulldb-adapter", "~> 1.1"
 gem "rtesseract"
 gem "iiif_print", path: "vendor/iiif_print"
 gem "derivative-rodeo"
+gem "blacklight_iiif_search"
 # gem "bulkrax"
 
 group :development do
