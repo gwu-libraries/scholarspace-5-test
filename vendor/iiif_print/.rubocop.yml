@@ -1,0 +1,178 @@
+inherit_gem:
+ bixby: bixby_default.yml
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+AllCops:
+  TargetRubyVersion: 2.7
+  DisplayCopNames: true
+  Exclude:
+    - 'db/**/*'
+    - 'script/**/*'
+    - 'spec/test_app_templates/**/*'
+    - 'vendor/**/*'
+    # Resole the issues below
+    - 'app/helpers/iiif_print/breadcrumb_helper.rb'
+    - 'app/helpers/iiif_print/iiif_print_helper_behavior.rb'
+    - 'app/helpers/iiif_print/iiif_print_helper_behavior.rb'
+    - 'app/models/newspaper_article.rb'
+    - 'app/validators/iiif_print/publication_date_start_end_validator.rb'
+    - 'app/validators/iiif_print/publication_date_validator.rb'
+    - 'lib/iiif_print/data/work_derivatives.rb'
+    - 'lib/iiif_print/data/work_files.rb'
+    - 'lib/iiif_print/ingest.rb'
+    - 'lib/iiif_print/ingest/ndnp/batch_ingester.rb'
+    - 'app/indexers/newspaper_issue_indexer.rb'
+    - 'lib/iiif_print/ingest/pdf_pages.rb'
+    - 'lib/iiif_print/text_extraction/hocr_reader.rb'
+    - 'lib/tasks/iiif_print_tasks.rake'
+    - 'spec/lib/iiif_print/data/work_derivatives_spec.rb'
+    - 'spec/lib/iiif_print/data/work_files_spec.rb'
+    - 'spec/lib/iiif_print/ingest/ndnp/container_ingester_spec.rb'
+    - 'tasks/newspaperworks_dev.rake'
+
+Layout/HashAlignment:
+  Enabled: false
+
+Layout/LineLength:
+  Exclude:
+    - 'spec/lib/iiif_print/data/work_derivatives_spec.rb'
+    - 'spec/lib/iiif_print/ingest/ndnp/issue_ingester_spec.rb'
+    - 'lib/generators/iiif_print/catalog_controller_generator.rb'
+
+Lint/ImplicitStringConcatenation:
+  Exclude:
+    - 'lib/generators/iiif_print/**/*'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'spec/model_shared.rb'
+
+Metrics/BlockLength:
+  ExcludedMethods: ['included']
+  Exclude:
+    - 'iiif_print.gemspec'
+    - 'lib/tasks/*.rake'
+    - 'spec/**/*.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'spec/model_shared.rb'
+
+Metrics/ClassLength:
+  Exclude:
+    - 'lib/iiif_print/data/work_derivatives.rb'
+    - 'lib/iiif_print/ingest/ndnp/page_ingester.rb'
+    - 'lib/iiif_print/ingest/lc_publication_info.rb'
+
+Metrics/MethodLength:
+  Exclude:
+    - 'app/helpers/iiif_print/breadcrumb_helper.rb'
+    - 'lib/generators/iiif_print/catalog_controller_generator.rb'
+    - 'lib/iiif_print/ingest/ndnp/ndnp_mets_helper.rb'
+    - 'lib/iiif_print/ingest/pdf_issue_ingester.rb'
+    - 'app/jobs/iiif_print/jobs/create_relationships_job.rb'
+    - 'spec/model_shared.rb'
+
+Naming/PredicateName:
+  Exclude:
+    - ''
+
+# The guidance is to use find, but that may not be what we're after.  This is a
+# quick adjustment to appease rubocop.
+Performance/Detect:
+  Enabled: false
+
+Performance/StringReplacement:
+  Exclude:
+    - 'app/indexers/concerns/iiif_print/indexes_full_text.rb'
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/CollectionMethods:
+  PreferredMethods:
+    collect: 'map'
+    collect!: 'map!'
+    inject: 'reduce'
+    detect: 'find'
+    find_all: 'select'
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Enabled: false
+
+Rails/ApplicationJob:
+  Enabled: false
+
+Rails/ApplicationRecord:
+  Enabled: false
+
+# We define custom methods like `find_by_user_key`,
+# `find_by_created_date`, etc
+Rails/DynamicFindBy:
+  Enabled: false
+
+Rails/FilePath:
+  Exclude:
+    - 'spec/abilities/**/*'
+
+Rails/OutputSafety:
+  Exclude:
+    - 'lib/generators/iiif_print/templates/config/initializers/patch_blacklight_advanced_search.rb'
+    - 'spec/helpers/iiif_print_helper_spec.rb'
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/abilities/**/*'
+    - 'spec/conversions/**/*'
+    - 'spec/features/**/*'
+    - 'spec/inputs/**/*'
+    - 'spec/views/**/*'
+    - 'spec/lib/tasks/**/*'
+
+# # By default RSpec/MessageSpies has the following:
+# #   Prefer have_received for setting message expectations. Setup form as a spy using allow or instance_spy.
+# # The default assumes EnforcedStyle is 'have_received'. Most of our specs are 'receive'
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/InstanceVariable:
+  Exclude:
+    - 'spec/**/*'
+
+RSpec/ExpectActual:
+  Enabled: false
+
+RSpec/LetSetup:
+  Enabled: false
+
+RSpec/MessageExpectation:
+  Enabled: false
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Enabled: false
+
+RSpec/LeadingSubject:
+  Enabled: false
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Max: 19
+
+Rails/RakeEnvironment:
+  Enabled: false
+
+Style/IdenticalConditionalBranches:
+  Enabled: false
