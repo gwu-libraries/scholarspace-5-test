@@ -13,8 +13,8 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: sh -c "bundle install && ./bin/rails server -p 3000 -b 0.0.0.0" 
-    #command: "./bin/rails server -p 3000 -b 0.0.0.0" 
+    #command: sh -c "bundle install && ./bin/rails server -p 3000 -b 0.0.0.0" 
+    command: "./bin/rails server -p 3000 -b 0.0.0.0" 
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -47,8 +47,8 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: sh -c 'bundle install && bundle exec sidekiq'
-    #command: sh -c 'bundle exec sidekiq'
+    #command: sh -c 'bundle install && bundle exec sidekiq'
+    command: sh -c 'bundle exec sidekiq'
     user: root
     restart: unless-stopped
     env_file:
