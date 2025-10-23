@@ -1,3 +1,17 @@
+FROM golang:1.24 AS build
+
+WORKDIR /src
+
+RUN git clone https://github.com/gwu-libraries/fedora_queue_test.git
+
+RUN cd fedora_queue_test && go mod tidy && go build -o /bin/test-fedora-queue ./main.go
+
 FROM fcrepo/fcrepo:6.5.1-tomcat9
 
 COPY ./fedora/config/activemq.xml /usr/local/tomcat/conf/activemq.xml
+
+RUN mkdir /usr/local/test
+
+COPY --from=build /bin/test-fedora-queue /usr/local/test/
+
+COPY --from=build /src/fedora_queue_test/test-data  /usr/local/test/
