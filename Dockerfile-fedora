@@ -16,4 +16,4 @@ RUN mkdir /usr/local/test
 
 COPY --from=setup /bin/test-fedora-queue /usr/local/test/
 
-COPY --from=setup /src/fedora_queue_test/test-data  /usr/local/test/
+COPY --from=setup /src/fedora_queue_test/test-data/  /usr/local/test/test-data/
