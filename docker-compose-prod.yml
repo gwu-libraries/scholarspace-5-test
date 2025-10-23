@@ -1,200 +1,201 @@
 # Requires Docker Compose v2
 name: scholarspace-prod
 services:
-  rails:
-    container_name: rails
-    hostname: rails
-    build:
-      dockerfile: Dockerfile-prod
-      context: .
-      target: scholarspace-prod
-      args:
-        - EXTRA_APK_PACKAGES=git less
-        - BUNDLE_GEMFILE=Gemfile
-        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
-        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: "./bin/rails server -p 3000 -b 0.0.0.0"
-    stdin_open: true
-    tty: true
-    user: root
-    env_file:
-      - .env
-    environment:
-      - RAILS_ROOT=/app/scholarspace
-    ports:
-      - "3000:3000"
-    volumes:
-      - prod-storage:/app/scholarspace/storage
-      - prod-derivatives:/app/scholarspace/derivatives
-      - prod-uploads:/app/scholarspace/uploads
-      - prod-public:/app/scholarspace/public
-      - prod-tmp:/app/scholarspace/tmp
-    restart: unless-stopped
-    networks:
-      - scholarspace
+    rails:
+        container_name: rails
+        hostname: rails
+        build:
+            dockerfile: Dockerfile-prod
+            context: .
+            target: scholarspace-prod
+            args:
+                - EXTRA_APK_PACKAGES=git less
+                - BUNDLE_GEMFILE=Gemfile
+                - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+                - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+        command: "./bin/rails server -p 3000 -b 0.0.0.0"
+        stdin_open: true
+        tty: true
+        user: root
+        env_file:
+            - .env
+        environment:
+            - RAILS_ROOT=/app/scholarspace
+        ports:
+            - "3000:3000"
+        volumes:
+            - prod-storage:/app/scholarspace/storage
+            - prod-derivatives:/app/scholarspace/derivatives
+            - prod-uploads:/app/scholarspace/uploads
+            - prod-public:/app/scholarspace/public
+            - prod-tmp:/app/scholarspace/tmp
+        restart: unless-stopped
+        networks:
+            - scholarspace
 
-  worker:
-    container_name: worker
-    hostname: worker
-    build:
-      dockerfile: Dockerfile-prod
-      context: .
-      target: scholarspace-prod-worker
-      args:
-        - EXTRA_APK_PACKAGES=git less
-        - BUNDLE_GEMFILE=Gemfile
-        - VALKYRIE_METADATA_ADAPTER=fedora_metadata
-        - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: sh -c 'bundle exec sidekiq RAILS_ENV=production'
-    user: root
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      - fits
-      - memcached
-      - postgres
-      - redis
-      - solr
-      - fedora
-    volumes:
-      - prod-storage:/app/scholarspace/storage
-      - prod-derivatives:/app/scholarspace/derivatives
-      - prod-uploads:/app/scholarspace/uploads
-      - prod-public:/app/scholarspace/public
-      - prod-tmp:/app/scholarspace/tmp
-    networks:
-      - scholarspace
-  nginx:
-    container_name: nginx
-    hostname: nginx
-    image: "nginx:latest"
-    ports:
-      - 443:443
-      - 80:80
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/ssl
-    restart: unless-stopped
-    depends_on:
-      - rails
-    networks:
-      - scholarspace
+    worker:
+        container_name: worker
+        hostname: worker
+        build:
+            dockerfile: Dockerfile-prod
+            context: .
+            target: scholarspace-prod-worker
+            args:
+                - EXTRA_APK_PACKAGES=git less
+                - BUNDLE_GEMFILE=Gemfile
+                - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+                - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+        command: sh -c 'bundle exec sidekiq RAILS_ENV=production'
+        user: root
+        restart: unless-stopped
+        env_file:
+            - .env
+        depends_on:
+            - fits
+            - memcached
+            - postgres
+            - redis
+            - solr
+            - fedora
+        volumes:
+            - prod-storage:/app/scholarspace/storage
+            - prod-derivatives:/app/scholarspace/derivatives
+            - prod-uploads:/app/scholarspace/uploads
+            - prod-public:/app/scholarspace/public
+            - prod-tmp:/app/scholarspace/tmp
+        networks:
+            - scholarspace
+    nginx:
+        container_name: nginx
+        hostname: nginx
+        image: "nginx:latest"
+        ports:
+            - 443:443
+            - 80:80
+        volumes:
+            - ./nginx/conf.d:/etc/nginx/conf.d
+            - ./nginx/certs:/etc/ssl
+        restart: unless-stopped
+        depends_on:
+            - rails
+        networks:
+            - scholarspace
 
-  fedora:
-    container_name: fedora
-    hostname: fedora
-    #image: fcrepo/fcrepo:6.5.1-tomcat9
-    build:
-      dockerfile: Dockerfile-fedora
-      context: .
-    restart: unless-stopped
-    environment:
-      - >-
-        CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
-        -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
-        -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
-        -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
-        -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-        -Dfcrepo.metrics.enable=true -Dfcrepo.aws.access-key=${AWS_ACCESS_KEY} -Dfcrepo.aws.secret-key=${AWS_SECRET_KEY} -Dfcrepo.storage=ocfl-s3 -Dfcrepo.aws.region=us-east-1 -Dfcrepo.ocfl.s3.bucket=${S3_BUCKET_NAME} -Dfcrepo.ocfl.s3.prefix=${S3_PREFIX}
-        -Dfcrepo.jms.enabled=true -Dfcrepo.ocfl.show_path=true
-        -Dfcrepo.jms.destination.type="queue"
-        -Dfcrepo.activemq.configuration=file:///usr/local/tomcat/conf/activemq.xml
-      - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-    volumes:
-      - fedora:/fcrepo-home
-    ports:
-      - 8080:8080
-    networks:
-      - scholarspace
-  postgres:
-    image: postgres:15-alpine
-    container_name: postgres
-    hostname: postgres
-    env_file:
-      - .env
-    volumes:
-      - prod-db:/var/lib/postgresql/data
-    networks:
-      - scholarspace
-    ports:
-      - "5432:5432"
+    fedora:
+        container_name: fedora
+        hostname: fedora
+        #image: fcrepo/fcrepo:6.5.1-tomcat9
+        build:
+            dockerfile: Dockerfile-fedora
+            context: .
+            target: base
+        restart: unless-stopped
+        environment:
+            - >-
+                CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
+                -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
+                -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
+                -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
+                -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+                -Dfcrepo.metrics.enable=true -Dfcrepo.aws.access-key=${AWS_ACCESS_KEY} -Dfcrepo.aws.secret-key=${AWS_SECRET_KEY} -Dfcrepo.storage=ocfl-s3 -Dfcrepo.aws.region=us-east-1 -Dfcrepo.ocfl.s3.bucket=${S3_BUCKET_NAME} -Dfcrepo.ocfl.s3.prefix=${S3_PREFIX}
+                -Dfcrepo.jms.enabled=true -Dfcrepo.ocfl.show_path=true
+                -Dfcrepo.jms.destination.type="queue"
+                -Dfcrepo.activemq.configuration=file:///usr/local/tomcat/conf/activemq.xml
+            - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+        volumes:
+            - fedora:/fcrepo-home
+        ports:
+            - 8080:8080
+        networks:
+            - scholarspace
+    postgres:
+        image: postgres:15-alpine
+        container_name: postgres
+        hostname: postgres
+        env_file:
+            - .env
+        volumes:
+            - prod-db:/var/lib/postgresql/data
+        networks:
+            - scholarspace
+        ports:
+            - "5432:5432"
 
-  fits:
-    container_name: fits
-    hostname: fits
-    image: ghcr.io/samvera/fitsservlet:1.6.0
-    restart: unless-stopped
-    ports:
-      - 8080
-    networks:
-      - scholarspace
+    fits:
+        container_name: fits
+        hostname: fits
+        image: ghcr.io/samvera/fitsservlet:1.6.0
+        restart: unless-stopped
+        ports:
+            - 8080
+        networks:
+            - scholarspace
 
-  memcached:
-    image: bitnami/memcached
-    restart: unless-stopped
-    networks:
-      - scholarspace
+    memcached:
+        image: bitnami/memcached
+        restart: unless-stopped
+        networks:
+            - scholarspace
 
-  redis:
-    container_name: redis
-    restart: unless-stopped
-    hostname: redis
-    image: bitnami/redis:6.2
-    env_file:
-      - .env
-    volumes:
-      - redis:/bitnami/redis/data
-    networks:
-      - scholarspace
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+    redis:
+        container_name: redis
+        restart: unless-stopped
+        hostname: redis
+        image: bitnami/redis:6.2
+        env_file:
+            - .env
+        volumes:
+            - redis:/bitnami/redis/data
+        networks:
+            - scholarspace
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
 
-  solr:
-    container_name: solr
-    hostname: solr
-    image: solr:8.11
-    restart: unless-stopped
-    command:
-      - sh
-      - "-c"
-      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
-    volumes:
-      - solr_home:/var/solr/data:cached
-      - ./solr/conf:/opt/solr/server/configsets/hyraxconf
-      - ./solr/plugins:/opt/solr/lib
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 524288
-    ports:
-      - 8983
-    networks:
-      - scholarspace
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
-        ]
-      interval: 30s
-      timeout: 5s
-      retries: 20
+    solr:
+        container_name: solr
+        hostname: solr
+        image: solr:8.11
+        restart: unless-stopped
+        command:
+            - sh
+            - "-c"
+            - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
+        volumes:
+            - solr_home:/var/solr/data:cached
+            - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+            - ./solr/plugins:/opt/solr/lib
+        ulimits:
+            nofile:
+                soft: 65536
+                hard: 524288
+        ports:
+            - 8983
+        networks:
+            - scholarspace
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 20
 
 volumes:
-  prod-db:
-  prod-storage:
-  prod-derivatives:
-  prod-uploads:
-  prod-public:
-  prod-tmp:
-  redis:
-  fedora:
-  sidekiq-public:
-  sidekiq-tmp:
-  solr_home:
+    prod-db:
+    prod-storage:
+    prod-derivatives:
+    prod-uploads:
+    prod-public:
+    prod-tmp:
+    redis:
+    fedora:
+    sidekiq-public:
+    sidekiq-tmp:
+    solr_home:
 networks:
-  scholarspace:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-scholarspace
+    scholarspace:
+        driver: bridge
+        driver_opts:
+            com.docker.network.bridge.name: br-scholarspace
