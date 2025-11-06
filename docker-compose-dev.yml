@@ -137,7 +137,7 @@ services:
   redis:
     container_name: redis
     hostname: redis
-    image: bitnami/redis:6.2
+    image: bitnami/redis:latest
     env_file:
       - .env
     volumes:
