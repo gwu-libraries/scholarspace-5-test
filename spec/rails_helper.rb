@@ -16,6 +16,8 @@ Valkyrie::MetadataAdapter.register(
 )
 Valkyrie::StorageAdapter.register(Valkyrie::Storage::Memory.new, :memory)
 
+# Valkyrie.config.storage_adapter = :memory
+
 query_registration_target =
   Valkyrie::MetadataAdapter.find(:test_adapter).query_service.custom_queries
 custom_queries = [
