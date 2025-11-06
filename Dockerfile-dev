@@ -3,12 +3,10 @@ ARG RUBY_VERSION=3.3.6
 
 FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-dev-base
 
-ARG DATABASE_APK_PACKAGE="postgresql-dev"
-ARG EXTRA_APK_PACKAGES="git tesseract-ocr"
 ARG RUBYGEMS_VERSION=""
 
-RUN addgroup -S --gid 101 app && \
-    adduser -S -G app -u 1001 -s /bin/sh -h /app app
+RUN addgroup -S --gid 8983 app && \
+    adduser -S -G app -u 8983 -s /bin/sh -h /app app
 
 RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
@@ -29,32 +27,38 @@ RUN apk --no-cache upgrade && \
   nodejs \
   yarn \
   zip \
-  $DATABASE_APK_PACKAGE \
-  $EXTRA_APK_PACKAGES
+  tesseract-ocr \
+  tesseract-ocr-data-eng \
+  postgresql-dev \
+  git \
+  poppler-utils \
+  libxml2 \
+  libxml2-dev
 
 RUN setfacl -d -m o::rwx /usr/local/bundle && \
   gem update --silent --system $RUBYGEMS_VERSION
 
-USER app
+USER 8983:8983
 
 RUN mkdir -p /app/scholarspace
 WORKDIR /app/scholarspace
-# COPY --chown=1001:101 ./bin/*.sh /scholarspace/bin
 
 ENV PATH="/app/scholarspace:$PATH" \
 RAILS_ROOT="/app/scholarspace" \
 RAILS_SERVE_STATIC_FILES="1" \
-LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" 
 
-RUN yarn install
+COPY --chown=8983:8983 Gemfile Gemfile.lock ./
 
-COPY Gemfile ./
+RUN bundle config set deployment true 
 
-RUN bundle install --gemfile Gemfile
+RUN bundle install
 
-COPY --chown=1001:101 . ./
+COPY --chown=8983:8983 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
+
+RUN yarn install
 
 FROM scholarspace-dev-base AS scholarspace-dev
 
@@ -71,6 +75,6 @@ RUN apk --no-cache add bash \
   openjdk17-jre \
   perl \
   tesseract-ocr
-USER app
+USER 8983:8983
 
 CMD ["bundle", "exec", "sidekiq", "RAILS_ENV=development"]
