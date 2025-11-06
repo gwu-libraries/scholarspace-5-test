@@ -1,10 +1,13 @@
 require "sidekiq/web"
 
 Rails.application.routes.draw do
+  concern :iiif_search, BlacklightIiifSearch::Routes.new
   if Hyrax.config.iiif_image_server?
+    mount IiifPrint::Engine, at: "/"
     mount Riiif::Engine => "images", :as => :riiif
   end
-  mount BrowseEverything::Engine => "/browse"
+
+  get "/uv/config/:id", to: "application#uv_config", as: "uv_config", defaults: { format: :json }
 
   mount Blacklight::Engine => "/"
 
@@ -18,6 +21,7 @@ Rails.application.routes.draw do
     concerns :searchable
   end
   devise_for :users
+  mount Hydra::RoleManagement::Engine => "/"
   mount Sidekiq::Web => "/sidekiq"
   mount Qa::Engine => "/authorities"
   mount Hyrax::Engine, at: "/"
@@ -31,6 +35,7 @@ Rails.application.routes.draw do
             path: "/catalog",
             controller: "catalog" do
     concerns :exportable
+    concerns :iiif_search
   end
 
   resources :bookmarks do
