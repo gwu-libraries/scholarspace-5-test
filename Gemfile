@@ -5,8 +5,8 @@ source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem "bootsnap", ">= 1.1.0", require: false
-gem "bootstrap", "~> 4.0"
-gem "coffee-rails", "~> 4.2"
+gem "bootstrap", "~> 5.3"
+gem "coffee-rails", "~> 5.0"
 gem "dalli"
 gem "devise"
 gem "devise-guests", "~> 0.8"
@@ -33,9 +33,9 @@ gem "rails", "~> 7.2", "< 8.0"
 gem "riiif", "~> 2.1"
 gem "rsolr", ">= 1.0", "< 3"
 gem "sass-rails", "~> 6.0"
-gem "sidekiq", "~> 6.4"
+gem "sidekiq", "~> 7.3"
 gem "turbolinks", "~> 5"
-gem "twitter-typeahead-rails", "0.11.1.pre.corejavascript"
+gem "twitter-typeahead-rails", "0.11.1"
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
 gem "uglifier", ">= 1.3.0"
 gem "activerecord-nulldb-adapter", "~> 1.1"
