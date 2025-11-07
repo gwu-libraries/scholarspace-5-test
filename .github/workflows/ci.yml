@@ -34,7 +34,11 @@ jobs:
       - name: Start Docker containers
         run: |
           docker compose up --wait
-
+      # Sleep for 30 seconds, sometimes still get a 'wait for containers to start' message 
+      - name: Sleep for 30 seconds
+        run: |
+          sleep 30s
+        shell: bash
       - name: Create dev/test databases
         run: |
           docker exec rails /bin/sh -lc "bundle exec rails db:create"
