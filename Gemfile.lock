@@ -105,8 +105,6 @@ GEM
       public_suffix (>= 2.0.2, < 7.0)
     almond-rails (0.3.0)
       rails (>= 4.2)
-    autoprefixer-rails (10.4.21.0)
-      execjs (~> 2)
     awesome_nested_set (3.8.0)
       activerecord (>= 4.0.0, < 8.1)
     awesome_print (1.9.2)
@@ -165,9 +163,8 @@ GEM
       rails (>= 6.1, < 9)
     bootsnap (1.18.6)
       msgpack (~> 1.2)
-    bootstrap (4.6.2.1)
-      autoprefixer-rails (>= 9.1.0)
-      popper_js (>= 1.16.1, < 2)
+    bootstrap (5.3.5)
+      popper_js (>= 2.11.8, < 3)
     breadcrumbs_on_rails (3.0.1)
     browse-everything (1.6.0)
       addressable (~> 2.5)
@@ -737,7 +734,7 @@ GEM
     pg (1.6.2-x86_64-darwin)
     pg (1.6.2-x86_64-linux)
     pg (1.6.2-x86_64-linux-musl)
-    popper_js (1.16.1)
+    popper_js (2.11.8)
     pp (0.6.3)
       prettyprint
     prettier_print (1.2.1)
@@ -1105,7 +1102,7 @@ DEPENDENCIES
   better_errors
   binding_of_caller
   bootsnap (>= 1.1.0)
-  bootstrap (~> 4.0)
+  bootstrap (~> 5.3)
   capybara
   coffee-rails (~> 4.2)
   dalli

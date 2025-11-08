@@ -5,7 +5,7 @@ source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem "bootsnap", ">= 1.1.0", require: false
-gem "bootstrap", "~> 4.0"
+gem "bootstrap", "~> 5.3"
 gem "coffee-rails", "~> 4.2"
 gem "dalli"
 gem "devise"
