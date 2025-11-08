@@ -39,6 +39,10 @@ jobs:
         run: |
           sleep 30s
         shell: bash
+      # troubleshooting
+      - name: docker ps
+        run: |
+          docker ps
       - name: Create dev/test databases
         run: |
           docker exec rails /bin/sh -lc "bundle exec rails db:create"
