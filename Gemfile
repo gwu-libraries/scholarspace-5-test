@@ -35,7 +35,7 @@ gem "rsolr", ">= 1.0", "< 3"
 gem "sass-rails", "~> 6.0"
 gem "sidekiq", "~> 6.4"
 gem "turbolinks", "~> 5"
-gem "twitter-typeahead-rails", "0.11.1.pre.corejavascript"
+gem "twitter-typeahead-rails", "0.11.1"
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
 gem "uglifier", ">= 1.3.0"
 gem "activerecord-nulldb-adapter", "~> 1.1"
