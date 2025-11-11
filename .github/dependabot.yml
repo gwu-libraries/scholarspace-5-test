@@ -3,20 +3,22 @@
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
+
+multi-ecosystem-groups:
+  infrastructure:
+    schedule:
+      interval: "weekly"
       
 updates:
   - package-ecosystem: "bundler"
     directory: "/"
     patterns: ["*"]
-    schedule:
-      interval: "daily"
+    multi-ecosystem-group: "infrastructure"
   - package-ecosystem: "docker"
     directory: "/"
     patterns: ["*"]
-    schedule:
-      interval: "daily"
+    multi-ecosystem-group: "infrastructure"
   - package-ecosystem: "terraform"
     directory: "/"
     patterns: ["*"]
-    schedule:
-      interval: "daily"
+    multi-ecosystem-group: "infrastructure"
