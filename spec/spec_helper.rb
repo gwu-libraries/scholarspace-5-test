@@ -1,6 +1,44 @@
 require "factory_bot_rails"
 
+class TestHydraGroupService
+  ##
+  # @param group_map [Hash{String, Array<String>}] map user keys to group names
+  def initialize(group_map: {})
+    @group_map = group_map
+  end
+
+  ##
+  # @param user [::User]
+  # @param groups [Array<String>, String]
+  #
+  # @return [void]
+  def add(user:, groups:)
+    @group_map[user.user_key] = fetch_groups(user: user) + Array(groups)
+  end
+
+  ##
+  # @return [void]
+  def clear
+    @group_map = {}
+  end
+
+  ##
+  # @param user [::User]
+  #
+  # @return [Array<String>]
+  def fetch_groups(user:)
+    @group_map.fetch(user.user_key) { [] }
+  end
+
+  ##
+  # @return [Array<String>] a list of all known group names
+  def role_names
+    @group_map.values.flatten.uniq
+  end
+end
+
 RSpec.configure do |config|
+  config.before(:suite) { User.group_service = TestHydraGroupService.new }
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
   end

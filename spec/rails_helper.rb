@@ -13,6 +13,7 @@ require "rspec/rails"
 # Add additional requires below this line. Rails is not loaded until this point!
 require "hyrax"
 require "valkyrie"
+require 'capybara/rails'
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Memory::MetadataAdapter.new,
   :test_adapter
@@ -47,6 +48,7 @@ rescue ActiveRecord::PendingMigrationError => e
   exit 1
 end
 RSpec.configure do |config|
+  config.include Capybara::DSL
   # config.fixture_path = "#{::Rails.root}/spec/fixtures"
   config.use_transactional_fixtures = true
   # config.use_active_record = false
