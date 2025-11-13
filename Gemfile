@@ -24,7 +24,8 @@ gem "devise-guests", "~> 0.8"
 # end
 
 # gemspec name: 'hyrax', path: ENV.fetch('HYRAX_ENGINE_PATH', '..')
-gem "hyrax"
+gem "hyrax", git: "https://github.com/samvera/hyrax", branch: "main"
+gem "hydra-role-management"
 gem "jbuilder", "~> 2.5"
 gem "jquery-rails"
 gem "pg", "~> 1.3"
@@ -32,14 +33,17 @@ gem "puma"
 gem "rails", "~> 7.2", "< 8.0"
 gem "riiif", "~> 2.1"
 gem "rsolr", ">= 1.0", "< 3"
-gem "sass-rails", "~> 6.0"
 gem "sidekiq", "~> 6.4"
 gem "turbolinks", "~> 5"
 gem "twitter-typeahead-rails", "0.11.1.pre.corejavascript"
-gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
+gem "tzinfo-data", platforms: %i[windows jruby]
 gem "uglifier", ">= 1.3.0"
 gem "activerecord-nulldb-adapter", "~> 1.1"
 gem "rtesseract"
+gem "iiif_print", git: "https://github.com/alepbloyd/iiif_print/"
+gem "derivative-rodeo"
+gem "blacklight_iiif_search"
+# gem "bulkrax"
 
 group :development do
   gem "better_errors" # add command line in browser when errors
