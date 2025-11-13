@@ -33,8 +33,10 @@
   <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lib" />
   <lib dir="${solr.install.dir:../../../..}/contrib/analysis-extras/lucene-libs" />
   <lib dir="${solr.install.dir:../../../..}/contrib/extraction/lib" regex=".*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/contrib/plugins" regex=".*\.jar" />
+  <!-- <lib dir="${solr.install.dir:../../../..}/lib" regex=".*\.jar" /> -->
   <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-cell-\d.*\.jar" />
-  <!-- <lib dir="${solr.install.dir:../../../..}/lib/" regex=".*\.jar" /> -->
+  <!-- <lib dir="${solr.install.dir:../../../..}/contrib" regex="tokenizing-suggest-v1.0.1.jar" /> -->
 
   <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}">
@@ -73,10 +75,6 @@
     </autoSoftCommit>
   </updateHandler>
 
-  <!--  solr OCR highlighting -->
-  <!-- <searchComponent
-      class="solrocr.OcrHighlightComponent"
-      name="ocrHighlight" /> -->
 
   <!-- SearchHandler
 
@@ -91,11 +89,6 @@
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
       -->
-     <!-- <lst name="components">
-       <str>query</str>
-       <str>ocrHighlight</str>
-       <str>highlight</str>
-     </lst> -->
      <lst name="defaults">
        <str name="defType">edismax</str>
        <str name="echoParams">explicit</str>
@@ -118,7 +111,7 @@
           subject_tesim
         </str>
         <str name="pf">
-          all_text_timv^10
+          all_text_tsimv^10
         </str>
 
        <str name="author_qf">
@@ -142,6 +135,8 @@
          score
        </str>
 
+       <str name="hl">true</str>
+       <str name="hl.ocr.fl">ocr_text</str>
        <str name="facet">true</str>
        <str name="facet.mincount">1</str>
 
@@ -154,6 +149,7 @@
 
      </lst>
     <arr name="last-components">
+      <str>ocrHighlight</str>
       <str>spellcheck</str>
     </arr>
   </requestHandler>
@@ -332,5 +328,37 @@
     <!--   <str>yyyy&#45;MM&#45;dd</str> -->
     <!-- </lst> -->
   </requestHandler>
+
+  <searchComponent class="solrocr.OcrHighlightComponent"
+                   name="ocrHighlight" />
+
+  <!-- BEGIN Blacklight IIIF Search autocomplete config -->
+  <!-- solr-tokenizing_suggester is necessary to return single terms from the suggester -->
+
+  <!-- <searchComponent name="iiif_suggest" class="solr.SuggestComponent">
+    <lst name="suggester">
+      <str name="name">iiifSuggester</str>
+      <str name="lookupImpl">edu.stanford.dlss.search.suggest.analyzing.TokenizingLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="suggestAnalyzerFieldType">textSuggest</str>
+      <str name="suggestTokenizingAnalyzerFieldType">textSuggestTokenizer</str>
+      <str name="contextField">is_page_of_ssi</str>
+      <str name="buildOnCommit">true</str>
+      <str name="field">iiif_suggest</str>
+    </lst>
+  </searchComponent>
+
+  <requestHandler name="/iiif_suggest" class="solr.SearchHandler" startup="lazy">
+    <lst name="defaults">
+      <str name="suggest">true</str>
+      <str name="suggest.count">5</str>
+      <str name="suggest.dictionary">iiifSuggester</str>
+    </lst>
+    <arr name="components">
+      <str>iiif_suggest</str>
+    </arr>
+  </requestHandler> -->
+  <!-- END Blacklight IIIF Search autocomplete config -->
+
 </config>
 
