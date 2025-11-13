@@ -1,26 +1,16 @@
-<div>
-  <%= render 'work_title', presenter: @presenter %>
+<h1>
+  Title: <%= @presenter.title.first %>
+</h1>
+
+<div id="work-type">
+  Work type: <%= @presenter.model.human_readable_type %>
 </div>
 
-<div>
-  <%= render 'shared/citations' %>
-</div>
-
-<div>
-  <%= render 'work_type', presenter: @presenter %>
-</div>
-
-<div>
-  <%= render 'show_actions', presenter: @presenter %>
-</div>
-
-<div>
-  <%= render 'workflow_actions_widget', presenter: @presenter %>
-</div>
-
-<div>
-  <%= render 'work_description', presenter: @presenter %>
-</div>
+<% @presenter.description.each_with_index do |description, index| %>
+  <div id=<%="description-#{index}"%>>
+    Description: <%= iconify_auto_link(description) %>
+  </div>
+<% end %>
 
 <div>
   <%= render 'items', presenter: @presenter %>
