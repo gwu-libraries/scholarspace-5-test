@@ -1,3 +1,76 @@
+GIT
+  remote: https://github.com/alepbloyd/iiif_print
+  revision: 3cf55b768f54f140c0c36c048576a3c0c24db46e
+  specs:
+    iiif_print (3.0.8)
+      blacklight_iiif_search (>= 1.0, < 3.0)
+      derivative-rodeo (~> 0.5)
+      hyrax (>= 2.5, < 6)
+      nokogiri (>= 1.13.2)
+      rdf-vocab (~> 3.0)
+
+GIT
+  remote: https://github.com/samvera/hyrax
+  revision: 249288411db216a8c532fe3cdb5cd97360deb239
+  branch: main
+  specs:
+    hyrax (5.2.0)
+      active-fedora (~> 15.0)
+      almond-rails (~> 0.1)
+      awesome_nested_set (~> 3.1)
+      blacklight (~> 7.29)
+      blacklight-gallery (~> 4.6.4)
+      breadcrumbs_on_rails (~> 3.0)
+      browse-everything (>= 0.16, < 2.0)
+      carrierwave (~> 1.0)
+      clipboard-rails (~> 1.5)
+      concurrent-ruby (= 1.3.4)
+      connection_pool (~> 2.4)
+      draper (~> 4.0)
+      dry-container (~> 0.11)
+      dry-events (~> 1.0, >= 1.0.1)
+      dry-logic (~> 1.5)
+      dry-monads (~> 1.6)
+      dry-validation (~> 1.10)
+      flipflop (~> 2.3)
+      flot-rails (~> 0.0.6)
+      font-awesome-rails (~> 4.2)
+      google-analytics-data (~> 0.6)
+      hydra-derivatives (~> 4.0)
+      hydra-editor (~> 7.0)
+      hydra-file_characterization (~> 1.1)
+      hydra-head (~> 13.0)
+      hydra-works (>= 0.16)
+      iiif_manifest (>= 0.3, < 2.0)
+      json-schema
+      legato (~> 0.3)
+      linkeddata
+      listen (~> 3.9)
+      mailboxer (~> 0.12)
+      nest (~> 3.1)
+      noid-rails (~> 3.0)
+      oauth
+      oauth2 (~> 1.2)
+      openseadragon (~> 0.9)
+      qa (~> 5.5, >= 5.5.1)
+      rails (> 6.1, < 8.0)
+      rails_autolink (~> 1.1)
+      rdf-rdfxml
+      rdf-vocab (~> 3.0)
+      redis (~> 4.0)
+      redis-namespace (~> 1.5)
+      redlock (>= 0.1.2, < 2.0)
+      reform (~> 2.3)
+      reform-rails (~> 0.2.0)
+      retriable (>= 2.9, < 4.0)
+      sass-rails (~> 6.0)
+      select2-rails (~> 3.5)
+      signet
+      sprockets (= 3.7.2)
+      tinymce-rails (~> 5.10)
+      valkyrie (~> 3.5)
+      view_component (~> 2.74.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -111,7 +184,7 @@ GEM
       activerecord (>= 4.0.0, < 8.1)
     awesome_print (1.9.2)
     aws-eventstream (1.4.0)
-    aws-partitions (1.1179.0)
+    aws-partitions (1.1181.0)
     aws-sdk-core (3.236.0)
       aws-eventstream (~> 1, >= 1.3.0)
       aws-partitions (~> 1, >= 1.992.0)
@@ -123,9 +196,12 @@ GEM
     aws-sdk-kms (1.116.0)
       aws-sdk-core (~> 3, >= 3.234.0)
       aws-sigv4 (~> 1.5)
-    aws-sdk-s3 (1.202.0)
+    aws-sdk-s3 (1.203.0)
       aws-sdk-core (~> 3, >= 3.234.0)
       aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.5)
+    aws-sdk-sqs (1.106.0)
+      aws-sdk-core (~> 3, >= 3.234.0)
       aws-sigv4 (~> 1.5)
     aws-sigv4 (1.12.1)
       aws-eventstream (~> 1, >= 1.0.2)
@@ -163,11 +239,19 @@ GEM
     blacklight-gallery (4.6.4)
       blacklight (>= 7.17, < 9)
       rails (>= 6.1, < 9)
+    blacklight_iiif_search (2.1.0)
+      blacklight (~> 7.0)
+      ffi (~> 1.16.3)
+      iiif-presentation
+      rails (>= 6, < 7.3)
     bootsnap (1.18.6)
       msgpack (~> 1.2)
     bootstrap (4.6.2.1)
       autoprefixer-rails (>= 9.1.0)
       popper_js (>= 1.16.1, < 2)
+    bootstrap_form (5.5.0)
+      actionpack (>= 7.2)
+      activemodel (>= 7.2)
     breadcrumbs_on_rails (3.0.1)
     browse-everything (1.6.0)
       addressable (~> 2.5)
@@ -229,6 +313,15 @@ GEM
     declarative (0.0.20)
     deprecation (1.1.0)
       activesupport
+    derivative-rodeo (0.5.3)
+      activesupport (>= 5)
+      aws-sdk-s3
+      aws-sdk-sqs
+      httparty
+      marcel
+      mime-types
+      mini_magick
+      nokogiri
     devise (4.9.4)
       bcrypt (~> 3.0)
       orm_adapter (~> 0.1)
@@ -334,14 +427,7 @@ GEM
       net-http (>= 0.5.0)
     faraday-retry (2.3.2)
       faraday (~> 2.0)
-    ffi (1.17.2-aarch64-linux-gnu)
-    ffi (1.17.2-aarch64-linux-musl)
-    ffi (1.17.2-arm-linux-gnu)
-    ffi (1.17.2-arm-linux-musl)
-    ffi (1.17.2-arm64-darwin)
-    ffi (1.17.2-x86_64-darwin)
-    ffi (1.17.2-x86_64-linux-gnu)
-    ffi (1.17.2-x86_64-linux-musl)
+    ffi (1.16.3)
     flipflop (2.8.0)
       activesupport (>= 4.0)
       terminal-table (>= 1.8)
@@ -359,6 +445,7 @@ GEM
       googleapis-common-protos-types (~> 1.15)
       googleauth (~> 1.12)
       grpc (~> 1.66)
+    geo_coord (0.2.0)
     geocoder (1.8.6)
       base64 (>= 0.1.0)
       csv (>= 3.0.0)
@@ -453,6 +540,10 @@ GEM
     hiredis (0.6.3)
     htmlentities (4.3.4)
     http_logger (1.0.1)
+    httparty (0.23.2)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
     hydra-access-controls (13.1.0)
       active-fedora (>= 10.0.0)
       activesupport (>= 6.1, < 8.1)
@@ -492,72 +583,28 @@ GEM
       active-fedora (>= 10)
       mime-types (>= 1)
       rdf-vocab
+    hydra-role-management (1.2.0)
+      blacklight (< 8)
+      bootstrap_form
+      bundler (>= 1.5)
+      cancancan
+      json (>= 1.8)
+      psych (~> 3.0)
     hydra-works (2.2.0)
       activesupport (>= 5.2, < 8.0)
       hydra-derivatives (>= 3.6)
       hydra-file_characterization (~> 1.0)
       hydra-pcdm (>= 0.9)
-    hyrax (5.2.0)
-      active-fedora (~> 15.0)
-      almond-rails (~> 0.1)
-      awesome_nested_set (~> 3.1)
-      blacklight (~> 7.29)
-      blacklight-gallery (~> 4.6.4)
-      breadcrumbs_on_rails (~> 3.0)
-      browse-everything (>= 0.16, < 2.0)
-      carrierwave (~> 1.0)
-      clipboard-rails (~> 1.5)
-      concurrent-ruby (= 1.3.4)
-      connection_pool (~> 2.4)
-      draper (~> 4.0)
-      dry-container (~> 0.11)
-      dry-events (~> 1.0, >= 1.0.1)
-      dry-logic (~> 1.5)
-      dry-monads (~> 1.6)
-      dry-validation (~> 1.10)
-      flipflop (~> 2.3)
-      flot-rails (~> 0.0.6)
-      font-awesome-rails (~> 4.2)
-      google-analytics-data (~> 0.6)
-      hydra-derivatives (~> 4.0)
-      hydra-editor (~> 7.0)
-      hydra-file_characterization (~> 1.1)
-      hydra-head (~> 13.0)
-      hydra-works (>= 0.16)
-      iiif_manifest (>= 0.3, < 2.0)
-      json-schema
-      legato (~> 0.3)
-      linkeddata
-      listen (~> 3.9)
-      mailboxer (~> 0.12)
-      nest (~> 3.1)
-      noid-rails (~> 3.0)
-      oauth
-      oauth2 (~> 1.2)
-      openseadragon (~> 0.9)
-      qa (~> 5.5, >= 5.5.1)
-      rails (> 6.1, < 8.0)
-      rails_autolink (~> 1.1)
-      rdf-rdfxml
-      rdf-vocab (~> 3.0)
-      redis (~> 4.0)
-      redis-namespace (~> 1.5)
-      redlock (>= 0.1.2, < 2.0)
-      reform (~> 2.3)
-      reform-rails (~> 0.2.0)
-      retriable (>= 2.9, < 4.0)
-      sass-rails (~> 6.0)
-      select2-rails (~> 3.5)
-      signet
-      sprockets (= 3.7.2)
-      tinymce-rails (~> 5.10)
-      valkyrie (~> 3.5)
-      view_component (~> 2.74.1)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
     iiif-image-api (0.3.0)
       activesupport
+    iiif-presentation (1.4.2)
+      activesupport (>= 3.2.18)
+      faraday (~> 2.7)
+      geo_coord
+      json
     iiif_manifest (1.6.0)
       activesupport (>= 4)
     interception (0.5)
@@ -574,7 +621,7 @@ GEM
       rails-dom-testing (>= 1, < 3)
       railties (>= 4.2.0)
       thor (>= 0.14, < 2.0)
-    json (2.15.2)
+    json (2.16.0)
     json-canonicalization (1.0.0)
     json-ld (3.3.2)
       htmlentities (~> 4.3)
@@ -709,7 +756,8 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.10-x86_64-linux-musl)
       racc (~> 1.4)
-    oauth (1.1.2)
+    oauth (1.1.3)
+      base64 (~> 0.1)
       oauth-tty (~> 1.0, >= 1.0.6)
       snaky_hash (~> 2.0)
       version_gem (~> 1.1, >= 1.1.9)
@@ -1104,6 +1152,7 @@ DEPENDENCIES
   awesome_print
   better_errors
   binding_of_caller
+  blacklight_iiif_search
   bootsnap (>= 1.1.0)
   bootstrap (~> 4.0)
   capybara
@@ -1111,11 +1160,14 @@ DEPENDENCIES
   dalli
   database_cleaner
   debug (>= 1.0.0)
+  derivative-rodeo
   devise
   devise-guests (~> 0.8)
   factory_bot_rails
   faker
-  hyrax
+  hydra-role-management
+  hyrax!
+  iiif_print!
   jbuilder (~> 2.5)
   jquery-rails
   launchy
@@ -1133,7 +1185,6 @@ DEPENDENCIES
   rsolr (>= 1.0, < 3)
   rspec-rails
   rtesseract
-  sass-rails (~> 6.0)
   shoulda-matchers
   sidekiq (~> 6.4)
   simplecov

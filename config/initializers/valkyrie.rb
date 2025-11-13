@@ -23,10 +23,10 @@ require "faraday/multipart"
 # Valkyrie::MetadataAdapter
 #   .register(Valkyrie::Sequel::MetadataAdapter.new(connection: connection),
 #             :nurax_pg_metadata_adapter)
-Valkyrie::MetadataAdapter.register(
-  Valkyrie::Persistence::Postgres::MetadataAdapter.new,
-  :pg_metadata
-)
+# Valkyrie::MetadataAdapter.register(
+#   Valkyrie::Persistence::Postgres::MetadataAdapter.new,
+#   :pg_metadata
+# )
 
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Fedora::MetadataAdapter.new(
@@ -36,7 +36,7 @@ Valkyrie::MetadataAdapter.register(
           ENV.fetch("FEDORA_URL") { "http://localhost:8080/fcrepo/rest" }
         )
       ),
-    base_path: Rails.env,
+    base_path: Rails.env, # sets to '/development' instead of '/dev'
     schema:
       Valkyrie::Persistence::Fedora::PermissiveSchema.new(
         Hyrax::SimpleSchemaLoader.new.permissive_schema_for_valkrie_adapter
@@ -49,7 +49,7 @@ Valkyrie::MetadataAdapter.register(
 )
 
 Valkyrie.config.metadata_adapter =
-  ENV.fetch("VALKYRIE_METADATA_ADAPTER") { :pg_metadata }.to_sym
+  ENV.fetch("VALKYRIE_METADATA_ADAPTER") { :fedora_metadata }.to_sym
 
 # shrine_s3_options = {
 #   bucket: ENV.fetch("REPOSITORY_S3_BUCKET") { "scholarspace_pg#{Rails.env}" },
@@ -78,7 +78,7 @@ Valkyrie::StorageAdapter.register(
           ENV.fetch("FEDORA_URL") { "http://localhost:8080/fcrepo/rest" }
         )
       ),
-    base_path: Rails.env,
+    base_path: Rails.env, # sets to '/development' instead of '/dev'
     fedora_version: 6.5,
     fedora_pairtree_count: 4,
     fedora_pairtree_length: 2
@@ -95,6 +95,6 @@ Valkyrie::StorageAdapter.register(
 )
 
 Valkyrie.config.storage_adapter =
-  ENV.fetch("VALKYRIE_STORAGE_ADAPTER") { :versioned_disk_storage }.to_sym
+  ENV.fetch("VALKYRIE_STORAGE_ADAPTER") { :fedora_storage }.to_sym
 
 Valkyrie.config.indexing_adapter = :solr_index
