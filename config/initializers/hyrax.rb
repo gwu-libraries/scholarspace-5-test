@@ -7,6 +7,7 @@ Hyrax.config do |config|
   config.register_curation_concern :archival_document
   # Injected via `rails g hyrax:work_resource AcademicDocument`
   config.register_curation_concern :academic_document
+  config.register_curation_concern :gw_work
   # Injected via `rails g hyrax:work_resource Page`
   config.register_curation_concern :derived_page
 
