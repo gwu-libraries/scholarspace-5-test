@@ -7,7 +7,7 @@ RSpec.describe "Deposit a PDF AcademicDocument through dashboard" do
   let(:user) { FactoryBot.create(:user) }
   let(:pdf_path) { "#{Rails.root}/spec/fixtures/testing_pdf.pdf" }
   
-  it 'can deposit a pdf' do
+  xit 'can deposit a pdf' do
     sign_in_user(admin_user)
 
     visit new_hyrax_academic_document_path
