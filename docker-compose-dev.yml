@@ -28,7 +28,7 @@ services:
       - dev-storage:/app/scholarspace/storage
       - dev-derivatives:/app/scholarspace/derivatives
       - dev-uploads:/app/scholarspace/uploads
-      - dev-public:/app/scholarspace/public
+      - ./public:/app/scholarspace/public
       - dev-tmp:/app/scholarspace/tmp
     networks:
       - ss-dev
@@ -61,7 +61,6 @@ services:
       - dev-storage:/app/scholarspace/storage
       - dev-derivatives:/app/scholarspace/derivatives
       - dev-uploads:/app/scholarspace/uploads
-      - dev-public:/app/scholarspace/public
       - dev-tmp:/app/scholarspace/tmp
     networks:
       - ss-dev

@@ -2,11 +2,6 @@
 
 FactoryBot.define do
   factory :academic_document, class: "AcademicDocument" do
-    to_create do |obj|
-      Hyrax.persister.save!(resource: obj)
-      Hyrax.index_adapter.save(resource: obj)
-    end
-
     transient do
       user {}
       # Set to true (or a hash) if you want to create an admin set
@@ -107,7 +102,7 @@ FactoryBot.define do
     factory :academic_document_with_one_child do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained Work"]
         )
@@ -117,13 +112,13 @@ FactoryBot.define do
     factory :academic_document_with_two_children do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained Work"],
           id: "BlahBlah1"
         )
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["Another Contained Work"],
           id: "BlahBlah2"
