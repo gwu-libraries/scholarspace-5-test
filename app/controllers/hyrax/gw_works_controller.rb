@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Hyrax
-  class AcademicGwWorksController < ApplicationController
+  class GwWorksController < ApplicationController
     # Adds Hyrax behaviors to the controller.
     include Hyrax::WorksControllerBehavior
     include Hyrax::BreadcrumbsForWorks
