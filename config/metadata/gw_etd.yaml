@@ -24,3 +24,27 @@ attributes:
         index_keys:
             - "bulkrax_identifier_tesim"
         predicate: https://iro.bl.uk/resource#bulkraxIdentifier
+    degree:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "degree_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#degree
+    advisor:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "advisor_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#advisor
+    committee_member:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "committee_member_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#committee_member
