@@ -30,8 +30,6 @@ services:
             - dev-uploads:/app/scholarspace/uploads
             - dev-public:/app/scholarspace/public
             - dev-tmp:/app/scholarspace/tmp
-            - ./app:/app/scholarspace/app
-            - ./config:/app/scholarspace/config
         networks:
             - ss-dev
 
@@ -65,8 +63,6 @@ services:
             - dev-uploads:/app/scholarspace/uploads
             - dev-public:/app/scholarspace/public
             - dev-tmp:/app/scholarspace/tmp
-            - ./app:/app/scholarspace/app
-            - ./config:/app/scholarspace/config
         networks:
             - ss-dev
     nginx:
