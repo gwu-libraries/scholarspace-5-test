@@ -41,5 +41,7 @@ IiifPrint.config do |config|
 
   config.uv_config_path = "/uv/config/default"
   config.uv_base_path = "/uv/uv.html"
+
+  config.default_iiif_manifest_version = 2
 end
 # rubocop:enable Lint/UnusedBlockArgument
