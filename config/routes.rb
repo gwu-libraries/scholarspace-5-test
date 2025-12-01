@@ -1,6 +1,7 @@
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
+mount Bulkrax::Engine, at: '/'
   concern :iiif_search, BlacklightIiifSearch::Routes.new
   mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
 

@@ -18,4 +18,7 @@ class Ability
     #   can [:create], ActiveFedora::Base
     # end
   end
+  def can_import_works?
+    can_create_any_work?
+  end
 end
