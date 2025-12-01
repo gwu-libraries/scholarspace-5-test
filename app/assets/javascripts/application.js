@@ -25,5 +25,6 @@
 //= require blacklight/blacklight
 //= require blacklight_gallery
 
+//= require bulkrax/application
 //= require_tree .
 //= require hyrax
