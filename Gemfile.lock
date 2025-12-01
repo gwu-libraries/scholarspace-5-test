@@ -209,6 +209,9 @@ GEM
     babel-transpiler (0.7.0)
       babel-source (>= 4.0, < 6)
       execjs (~> 2.0)
+    bagit (0.6.0)
+      docopt (~> 0.5.0)
+      validatable (~> 1.6)
     base64 (0.3.0)
     bcp47_spec (0.2.1)
     bcrypt (3.1.20)
@@ -264,6 +267,22 @@ GEM
       ruby-box
       signet (~> 0.8)
     builder (3.3.0)
+    bulkrax (9.3.3)
+      bagit (~> 0.6.0)
+      coderay
+      denormalize_fields
+      iso8601 (~> 0.9.0)
+      kaminari
+      language_list (~> 1.2, >= 1.2.1)
+      libxml-ruby (~> 5.0)
+      loofah (>= 2.2.3)
+      marcel
+      oai (>= 0.4, < 2.x)
+      rack (>= 2.0.6)
+      rails (>= 5.1.6, < 8.0.0)
+      rdf (>= 2.0.2, < 4.0)
+      rubyzip
+      simple_form
     cancancan (3.6.1)
     capybara (3.40.0)
       addressable
@@ -311,6 +330,8 @@ GEM
       reline (>= 0.3.8)
     debug_inspector (1.2.0)
     declarative (0.0.20)
+    denormalize_fields (1.3.0)
+      activerecord (>= 4.1.14, < 8.0.0)
     deprecation (1.1.0)
       activesupport
     derivative-rodeo (0.5.3)
@@ -335,6 +356,7 @@ GEM
       declarative (>= 0.0.9, < 1.0.0)
       representable (>= 3.1.1, < 4)
     docile (1.4.1)
+    docopt (0.5.0)
     draper (4.0.4)
       actionpack (>= 5.0)
       activemodel (>= 5.0)
@@ -613,6 +635,7 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
+    iso8601 (0.9.1)
     jbuilder (2.14.1)
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
@@ -648,6 +671,7 @@ GEM
       activerecord
       kaminari-core (= 1.2.2)
     kaminari-core (1.2.2)
+    language_list (1.2.1)
     launchy (3.1.1)
       addressable (~> 2.8)
       childprocess (~> 5.0)
@@ -670,6 +694,7 @@ GEM
       rdf-vocab (~> 3.0)
     legato (0.7.0)
       multi_json
+    libxml-ruby (5.0.5)
     link_header (0.0.8)
     linkeddata (1.1.1)
       equivalent-xml (>= 0.4.0)
@@ -756,6 +781,11 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.10-x86_64-linux-musl)
       racc (~> 1.4)
+    oai (1.3.0)
+      builder (>= 3.1.0)
+      faraday (< 3)
+      faraday-follow_redirects (>= 0.3.0, < 2)
+      rexml
     oauth (1.1.3)
       base64 (~> 0.1)
       oauth-tty (~> 1.0, >= 1.0.6)
@@ -990,6 +1020,7 @@ GEM
       oauth2
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    rubyzip (3.2.2)
     sass-rails (6.0.0)
       sassc-rails (~> 2.1, >= 2.1.1)
     sassc (2.4.0)
@@ -1093,6 +1124,7 @@ GEM
     unicode-types (1.11.0)
     uri (1.1.1)
     useragent (0.16.11)
+    validatable (1.6.7)
     valkyrie (3.5.0)
       activemodel
       activesupport
@@ -1155,6 +1187,7 @@ DEPENDENCIES
   blacklight_iiif_search
   bootsnap (>= 1.1.0)
   bootstrap (~> 4.0)
+  bulkrax
   capybara
   coffee-rails (~> 4.2)
   dalli

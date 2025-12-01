@@ -43,7 +43,7 @@ gem "rtesseract"
 gem "iiif_print", git: "https://github.com/alepbloyd/iiif_print/"
 gem "derivative-rodeo"
 gem "blacklight_iiif_search"
-# gem "bulkrax"
+gem "bulkrax"
 
 group :development do
   gem "better_errors" # add command line in browser when errors
