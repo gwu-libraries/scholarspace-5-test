@@ -2,8 +2,7 @@
 
 require 'hyrax/file_set_derivatives_service'
 
-Rails.application.reloader.to_prepare do
-  Hyrax.config do |config|
+Hyrax.config do |config|
     # Injected via `rails g hyrax:work_resource ArchivalDocument`
     config.register_curation_concern :archival_document
     # Injected via `rails g hyrax:work_resource AcademicDocument`
@@ -339,9 +338,11 @@ Qa::Authorities::Local.register_subauthority(
   'Qa::Authorities::Local::TableBasedAuthority'
 )
 
-  # set bulkrax default work type to first curation_concern if it isn't already set
-  if Bulkrax.default_work_type.blank?
-    Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s
+  Rails.application.reloader.to_prepare do
+    # set bulkrax default work type to first curation_concern if it isn't already set
+    if Bulkrax.default_work_type.blank?
+      Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s
+    end
   end
 end
 
