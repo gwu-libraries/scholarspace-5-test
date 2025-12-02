@@ -4,6 +4,7 @@ services:
     rails:
         container_name: rails
         hostname: rails
+        image: scholarspace-5-test-rails:${RAILS_TAG:-latest}
         build:
             dockerfile: Dockerfile-dev
             context: .
@@ -38,6 +39,7 @@ services:
         hostname: worker
         stdin_open: true
         tty: true
+        image: scholarspace-5-test-rails:${RAILS_TAG:-latest}
         build:
             dockerfile: Dockerfile-dev
             context: .
