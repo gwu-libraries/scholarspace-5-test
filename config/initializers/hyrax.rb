@@ -12,7 +12,7 @@ Hyrax.config do |config|
     # Injected via `rails g hyrax:work_resource Page`
     config.register_curation_concern :derived_page
 
-    config.disable_wings = false # not needed if ENV includes HYRAX_SKIP_WINGS=true
+    config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
     config.characterization_options = {
       ch12n_tool: ENV.fetch("CH12N_TOOL", "fits").to_sym
