@@ -1,7 +1,7 @@
 {
-  "name": "hyrax",
+  "name": "scholarspace",
   "private": true,
-  "repository": "git@github.com:samvera/hyrax.git",
+  "repository": "git@github.com:gwu-libraries/scholarspace-5-test.git",
   "dependencies": {
     "universalviewer": "^3.1.4"
   },
@@ -9,7 +9,7 @@
     "preinstall": "rm -rf ./public/uv",
     "postinstall": "yarn run uv-install && yarn run uv-config",
     "uv-install": "cp -r ./node_modules/universalviewer/dist ./public/uv",
-    "uv-config": "cp ./config/uv/uv.html ./public/uv/uv.html & cp ./config/uv/uv-config.json ./public/uv/"
+    "uv-config": "cp ./config/uv/uv.html ./public/uv/uv.html"
   },
   "devDependencies": {}
 }

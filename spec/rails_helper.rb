@@ -13,6 +13,7 @@ require "rspec/rails"
 # Add additional requires below this line. Rails is not loaded until this point!
 require "hyrax"
 require "valkyrie"
+require 'capybara/rails'
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Memory::MetadataAdapter.new,
   :test_adapter
@@ -47,6 +48,7 @@ rescue ActiveRecord::PendingMigrationError => e
   exit 1
 end
 RSpec.configure do |config|
+  config.include Capybara::DSL
   # config.fixture_path = "#{::Rails.root}/spec/fixtures"
   config.use_transactional_fixtures = true
   # config.use_active_record = false
@@ -56,4 +58,13 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+end
+
+def sign_in_user(user)
+    visit "/users/sign_in"
+
+    fill_in("user_email", with: user.email)
+    fill_in("user_password", with: user.password)
+    
+    click_button("Log in")
 end
