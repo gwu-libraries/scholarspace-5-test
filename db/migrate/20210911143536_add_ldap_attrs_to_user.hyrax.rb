@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddLdapAttrsToUser < ActiveRecord::Migration[5.2]
   def self.up
     add_column :users, :display_name, :string

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-require "faraday/multipart"
+
+require 'faraday/multipart'
 
 # require "shrine/storage/s3"
 # require "valkyrie/storage/shrine"
@@ -33,7 +34,7 @@ Valkyrie::MetadataAdapter.register(
     connection:
       ::Ldp::Client.new(
         Hyrax.config.fedora_connection_builder.call(
-          ENV.fetch("FEDORA_URL") { "http://localhost:8080/fcrepo/rest" }
+          ENV.fetch('FEDORA_URL', 'http://localhost:8080/fcrepo/rest')
         )
       ),
     base_path: Rails.env, # sets to '/development' instead of '/dev'
@@ -49,7 +50,7 @@ Valkyrie::MetadataAdapter.register(
 )
 
 Valkyrie.config.metadata_adapter =
-  ENV.fetch("VALKYRIE_METADATA_ADAPTER") { :fedora_metadata }.to_sym
+  ENV.fetch('VALKYRIE_METADATA_ADAPTER', :fedora_metadata).to_sym
 
 # shrine_s3_options = {
 #   bucket: ENV.fetch("REPOSITORY_S3_BUCKET") { "scholarspace_pg#{Rails.env}" },
@@ -75,7 +76,7 @@ Valkyrie::StorageAdapter.register(
     connection:
       ::Ldp::Client.new(
         Hyrax.config.fedora_connection_builder.call(
-          ENV.fetch("FEDORA_URL") { "http://localhost:8080/fcrepo/rest" }
+          ENV.fetch('FEDORA_URL', 'http://localhost:8080/fcrepo/rest')
         )
       ),
     base_path: Rails.env, # sets to '/development' instead of '/dev'
@@ -88,13 +89,13 @@ Valkyrie::StorageAdapter.register(
 
 Valkyrie::StorageAdapter.register(
   Valkyrie::Storage::VersionedDisk.new(
-    base_path: Rails.root.join("storage", "files"),
+    base_path: Rails.root.join('storage', 'files'),
     file_mover: FileUtils.method(:cp)
   ),
   :versioned_disk_storage
 )
 
 Valkyrie.config.storage_adapter =
-  ENV.fetch("VALKYRIE_STORAGE_ADAPTER") { :fedora_storage }.to_sym
+  ENV.fetch('VALKYRIE_STORAGE_ADAPTER', :fedora_storage).to_sym
 
 Valkyrie.config.indexing_adapter = :solr_index

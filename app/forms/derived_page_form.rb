@@ -6,8 +6,8 @@
 # @see https://github.com/samvera/hyrax/wiki/Hyrax-Valkyrie-Usage-Guide#forms
 # @see https://github.com/samvera/valkyrie/wiki/ChangeSets-and-Dirty-Tracking
 class DerivedPageForm < Hyrax::Forms.PcdmObjectForm(DerivedPage)
-  include Hyrax::FormFields(:basic_metadata)
-  include Hyrax::FormFields(:derived_page)
+  include Hyrax.FormFields(:basic_metadata)
+  include Hyrax.FormFields(:derived_page)
 
   # Define custom form fields using the Valkyrie::ChangeSet interface
   #

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApplicationHelper
 
   # This is just used in stripping the "?locale=en" when setting the path to the 

@@ -14,7 +14,7 @@ services:
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
         - RAILS_ENV=production
-    command: "./bin/rails server -p 3000 -b 0.0.0.0"
+    command: './bin/rails server -p 3000 -b 0.0.0.0'
     stdin_open: true
     tty: true
     user: root
@@ -23,7 +23,7 @@ services:
     environment:
       - RAILS_ROOT=/app/scholarspace
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - prod-storage:/app/scholarspace/storage
       - prod-derivatives:/app/scholarspace/derivatives
@@ -70,7 +70,7 @@ services:
   nginx:
     container_name: nginx
     hostname: nginx
-    image: "nginx:latest"
+    image: 'nginx:latest'
     ports:
       - 443:443
       - 80:80
@@ -114,7 +114,7 @@ services:
     networks:
       - scholarspace
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   fits:
     container_name: fits
@@ -144,7 +144,7 @@ services:
     networks:
       - scholarspace
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
 
   solr:
     container_name: solr
@@ -153,8 +153,8 @@ services:
     restart: unless-stopped
     command:
       - sh
-      - "-c"
-      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
+      - '-c'
+      - 'precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf'
     volumes:
       - solr_home:/var/solr/data:cached
       - ./solr/conf:/opt/solr/server/configsets/hyraxconf
@@ -170,8 +170,8 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL",
-          "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
+          'CMD-SHELL',
+          'wget --no-verbose --spider --tries=1 localhost:8983 || exit 1'
         ]
       interval: 30s
       timeout: 5s

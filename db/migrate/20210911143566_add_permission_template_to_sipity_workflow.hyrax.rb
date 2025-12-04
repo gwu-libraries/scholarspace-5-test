@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddPermissionTemplateToSipityWorkflow < ActiveRecord::Migration[5.2]
   def change
     add_column :sipity_workflows, :permission_template_id, :integer, index: true
@@ -18,10 +20,11 @@ class AddPermissionTemplateToSipityWorkflow < ActiveRecord::Migration[5.2]
 
     # Doing an inline data migration
     begin
-      if Hyrax::PermissionTemplate.column_names.include?("workflow_id")
+      if Hyrax::PermissionTemplate.column_names.include?('workflow_id')
         Hyrax::PermissionTemplate.each do |permission_template|
           workflow_id = permission_template.workflow_id
           next unless workflow_id
+
           Sipity::Workflow.find(workflow_id).update(active: true)
         end
         remove_column :permission_templates, :workflow_id

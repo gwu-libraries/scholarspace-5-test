@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddUniqueConstraintToPermissionTemplateAccesses < ActiveRecord::Migration[
   5.2
 ]
@@ -5,6 +7,6 @@ class AddUniqueConstraintToPermissionTemplateAccesses < ActiveRecord::Migration[
     add_index :permission_template_accesses,
               %i[permission_template_id agent_id agent_type access],
               unique: true,
-              name: "uk_permission_template_accesses"
+              name: 'uk_permission_template_accesses'
   end
 end

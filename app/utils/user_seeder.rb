@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This class was created for use in rake tasks and db/seeds.rb.  It generates
 # users that can be used in release testing.  This data can also be helpful
 # for local development testing.
@@ -8,20 +10,20 @@ class UserSeeder
   class << self
     attr_accessor :logger
 
-    def generate_required_seeds(logger: Logger.new(STDOUT))
+    def generate_required_seeds(logger: Logger.new($stdout))
       @logger = logger
 
-      logger.info("Adding admin user...")
+      logger.info('Adding admin user...')
 
-      add_user(ENV["ADMIN_USER"], ENV["ADMIN_PASSWORD"], admin_role)
+      add_user(ENV['ADMIN_USER'], ENV['ADMIN_PASSWORD'], admin_role)
     end
 
-    def generate_testing_seeds(logger: Logger.new(STDOUT))
+    def generate_testing_seeds(logger: Logger.new($stdout))
       @logger = logger
-      logger.info("Adding optional users...")
+      logger.info('Adding optional users...')
 
-      add_user("basic_user@example.com", "password")
-      add_user("another_user@example.com", "password")
+      add_user('basic_user@example.com', 'password')
+      add_user('another_user@example.com', 'password')
     end
 
     private
@@ -29,10 +31,10 @@ class UserSeeder
     def admin_role
       unless ::User.reflect_on_association(:roles)
         logger.warn(
-          "Cannot create `Role` because the `hyrda-role-management` gem, or " \
-            "other gem providing a definition for a Role class, is not installed.  " \
+          'Cannot create `Role` because the `hyrda-role-management` gem, or ' \
+            'other gem providing a definition for a Role class, is not installed.  ' \
             "For development, you can edit `config/role_map.yml` and add the user's " \
-            "email under the role you want to assign."
+            'email under the role you want to assign.'
         )
         return
       end
@@ -47,8 +49,9 @@ class UserSeeder
           created = true
           f.password = password
         end
-      logger.info("   #{email} -- #{created ? "CREATED" : "ALREADY EXISTS"}")
+      logger.info("   #{email} -- #{created ? 'CREATED' : 'ALREADY EXISTS'}")
       return unless role && !user.roles.include?(role)
+
       logger.info("Adding #{role.name} to #{user.email}")
       user.roles << role
       user.save

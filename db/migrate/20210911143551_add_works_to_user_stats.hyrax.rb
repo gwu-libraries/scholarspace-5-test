@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddWorksToUserStats < ActiveRecord::Migration[5.2]
   def self.up
     add_column :user_stats, :work_views, :integer

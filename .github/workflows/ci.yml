@@ -13,28 +13,28 @@ env:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    permissions: 
+    permissions:
       contents: read
       packages: write
     steps:
-     # Checkout the repository code
+      # Checkout the repository code
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Create self-signed certs
-        run : |
-         openssl req -x509 -newkey rsa:4096 -keyout /home/runner/work/scholarspace-5-test/scholarspace-5-test/nginx/certs/key.pem -out /home/runner/work/scholarspace-5-test/scholarspace-5-test/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout /home/runner/work/scholarspace-5-test/scholarspace-5-test/nginx/certs/key.pem -out /home/runner/work/scholarspace-5-test/scholarspace-5-test/nginx/certs/certificate.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
       # Copy the pre-filled example.env file to use as the .env file for testing
       - name: cd to scholarspace folder
-        run : |
+        run: |
           cd /home/runner/work/scholarspace-5-test/scholarspace-5-test
       - name: Create env file
         run: |
           cp example.env .env
-       # Start all of the docker containers and wait until positive response from healthchecks
+        # Start all of the docker containers and wait until positive response from healthchecks
       - name: Start Docker containers
         run: |
           docker compose up --wait
-      # Sleep for 30 seconds, sometimes still get a 'wait for containers to start' message 
+      # Sleep for 30 seconds, sometimes still get a 'wait for containers to start' message
       - name: Sleep for 30 seconds
         run: |
           sleep 30s
@@ -52,5 +52,3 @@ jobs:
       - name: Run RSpec tests
         run: |
           docker exec rails /bin/sh -lc "bundle exec rspec"
-        
-        

@@ -1,7 +1,12 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :academic_document, class: "AcademicDocument" do
+  factory :academic_document, class: 'AcademicDocument' do
+    to_create do |obj|
+      Hyrax.persister.save!(resource: obj)
+      Hyrax.index_adapter.save(resource: obj)
+    end
+
     transient do
       user {}
       # Set to true (or a hash) if you want to create an admin set
@@ -14,22 +19,22 @@ FactoryBot.define do
       if evaluator.with_admin_set
         attributes = {}
         attributes[:id] = work.admin_set_id if work.admin_set_id.present?
-        attributes =
-          evaluator.with_admin_set.merge(
-            attributes
-          ) if evaluator.with_admin_set.respond_to?(:merge)
+        if evaluator.with_admin_set.respond_to?(:merge)
+          attributes =
+            evaluator.with_admin_set.merge(
+              attributes
+            )
+        end
         admin_set = create(:admin_set, attributes)
         work.admin_set_id = admin_set.id
       end
     end
 
     after(:create) do |work, _evaluator|
-      if work.try(:member_of_collections) && work.member_of_collections.present?
-        work.save!
-      end
+      work.save! if work.try(:member_of_collections) && work.member_of_collections.present?
     end
 
-    title { ["Test title"] }
+    title { ['Test title'] }
 
     after(:build) do |work, evaluator|
       if work.try(:apply_depositor_metadata, evaluator.user.user_key)
@@ -55,7 +60,7 @@ FactoryBot.define do
     end
 
     factory :registered_academic_document do
-      read_groups { ["registered"] }
+      read_groups { ['registered'] }
     end
 
     factory :academic_document_with_one_file do
@@ -63,8 +68,8 @@ FactoryBot.define do
         work.ordered_members << create(
           :file_set,
           user: evaluator.user,
-          title: ["A Contained FileSet"],
-          label: "filename.pdf"
+          title: ['A Contained FileSet'],
+          label: 'filename.pdf'
         )
       end
     end
@@ -104,7 +109,7 @@ FactoryBot.define do
         work.ordered_members << create(
           :academic_document,
           user: evaluator.user,
-          title: ["A Contained Work"]
+          title: ['A Contained Work']
         )
       end
     end
@@ -114,14 +119,14 @@ FactoryBot.define do
         work.ordered_members << create(
           :academic_document,
           user: evaluator.user,
-          title: ["A Contained Work"],
-          id: "BlahBlah1"
+          title: ['A Contained Work'],
+          id: 'BlahBlah1'
         )
         work.ordered_members << create(
           :academic_document,
           user: evaluator.user,
-          title: ["Another Contained Work"],
-          id: "BlahBlah2"
+          title: ['Another Contained Work'],
+          id: 'BlahBlah2'
         )
       end
     end
@@ -131,7 +136,7 @@ FactoryBot.define do
         work.ordered_members << create(
           :file_set,
           user: evaluator.user,
-          title: ["A Contained FileSet"]
+          title: ['A Contained FileSet']
         )
         work.representative_id = work.members[0].id
       end
@@ -272,8 +277,8 @@ FactoryBot.define do
   end
 
   # Doesn't set up any edit_users
-  factory :academic_document_without_access, class: "AcademicDocument" do
-    title { ["Test title"] }
+  factory :academic_document_without_access, class: 'AcademicDocument' do
+    title { ['Test title'] }
     depositor { create(:user).user_key }
   end
 end

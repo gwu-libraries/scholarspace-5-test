@@ -6,13 +6,14 @@ FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-dev-base
 ARG RUBYGEMS_VERSION=""
 
 RUN addgroup -S --gid 8983 app && \
-    adduser -S -G app -u 8983 -s /bin/sh -h /app app
+  adduser -S -G app -u 8983 -s /bin/sh -h /app app
 
 RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
   build-base \
   curl \
   gcompat \
+  ghostscript \
   imagemagick \
   imagemagick-heic \
   imagemagick-jpeg \
@@ -44,9 +45,9 @@ RUN mkdir -p /app/scholarspace
 WORKDIR /app/scholarspace
 
 ENV PATH="/app/scholarspace:$PATH" \
-RAILS_ROOT="/app/scholarspace" \
-RAILS_SERVE_STATIC_FILES="1" \
-LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" 
+  RAILS_ROOT="/app/scholarspace" \
+  RAILS_SERVE_STATIC_FILES="1" \
+  LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" 
 
 COPY --chown=8983:8983 Gemfile Gemfile.lock ./
 
@@ -54,11 +55,15 @@ RUN bundle config set deployment true
 
 RUN bundle install
 
+COPY --chown=8983:8983 ./package.json ./
+
+RUN mkdir -p ./public/uv
+
+RUN yarn install --production
+
 COPY --chown=8983:8983 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
-
-RUN yarn install
 
 FROM scholarspace-dev-base AS scholarspace-dev
 

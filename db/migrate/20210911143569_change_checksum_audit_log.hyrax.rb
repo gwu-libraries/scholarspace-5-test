@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 class ChangeChecksumAuditLog < ActiveRecord::Migration[5.2]
   def change
     rename_column :checksum_audit_logs, :version, :checked_uri
     add_column :checksum_audit_logs, :passed, :boolean
 
     reversible do |dir|
-      dir.up { execute "UPDATE checksum_audit_logs SET passed = (pass = 1)" }
+      dir.up { execute 'UPDATE checksum_audit_logs SET passed = (pass = 1)' }
       dir.down do
-        execute "UPDATE checksum_audit_logs SET pass = CASE WHEN passed THEN 1 ELSE 0 END"
+        execute 'UPDATE checksum_audit_logs SET pass = CASE WHEN passed THEN 1 ELSE 0 END'
       end
     end
 

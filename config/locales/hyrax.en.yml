@@ -48,11 +48,11 @@ en:
   hyrax:
     account_name: My Institution Account Id
     directory:
-      suffix: "@example.org"
+      suffix: '@example.org'
     footer:
-      copyright_html: "<strong>Copyright &copy; 2022 Samvera</strong> Licensed under the Apache License, Version 2.0"
+      copyright_html: '<strong>Copyright &copy; 2022 Samvera</strong> Licensed under the Apache License, Version 2.0'
       service_html: A service of <a href="http://library.gwu.edu" class="navbar-link" target="_blank">The George Washington University</a>.
     institution_name: The George Washington University
     institution_name_full: The George Washington University
     product_name: Scholarspace
-    product_twitter_handle: "@SamveraRepo"
+    product_twitter_handle: '@SamveraRepo'
