@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddCollectionTypeSharingOptions < ActiveRecord::Migration[5.2]
   def change
     add_column :hyrax_collection_types,

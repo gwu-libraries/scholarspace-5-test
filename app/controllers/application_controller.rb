@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ApplicationController < ActionController::Base
   helper Openseadragon::OpenseadragonHelper
   # Adds a few additional behaviors into the application controller
@@ -7,7 +9,7 @@ class ApplicationController < ActionController::Base
   # Adds Hyrax behaviors into the application controller
   include Hyrax::Controller
   include Hyrax::ThemedLayoutController
-  with_themed_layout "1_column"
+  with_themed_layout '1_column'
 
   protect_from_forgery with: :exception
 
@@ -17,14 +19,13 @@ class ApplicationController < ActionController::Base
     respond_to { |format| format.json { render json: config } }
   end
 
-  # TODO - this is placeholder and only certain parts seem to be working
+  # TODO: - this is placeholder and only certain parts seem to be working
   # but this should be the configuration for universal_viewer
   def default_uv_config
     {
       modules: {
         contentLeftPanel: {
-          options: {
-          },
+          options: {},
           content: {
             autoExpandTreeEnabled: false,
             autoExpandTreeIfFewerThan: 20,
@@ -45,10 +46,10 @@ class ApplicationController < ActionController::Base
             panelCollapsedWidth: 30,
             panelExpandedWidth: 255,
             panelOpen: true,
-            tabOrder: "",
+            tabOrder: '',
             thumbsCacheInvalidation: {
               enabled: true,
-              paramType: "?"
+              paramType: '?'
             },
             thumbsEnabled: true,
             thumbsExtraHeight: 8,
@@ -61,16 +62,14 @@ class ApplicationController < ActionController::Base
           }
         },
         searchFooterPanel: {
-          content: {
-          },
+          content: {},
           options: {
             autocompleteAllowWords: false,
             positionMarkerEnabled: true
           }
         },
         footerPanel: {
-          content: {
-          },
+          content: {},
           options: {
             shareEnabled: false,
             downloadEnabled: false,
@@ -78,8 +77,7 @@ class ApplicationController < ActionController::Base
           }
         },
         pagingHeaderPanel: {
-          content: {
-          },
+          content: {},
           options: {
             autocompleteAllowWords: false,
             autoCompleteBoxEnabled: false,
@@ -94,8 +92,7 @@ class ApplicationController < ActionController::Base
           content: {
             manifestHeader: nil
           },
-          options: {
-          }
+          options: {}
         }
       }
     }

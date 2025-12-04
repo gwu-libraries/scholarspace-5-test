@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-require "iiif_print/derivative_rodeo_service"
-require "hyrax/file_set_derivatives_service"
+
+require 'hyrax/file_set_derivatives_service'
 
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
@@ -13,7 +13,7 @@ Hyrax.config do |config|
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
   config.characterization_options = {
-    ch12n_tool: ENV.fetch("CH12N_TOOL", "fits").to_sym
+    ch12n_tool: ENV.fetch('CH12N_TOOL', 'fits').to_sym
   }
 
   config.disable_include_metadata = false
@@ -82,7 +82,7 @@ Hyrax.config do |config|
   config.enable_noids = true
 
   # Template for your repository's NOID IDs
-  config.noid_template = ".sddddddd"
+  config.noid_template = '.sddddddd'
 
   # Use the database-backed minter class
   # config.noid_minter_class = Noid::Rails::Minter::Db
@@ -94,7 +94,7 @@ Hyrax.config do |config|
   # config.redis_namespace = "hyrax"
 
   # Path to the file characterization tool
-  config.fits_path = ENV.fetch("FITS_PATH", "fits.sh")
+  config.fits_path = ENV.fetch('FITS_PATH', 'fits.sh')
 
   # Path to the file derivatives creation tool
   # config.libreoffice_path = "soffice"
@@ -115,7 +115,7 @@ Hyrax.config do |config|
 
   # Location autocomplete uses geonames to search for named regions
   # Username for connecting to geonames
-  config.geonames_username = ENV["GEONAMES_USERNAME"] || ""
+  config.geonames_username = ENV['GEONAMES_USERNAME'] || ''
 
   # Should the acceptance of the licence agreement be active (checkbox), or
   # implied when the save button is pressed? Set to true for active
@@ -149,7 +149,7 @@ Hyrax.config do |config|
 
   # Returns a URL that resolves to an image provided by a IIIF image server
   config.iiif_image_url_builder =
-    lambda do |file_id, base_url, size, format|
+    lambda do |file_id, base_url, size, _format|
       Riiif::Engine.routes.url_helpers.image_url(
         file_id,
         host: base_url,
@@ -164,7 +164,7 @@ Hyrax.config do |config|
   config.iiif_info_url_builder =
     lambda do |file_id, base_url|
       uri = Riiif::Engine.routes.url_helpers.info_url(file_id, host: base_url)
-      uri.sub(%r{/info\.json\Z}, "")
+      uri.sub(%r{/info\.json\Z}, '')
     end
   # config.iiif_info_url_builder = lambda { |_, _| "" }
 
@@ -172,7 +172,7 @@ Hyrax.config do |config|
   # config.iiif_image_compliance_level_uri = 'http://iiif.io/api/image/2/level2.json'
 
   # Returns a IIIF image size default
-  config.iiif_image_size_default = "600"
+  config.iiif_image_size_default = '600'
 
   # Fields to display in the IIIF metadata section; default is the required fields
   # config.iiif_metadata_fields = Hyrax::Forms::WorkForm.required_fields
@@ -266,10 +266,10 @@ Hyrax.config do |config|
   # Injected via `rails g hyrax:collection_resource CollectionResource`
   # config.collection_model = "CollectionResource"
 
-  config.collection_model = "CollectionResource"
+  config.collection_model = 'CollectionResource'
   # config.admin_set_model = "AdminSetResource"
-  config.admin_set_model = "Hyrax::AdministrativeSet"
-  config.file_set_model = "Hyrax::FileSet"
+  config.admin_set_model = 'Hyrax::AdministrativeSet'
+  config.file_set_model = 'Hyrax::FileSet'
   # Identify the model class name that will be used for Admin Sets in your app
   # (i.e. AdminSet for ActiveFedora, Hyrax::AdministrativeSet for Valkyrie)
   # config.admin_set_model = "AdminSet"
@@ -317,24 +317,24 @@ Hyrax.config do |config|
   # config.identifier_registrars = {}
 
   config.derivative_services = [
-    IiifPrint::DerivativeRodeoService,
+    # IiifPrint::DerivativeRodeoService,
     Hyrax::FileSetDerivativesService
   ]
 end
 
-Date::DATE_FORMATS[:standard] = "%m/%d/%Y"
+Date::DATE_FORMATS[:standard] = '%m/%d/%Y'
 
 Qa::Authorities::Local.register_subauthority(
-  "subjects",
-  "Qa::Authorities::Local::TableBasedAuthority"
+  'subjects',
+  'Qa::Authorities::Local::TableBasedAuthority'
 )
 Qa::Authorities::Local.register_subauthority(
-  "languages",
-  "Qa::Authorities::Local::TableBasedAuthority"
+  'languages',
+  'Qa::Authorities::Local::TableBasedAuthority'
 )
 Qa::Authorities::Local.register_subauthority(
-  "genres",
-  "Qa::Authorities::Local::TableBasedAuthority"
+  'genres',
+  'Qa::Authorities::Local::TableBasedAuthority'
 )
 
 Rails.application.reloader.to_prepare do
@@ -354,12 +354,12 @@ Rails.application.reloader.to_prepare do
     Hyrax::CustomQueries::FindModelsByAccess,
     Hyrax::CustomQueries::FindCountBy,
     Hyrax::CustomQueries::FindByDateRange,
-    Hyrax::CustomQueries::FindByModelAndPropertyValue,
-    Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId
+    CustomQueries::FindByModelAndPropertyValue,
+    CustomQueries::FindByOcrTextAndParentDocumentId
   ]
   custom_queries.each do |handler|
     Hyrax.query_service.custom_queries.register_query_handler(handler)
   end
 end
 
-ActiveFedora.init(solr_config_path: Rails.root.join("config", "solr.yml"))
+ActiveFedora.init(solr_config_path: Rails.root.join('config', 'solr.yml'))

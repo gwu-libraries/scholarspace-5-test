@@ -48,11 +48,11 @@ pt-BR:
   hyrax:
     account_name: ID da conta da minha instituição
     directory:
-      suffix: "@ Example.org"
+      suffix: '@ Example.org'
     footer:
-      copyright_html: "<strong>Copyright © 2018 Samvera </strong> Licenciado sob a Licença Apache, Versão 2.0"
+      copyright_html: '<strong>Copyright © 2018 Samvera </strong> Licenciado sob a Licença Apache, Versão 2.0'
       service_html: Um serviço de <a href="http://samvera.org/" class="navbar-link" target="_blank">Samvera</a> .
     institution_name: Instituição
     institution_name_full: O Nome da Instituição
     product_name: Hyrax
-    product_twitter_handle: "@SamveraRepo"
+    product_twitter_handle: '@SamveraRepo'

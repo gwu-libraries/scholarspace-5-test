@@ -7,18 +7,18 @@ version: 2
 multi-ecosystem-groups:
   infrastructure:
     schedule:
-      interval: "weekly"
-      
+      interval: 'weekly'
+
 updates:
-  - package-ecosystem: "bundler"
-    directory: "/"
-    patterns: ["*"]
-    multi-ecosystem-group: "infrastructure"
-  - package-ecosystem: "docker"
-    directory: "/"
-    patterns: ["*"]
-    multi-ecosystem-group: "infrastructure"
-  - package-ecosystem: "terraform"
-    directory: "/"
-    patterns: ["*"]
-    multi-ecosystem-group: "infrastructure"
+  - package-ecosystem: 'bundler'
+    directory: '/'
+    patterns: ['*']
+    multi-ecosystem-group: 'infrastructure'
+  - package-ecosystem: 'docker'
+    directory: '/'
+    patterns: ['*']
+    multi-ecosystem-group: 'infrastructure'
+  - package-ecosystem: 'terraform'
+    directory: '/'
+    patterns: ['*']
+    multi-ecosystem-group: 'infrastructure'

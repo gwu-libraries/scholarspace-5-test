@@ -7,9 +7,11 @@
   },
   "scripts": {
     "preinstall": "rm -rf ./public/uv",
-    "postinstall": "yarn run uv-install && yarn run uv-config",
-    "uv-install": "cp -r ./node_modules/universalviewer/dist ./public/uv",
-    "uv-config": "cp ./config/uv/uv.html ./public/uv/uv.html"
+    "postinstall": "yarn run uv-install",
+    "uv-install": "cp -r ./node_modules/universalviewer/dist ./public/uv"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@prettier/plugin-ruby": "^4.0.4",
+    "prettier": "^3.6.2"
+  }
 }

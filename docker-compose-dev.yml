@@ -13,7 +13,7 @@ services:
         - BUNDLE_GEMFILE=Gemfile
         - VALKYRIE_METADATA_ADAPTER=fedora_metadata
         - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-    command: "./bin/rails server -p 3000 -b 0.0.0.0" 
+    command: './bin/rails server -p 3000 -b 0.0.0.0'
     restart: unless-stopped
     stdin_open: true
     user: 8983:8983
@@ -23,7 +23,7 @@ services:
     environment:
       - RAILS_ROOT=/app/scholarspace
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - dev-storage:/app/scholarspace/storage
       - dev-derivatives:/app/scholarspace/derivatives
@@ -67,7 +67,7 @@ services:
   nginx:
     container_name: nginx
     hostname: nginx
-    image: "nginx:latest"
+    image: 'nginx:latest'
     ports:
       - 443:443
       - 80:80
@@ -112,10 +112,10 @@ services:
     networks:
       - ss-dev
     ports:
-      - "5432:5432"
+      - '5432:5432'
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      test: ['CMD-SHELL', 'pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER']
       interval: 30s
       timeout: 5s
       retries: 5
@@ -147,7 +147,7 @@ services:
     networks:
       - ss-dev
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
     restart: unless-stopped
 
   solr:
@@ -157,8 +157,8 @@ services:
     user: 8983:8983
     command:
       - sh
-      - "-c"
-      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
+      - '-c'
+      - 'precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf'
     volumes:
       - dev-solr_home:/var/solr/data:cached
       - dev-derivatives:/app/scholarspace/derivatives
@@ -175,8 +175,8 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL",
-          "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
+          'CMD-SHELL',
+          'wget --no-verbose --spider --tries=1 localhost:8983 || exit 1'
         ]
       interval: 30s
       timeout: 5s

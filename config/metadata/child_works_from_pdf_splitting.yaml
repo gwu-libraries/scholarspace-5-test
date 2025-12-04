@@ -3,21 +3,21 @@ attributes:
     type: bool
     multiple: false
     index_keys:
-      - "is_child_bsi"
+      - 'is_child_bsi'
     form:
       display: false
       required: false
       primary: false
       multiple: false
-    predicate: "http://id.loc.gov/vocabulary/identifiers/isChild"
+    predicate: 'http://id.loc.gov/vocabulary/identifiers/isChild'
   split_from_pdf_id:
     type: string
     multiple: false
     index_keys:
-      - "split_from_pdf_id_ssi"
+      - 'split_from_pdf_id_ssi'
     form:
       display: false
       required: false
       primary: false
       multiple: false
-    predicate: "http://id.loc.gov/vocabulary/identifiers/splitFromPdfId"
+    predicate: 'http://id.loc.gov/vocabulary/identifiers/splitFromPdfId'

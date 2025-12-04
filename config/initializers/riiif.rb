@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 Rails.application.reloader.to_prepare do
   Riiif::Image.info_service =
     lambda do |id, _file|
@@ -8,13 +9,14 @@ Rails.application.reloader.to_prepare do
 
       fs_id = id.sub(%r{\A([^/]*)/.*}, '\1')
       resp = Hyrax::SolrService.get("id:#{fs_id}")
-      doc = resp["response"]["docs"].first
+      doc = resp['response']['docs'].first
       raise "Unable to find solr document with id:#{fs_id}" unless doc
+
       {
-        height: doc["height_is"],
-        width: doc["width_is"],
-        format: doc["mime_type_ssi"],
-        channels: doc["alpha_channels_ssi"]
+        height: doc['height_is'],
+        width: doc['width_is'],
+        format: doc['mime_type_ssi'],
+        channels: doc['alpha_channels_ssi']
       }
     end
 
@@ -34,9 +36,9 @@ Rails.application.reloader.to_prepare do
   Riiif::Image.authorization_service = Hyrax::IiifAuthorizationService
 
   Riiif.not_found_image =
-    Rails.root.join("app", "assets", "images", "us_404.svg")
+    Rails.root.join('app', 'assets', 'images', 'us_404.svg')
   Riiif.unauthorized_image =
-    Rails.root.join("app", "assets", "images", "us_404.svg")
+    Rails.root.join('app', 'assets', 'images', 'us_404.svg')
 
   Riiif::Engine.config.cache_duration = 1.day
 end
@@ -49,9 +51,11 @@ module Hyrax
       include ActiveSupport::Benchmarkable
 
       attr_reader :id
+
       def initialize(input_path, tempfile = nil, id:)
         super(input_path, tempfile)
-        raise(ArgumentError, "must specify id") if id.blank?
+        raise(ArgumentError, 'must specify id') if id.blank?
+
         @id = id
       end
 
@@ -103,7 +107,7 @@ module Hyrax
       Riiif::Image
         .cache
         .fetch(
-          "riiif:" + Digest::MD5.hexdigest("path:#{id}"),
+          "riiif:#{Digest::MD5.hexdigest("path:#{id}")}",
           expires_in: Riiif::Image.expires_in,
           force: force
         ) { load_file(id) }

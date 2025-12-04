@@ -11,7 +11,7 @@ attributes:
       required: true
       primary: true
     index_keys:
-      - "creator_tesim"
+      - 'creator_tesim'
     predicate: http://purl.org/dc/elements/1.1/creator
   license:
     type: string
@@ -21,7 +21,7 @@ attributes:
       primary: true
     predicate: http://purl.org/dc/terms/license
     index_keys:
-      - "license_tesim"
+      - 'license_tesim'
 
   # Other attributes:
   abstract:
@@ -38,8 +38,8 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "based_near_sim"
-      - "based_near_tesim"
+      - 'based_near_sim'
+      - 'based_near_tesim'
     predicate: http://xmlns.com/foaf/0.1/based_near
   # missing: bibliograpic_citation
   contributor:
@@ -55,7 +55,7 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "date_created_tesim"
+      - 'date_created_tesim'
     predicate: http://purl.org/dc/terms/created
   description:
     type: string
@@ -63,7 +63,7 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "description_tesim"
+      - 'description_tesim'
     predicate: http://purl.org/dc/elements/1.1/description
   identifier:
     type: string
@@ -80,8 +80,8 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "keyword_sim"
-      - "keyword_tesim"
+      - 'keyword_sim'
+      - 'keyword_tesim'
     predicate: http://schema.org/keywords
   # missing: publisher
   label:
@@ -108,7 +108,7 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "related_url_tesim"
+      - 'related_url_tesim'
     predicate: http://www.w3.org/2000/01/rdf-schema#seeAlso
   relative_path:
     type: string
@@ -116,11 +116,11 @@ attributes:
   resource_type:
     type: string
     multiple: true
-  # form:
-  #   primary: false
+    # form:
+    #   primary: false
     index_keys:
-      - "resource_type_sim"
-      - "resource_type_tesim"
+      - 'resource_type_sim'
+      - 'resource_type_tesim'
     predicate: http://purl.org/dc/terms/type
   rights_notes:
     type: string
@@ -131,10 +131,10 @@ attributes:
   rights_statement:
     type: string
     multiple: true
-  # form:
-  #   primary: true
+    # form:
+    #   primary: true
     index_keys:
-      - "rights_statement_tesim"
+      - 'rights_statement_tesim'
     predicate: http://www.europeana.eu/schemas/edm/rights
   source:
     type: string
@@ -148,6 +148,6 @@ attributes:
     form:
       primary: false
     index_keys:
-      - "subject_sim"
-      - "subject_tesim"
+      - 'subject_sim'
+      - 'subject_tesim'
     predicate: http://purl.org/dc/elements/1.1/subject

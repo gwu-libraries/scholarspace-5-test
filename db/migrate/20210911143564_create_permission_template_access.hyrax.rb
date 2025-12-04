@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreatePermissionTemplateAccess < ActiveRecord::Migration[5.2]
   def change
     create_table :permission_template_accesses do |t|
