@@ -6,7 +6,6 @@ require 'tmpdir'
 
 module PdfSplittable
   extend ActiveSupport::Concern
-  include Enumerable
 
   COL_WIDTH = 3
   COL_HEIGHT = 4

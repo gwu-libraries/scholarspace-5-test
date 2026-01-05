@@ -1,14 +1,18 @@
 # frozen_string_literal: true
 
 require 'hyrax/file_set_derivatives_service'
+require 'derivative_services/archival/archival_text_derivatives_service'
+require 'derivative_services/archival/archival_image_derivatives_service'
+require 'derivative_services/archival/archival_video_derivatives_service'
+require 'derivative_services/archival/archival_audio_derivatives_service'
 
 Hyrax.config do |config|
-  # Injected via `rails g hyrax:work_resource ArchivalDocument`
-  config.register_curation_concern :archival_document
-  # Injected via `rails g hyrax:work_resource AcademicDocument`
+  config.register_curation_concern :archival_text
+  config.register_curation_concern :archival_image
+  config.register_curation_concern :archival_video
+  config.register_curation_concern :archival_audio
+
   config.register_curation_concern :academic_document
-  # Injected via `rails g hyrax:work_resource Page`
-  config.register_curation_concern :derived_page
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
@@ -317,8 +321,10 @@ Hyrax.config do |config|
   # config.identifier_registrars = {}
 
   config.derivative_services = [
-    # IiifPrint::DerivativeRodeoService,
-    Hyrax::FileSetDerivativesService
+    DerivativeServices::Archival::ArchivalTextDerivativesService,
+    DerivativeServices::Archival::ArchivalImageDerivativesService,
+    DerivativeServices::Archival::ArchivalVideoDerivativesService,
+    DerivativeServices::Archival::ArchivalAudioDerivativesService
   ]
 end
 

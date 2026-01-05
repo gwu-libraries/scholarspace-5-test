@@ -11,8 +11,7 @@ presenter.member_presenters(array_of_ids) %> <% if members.present? %>
     </tr>
   </thead>
   <tbody>
-    <%= render partial: 'member', collection: members.reject {|m|
-    m.solr_document['has_model_ssim'] == ['DerivedPage'] } %>
+    <%= render partial: 'member', collection: members %>
   </tbody>
 </table>
 <div class="row">
