@@ -27,6 +27,7 @@ module CustomQueries
 
     # Solr query for for a Publication with a deduplication_key_tesi that matches the provided key
     # @return [Hash]
+    # TODO get rid of the hardcoded DerivedPage model name
     def query
       "ocr_text:#{@ocr_text} AND has_model_ssim:DerivedPage AND (is_page_of_ssim:#{@parent_document_id} OR id:#{@parent_document_id})"
     end

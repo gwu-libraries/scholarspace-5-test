@@ -3,9 +3,8 @@
 module Hyrax
   module Stats
     class WorkStatusSearchBuilder < ::SearchBuilder
-      include ExcludeDerivedPageable
 
-      self.default_processor_chain = [:include_suppressed_facet, :exclude_derived_pages]
+      self.default_processor_chain = [:include_suppressed_facet]
 
       # includes the suppressed facet to get information on deposits.
       # use caution when combining this with other searches as it sets the rows to
