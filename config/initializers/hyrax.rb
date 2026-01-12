@@ -358,7 +358,9 @@ Hyrax.config do |config|
       Hyrax::CustomQueries::FindByDateRange,
       Hyrax::CustomQueries::FindByModelAndPropertyValue,
       Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId,
-      Hyrax::CustomQueries::FindBySourceIdentifier
+      #Hyrax::CustomQueries::FindBySourceIdentifier,
+      Hyrax::CustomQueries::FindByPropertyValue
+
     ]
     custom_queries.each do |handler|
       Hyrax.query_service.custom_queries.register_query_handler(handler)

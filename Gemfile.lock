@@ -11,8 +11,8 @@ GIT
 
 GIT
   remote: https://github.com/samvera/hyrax
-  revision: 249288411db216a8c532fe3cdb5cd97360deb239
-  branch: main
+  revision: 66d749a9bfbfe478b5c9546d11ea12fea43b3732
+  branch: add_bulkrax
   specs:
     hyrax (5.2.0)
       active-fedora (~> 15.0)
@@ -20,6 +20,7 @@ GIT
       awesome_nested_set (~> 3.1)
       blacklight (~> 7.29)
       blacklight-gallery (~> 4.6.4)
+      blacklight_dynamic_sitemap (~> 1.0)
       breadcrumbs_on_rails (~> 3.0)
       browse-everything (>= 0.16, < 2.0)
       carrierwave (~> 1.0)
@@ -43,6 +44,7 @@ GIT
       hydra-works (>= 0.16)
       iiif_manifest (>= 0.3, < 2.0)
       json-schema
+      json_schemer
       legato (~> 0.3)
       linkeddata
       listen (~> 3.9)
@@ -242,6 +244,9 @@ GEM
     blacklight-gallery (4.6.4)
       blacklight (>= 7.17, < 9)
       rails (>= 6.1, < 9)
+    blacklight_dynamic_sitemap (1.0.0)
+      blacklight (> 7.0)
+      rails
     blacklight_iiif_search (2.1.0)
       blacklight (~> 7.0)
       ffi (~> 1.16.3)
@@ -557,6 +562,7 @@ GEM
       temple (>= 0.8.2)
       thor
       tilt
+    hana (1.3.7)
     hashdiff (1.2.1)
     hashie (5.0.0)
     hiredis (0.6.3)
@@ -657,6 +663,11 @@ GEM
     json-schema (6.0.0)
       addressable (~> 2.8)
       bigdecimal (~> 3.1)
+    json_schemer (2.5.0)
+      bigdecimal
+      hana (~> 1.3)
+      regexp_parser (~> 2.0)
+      simpleidn (~> 0.2)
     jwt (2.10.2)
       base64
     kaminari (1.2.2)
@@ -1054,6 +1065,7 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
+    simpleidn (0.2.3)
     slop (4.10.1)
     snaky_hash (2.0.3)
       hashie (>= 0.1.0, < 6)
