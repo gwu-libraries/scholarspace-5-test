@@ -12,6 +12,14 @@ Rails.application.configure do
   # Show full error reports.
   config.consider_all_requests_local = true
 
+  # Allowed hosts
+  if ENV["ALLOWED_HOST_REGEX"].present?
+    config.hosts << Regexp.new(ENV['ALLOWED_HOST_REGEX'])
+  end
+  if ENV['HOST_NAME'].present?
+    config.hosts << ENV['HOST_NAME']
+  end
+
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
   if Rails.root.join("tmp", "caching-dev.txt").exist?
