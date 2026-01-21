@@ -1,0 +1,100 @@
+<h1>
+  Title:
+  <%= Array(@presenter.title).first %>
+</h1>
+
+<% if @presenter.representative_presenter&.pdf? %>
+  <div>
+    <iframe
+      id="pdf-viewer"
+      width="100%"
+      height="600px"
+      frameborder="0"
+      scrolling="no"
+      marginheight="0"
+      marginwidth="0"
+      title="PDF Document"
+      src="/pdfjs/web/viewer.html?file=<%= without_params(download_path(id: @presenter.representative_presenter.id)) %>"
+    >
+    </iframe>
+  </div>
+<% end %>
+
+<div id="work-type">
+  Work type:
+  <%= @presenter.model.human_readable_type %>
+</div>
+
+<% if @presenter.creator.present? %>
+  <div id="creator">
+    Creator:
+    <%= Array(@presenter.creator).first %>
+  </div>
+<% end %>
+
+<% if @presenter.date_modified.present? %>
+  <div id="last_modified">
+    Last Modified:
+    <%= Array(@presenter.date_modified).first %>
+  </div>
+<% end %>
+
+<% if @presenter.date_uploaded.present? %>
+  <div id="date_uploaded">
+    Date Uploaded:
+    <%= Array(@presenter.date_uploaded).first %>
+  </div>
+<% end %>
+
+<% if @presenter.date_created.present? %>
+  <div id="date_created">
+    Date Created:
+    <%= Array(@presenter.date_created).first %>
+  </div>
+<% end %>
+
+<% if @presenter.rights_statement.present? %>
+  <div id="rights_statement">
+    Rights Statement:
+    <%= Array(@presenter.rights_statement).first %>
+  </div>
+<% end %>
+
+<% if @presenter.persistent_url.present? %>
+  <div id="persistent_url">
+    Persistent URL:
+    <%= Array(@presenter.persistent_url).first %>
+  </div>
+<% end %>
+
+<% if @presenter.related_url.present? %>
+<div id="related_url">
+  Related URL:
+  <%= Array(@presenter.related_url).first %>
+</div>
+<% end %>
+
+<% if @presenter.description.present? %>
+  <% @presenter.description.each_with_index do |description, index| %>
+    <div id=<%="description-#{index}"%>>
+      Description:
+      <%= iconify_auto_link(description) %>
+    </div>
+  <% end %>
+<% end %>
+
+<div>
+  <%= render "items", presenter: @presenter %>
+</div>
+
+<div>
+  <% @presenter.member_of_collection_ids.each do |collection_id| %>
+    <span
+      class='hide analytics-event'
+      data-category="work-in-collection"
+      data-action="work-in-collection-view"
+      data-name="<%= collection_id %>"
+    ></span>
+  <% end %>
+</div>
+

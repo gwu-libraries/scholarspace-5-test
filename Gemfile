@@ -5,8 +5,8 @@ source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem 'activerecord-nulldb-adapter', '~> 1.1'
-gem 'blacklight_iiif_search'
 gem 'blacklight-access_controls'
+gem 'blacklight_iiif_search'
 gem 'bootsnap', '>= 1.1.0', require: false
 gem 'bootstrap', '~> 4.0'
 gem 'coffee-rails', '~> 4.2'
@@ -14,8 +14,9 @@ gem 'dalli'
 gem 'derivative-rodeo'
 gem 'devise'
 gem 'devise-guests', '~> 0.8'
-gem 'hydra-role-management'
+gem 'factory_bot_rails'
 gem 'hydra-access-controls'
+gem 'hydra-role-management'
 gem 'hyrax', git: 'https://github.com/samvera/hyrax', branch: 'main'
 gem 'jbuilder', '~> 2.5'
 gem 'jquery-rails'
@@ -30,7 +31,6 @@ gem 'turbolinks', '~> 5'
 gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
 gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'uglifier', '>= 1.3.0'
-gem 'factory_bot_rails'
 
 # gem "bulkrax"
 

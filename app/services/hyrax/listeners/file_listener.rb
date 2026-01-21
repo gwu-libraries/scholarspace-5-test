@@ -10,16 +10,11 @@ module Hyrax
       def on_file_characterized(event)
         file_set = event[:file_set]
 
-        if file_set.file_set?
-          # Get the parent work if it is a file set
-          work = Hyrax.custom_queries.find_parent_work(resource: file_set)
-        else
-          work = file_set
-        end
+        work = Hyrax.custom_queries.find_parent_work(resource: file_set)
 
-        if all_files_characterized?(work)
-          ValkyrieCreateDerivativesJob.perform_later(work.id.to_s)
-        end
+        return unless all_files_characterized?(work)
+
+        ValkyrieCreateDerivativesJob.perform_later(work.id.to_s)
       end
 
       ##
@@ -27,7 +22,6 @@ module Hyrax
       # @param [Dry::Events::Event] event
       # @return [void]
       def on_file_uploaded(event)
-        # Run characterization for original file only and allow optional skip parameter
         if event.payload[:skip_derivatives] || !event[:metadata]&.original_file?
           return
         end
@@ -43,9 +37,6 @@ module Hyrax
       # @return [Boolean]
       def all_files_characterized?(work)
         child_ids = work.member_ids
-
-        # this could be optimized to a single query and probably falls apart with documents with many files
-
         child_works = child_ids.map { |id| Hyrax.query_service.find_by(id: id) }
 
         child_works_metadata =

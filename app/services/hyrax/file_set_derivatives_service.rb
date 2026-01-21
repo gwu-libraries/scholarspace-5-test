@@ -1,8 +1,10 @@
 # frozen_string_literal: true
+
 module Hyrax
   # Responsible for creating and cleaning up the derivatives of a file_set
   class FileSetDerivativesService
     attr_reader :file_set
+
     delegate :mime_type, to: :file_set
 
     # @param file_set [Hyrax::FileSet, Hyrax::FileMetadata] At least for this class, it must have #uri and #mime_type

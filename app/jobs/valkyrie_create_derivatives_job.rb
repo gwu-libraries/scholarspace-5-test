@@ -9,15 +9,6 @@ class ValkyrieCreateDerivativesJob < Hyrax::ApplicationJob
     derivative_service = work.derivative_service_class.new(work)
     # Call create_derivatives on the service
     derivative_service.create_derivatives
-  end
-
-  private
-
-  def reindex_parent(parent)
-    return unless parent&.thumbnail_id == file_set.id
-    Hyrax.logger.debug do
-      "Reindexing #{parent.id} due to creation of thumbnail derivatives."
-    end
-    Hyrax.index_adapter.save(resource: parent)
+    Hyrax.index_adapter.save(resource: work)
   end
 end

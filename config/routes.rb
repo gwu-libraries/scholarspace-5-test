@@ -4,16 +4,10 @@ require 'sidekiq/web'
 
 Rails.application.routes.draw do
   concern :iiif_search, BlacklightIiifSearch::Routes.new
-  mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
-
-  get '/uv/config/:id',
-      to: 'application#uv_config',
-      as: 'uv_config',
-      defaults: {
-        format: :json
-      }
-
+  mount Riiif::Engine => 'images', :as => :riiif
   mount Blacklight::Engine => '/'
+
+  get '/uv/config/:id', to: 'application#uv_config', as: 'uv_config', defaults: { format: :json }
 
   concern :searchable, Blacklight::Routes::Searchable.new
 

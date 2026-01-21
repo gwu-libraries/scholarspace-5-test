@@ -34,7 +34,10 @@ RUN apk --no-cache upgrade && \
   git \
   poppler-utils \
   libxml2 \
-  libxml2-dev
+  libxml2-dev \
+  python3 \
+  py3-pip \
+  ocrmypdf
 
 RUN setfacl -d -m o::rwx /usr/local/bundle && \
   gem update --silent --system $RUBYGEMS_VERSION
@@ -49,26 +52,20 @@ ENV PATH="/app/scholarspace:$PATH" \
   RAILS_SERVE_STATIC_FILES="1" \
   LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" 
 
-COPY --chown=8983:8983 Gemfile Gemfile.lock ./
+COPY --chown=8983:8983 . ./
 
 RUN bundle config set deployment true 
 
 RUN bundle install
-
-COPY --chown=8983:8983 ./package.json ./
-
-RUN mkdir -p ./public/uv
-
-RUN yarn install --production
-
-COPY --chown=8983:8983 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
 
 FROM scholarspace-dev-base AS scholarspace-dev
 
 ENTRYPOINT ["./scholarspace-entrypoint-dev.sh"]
+
 ONBUILD RUN RAILS_ENV=development SECRET_KEY_BASE=`bin/rake secret` bundle exec rake assets:precompile
+
 CMD ["./bin/rails", "server", "-p", "3000", "-b", "0.0.0.0", "RAILS_ENV=development"]
 
 FROM scholarspace-dev-base AS scholarspace-dev-worker

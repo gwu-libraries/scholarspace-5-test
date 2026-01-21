@@ -13,12 +13,6 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :exception
 
-  def uv_config
-    config = default_uv_config
-
-    respond_to { |format| format.json { render json: config } }
-  end
-
   # TODO: - this is placeholder and only certain parts seem to be working
   # but this should be the configuration for universal_viewer
   def default_uv_config

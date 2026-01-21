@@ -1,40 +1,49 @@
 <h1>
-  Title: <%= @presenter.title.first %>
+  Title:
+  <%= @presenter.title.first %>
 </h1>
 
 <div id="work-type">
-  Work type: <%= @presenter.model.human_readable_type %>
+  Work type:
+  <%= @presenter.model.human_readable_type %>
 </div>
 
 <% @presenter.description.each_with_index do |description, index| %>
   <div id=<%="description-#{index}"%>>
-    Description: <%= iconify_auto_link(description) %>
+    Description:
+    <%= iconify_auto_link(description) %>
   </div>
 <% end %>
 
 <div>
-  <%= render 'items', presenter: @presenter %>
+  <%= render "items", presenter: @presenter %>
 </div>
 
 <% if @presenter.representative_presenter&.pdf? %>
   <div>
-    <iframe id="pdf-viewer" 
-            width="100%" 
-            height="600px" 
-            frameborder="0"
-            scrolling="no" 
-            marginheight="0" 
-            marginwidth="0"
-            title="PDF Document" 
-            src="/pdfjs/web/viewer.html?file=<%= without_params(download_path(id: @presenter.representative_presenter.id)) %>">
+    <iframe
+      id="pdf-viewer"
+      width="100%"
+      height="600px"
+      frameborder="0"
+      scrolling="no"
+      marginheight="0"
+      marginwidth="0"
+      title="PDF Document"
+      src="/pdfjs/web/viewer.html?file=<%= without_params(download_path(id: @presenter.representative_presenter.id)) %>"
+    >
     </iframe>
   </div>
 <% end %>
 
-
-
 <div>
   <% @presenter.member_of_collection_ids.each do |collection_id| %>
-    <span class='hide analytics-event' data-category="work-in-collection" data-action="work-in-collection-view" data-name="<%= collection_id %>" ></span>
+    <span
+      class='hide analytics-event'
+      data-category="work-in-collection"
+      data-action="work-in-collection-view"
+      data-name="<%= collection_id %>"
+    ></span>
   <% end %>
 </div>
+
