@@ -1,7 +1,8 @@
 module Hyrax
   module Listeners
     class FileListener
-      ##
+      ## TODO move all this to listeners/hyrax_listener.rb
+
       # Called when 'file.characterized' event is published
       # Waits for all files to be characterized before triggering derivative creation
       #
@@ -22,9 +23,7 @@ module Hyrax
       # @param [Dry::Events::Event] event
       # @return [void]
       def on_file_uploaded(event)
-        if event.payload[:skip_derivatives] || !event[:metadata]&.original_file?
-          return
-        end
+        return if event.payload[:skip_derivatives] || !event[:metadata]&.original_file?
 
         ValkyrieCharacterizationJob.perform_later(event[:metadata].id.to_s)
       end

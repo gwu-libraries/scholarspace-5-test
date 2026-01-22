@@ -31,6 +31,7 @@ gem 'turbolinks', '~> 5'
 gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
 gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'uglifier', '>= 1.3.0'
+gem 'whispercpp'
 
 # gem "bulkrax"
 
