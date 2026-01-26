@@ -1324,7 +1324,7 @@ DEPENDENCIES
   puma
   rails (~> 7.2, < 8.0)
   rails_live_reload
-  riiif (~> 2.1)
+  riiif (~> 2.8)
   rsolr (>= 1.0, < 3)
   rspec-rails
   rtesseract
