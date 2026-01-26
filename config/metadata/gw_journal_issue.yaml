@@ -1,0 +1,42 @@
+---
+attributes:
+    gw_affiliation:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "gw_affiliation_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#gwaffiliation
+    doi:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "doi_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#doi
+    bulkrax_identifier:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "bulkrax_identifier_tesim"
+        predicate: https://iro.bl.uk/resource#bulkraxIdentifier
+    volume:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "volume_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#volume
+    issue:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "issue_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#issue

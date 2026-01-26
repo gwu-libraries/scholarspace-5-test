@@ -22,19 +22,27 @@
 #  `rails generate hyrax:collection_resource CollectionResource`
 
 attributes:
-  target_audience:
-    type: string
-    form:
-      primary: true
-      multiple: true
-    predicate: http://hyrax-example.com/target_audience
-  department:
-    type: string
-    form:
-      primary: true
-    predicate: http://hyrax-example.com/department
-  course:
-    type: string
-    form:
-      primary: false
-    predicate: http://hyrax-example.com/course
+    target_audience:
+        type: string
+        form:
+            primary: true
+            multiple: true
+        predicate: http://hyrax-example.com/target_audience
+    department:
+        type: string
+        form:
+            primary: true
+        predicate: http://hyrax-example.com/department
+    course:
+        type: string
+        form:
+            primary: false
+        predicate: http://hyrax-example.com/course
+    bulkrax_identifier:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "bulkrax_identifier_tesim"
+        predicate: https://iro.bl.uk/resource#bulkraxIdentifier
