@@ -9,10 +9,11 @@ module DerivativesServices
     def create_derivatives
       prepare_working_directory
 
-      require 'pry'
-      binding.pry
+      # TODO: copy over the implementation from other branch
 
       cleanup_working_directory
+
+      raise StandardError, 'Not implemented yet'
     end
 
     def prepare_working_directory
@@ -22,8 +23,8 @@ module DerivativesServices
       @working_dir = Rails.root.join('tmp', dir_name)
 
       Dir.mkdir(@working_dir)
-      Dir.mkdir(@working_dir + '/images')
-      Dir.mkdir(@working_dir + '/pdfs')
+      Dir.mkdir("#{@working_dir}/images")
+      Dir.mkdir("#{@working_dir}/pdfs")
     end
 
     def cleanup_working_directory
