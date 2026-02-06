@@ -6,13 +6,16 @@ class ArchivalDocument < Hyrax::Work
   include Hyrax::Schema(:basic_metadata)
   include Hyrax::Schema(:archival_document)
 
-  include IiifPrint.model_configuration(
-            pdf_splitter_service: IiifPrint::SplitPdfs::DerivativeRodeoSplitter,
-            pdf_split_child_model: DerivedPage,
-            derivative_service_plugins: [
-              IiifPrint::PDFDerivativeService,
-              IiifPrint::TextExtractionDerivativeService,
-              IiifPrint::TIFFDerivativeService
-            ]
-          )
+  def all_files_characterized?
+    child_works = member_ids.map { |id| Hyrax.query_service.find_by(id: id) }
+
+    child_works_metadata =
+      child_works.map do |cw|
+        cw&.file_ids&.first&.then do |file_id|
+          Hyrax.custom_queries.find_file_metadata_by(id: file_id)
+        end
+      end
+
+    child_works_metadata.any?(&:nil?) ? false : true
+  end
 end
