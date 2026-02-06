@@ -13,6 +13,7 @@ RUN apk --no-cache upgrade && \
   build-base \
   curl \
   gcompat \
+  vips \
   imagemagick \
   imagemagick-heic \
   imagemagick-jpeg \
@@ -33,7 +34,11 @@ RUN apk --no-cache upgrade && \
   git \
   poppler-utils \
   libxml2 \
-  libxml2-dev
+  libxml2-dev \
+  python3 \ 
+  py3-pip \
+  ocrmypdf \
+  cmake
 
 RUN setfacl -d -m o::rwx /usr/local/bundle && \
   gem update --silent --system $RUBYGEMS_VERSION
@@ -57,8 +62,6 @@ RUN bundle install
 COPY --chown=8983:8983 . ./
 
 COPY --chmod=755 ./bin/scholarspace-entrypoint-dev.sh ./
-
-RUN yarn install
 
 FROM scholarspace-dev-base AS scholarspace-dev
 
