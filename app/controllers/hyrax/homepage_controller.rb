@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require "iiif_print/homepage_search_builder"
 
 class Hyrax::HomepageController < ApplicationController
   # Adds Hydra behaviors into the application controller
@@ -8,7 +7,7 @@ class Hyrax::HomepageController < ApplicationController
 
   class_attribute :presenter_class
   self.presenter_class = Hyrax::HomepagePresenter
-  layout "homepage"
+  layout 'homepage'
   helper Hyrax::ContentBlockHelper
 
   def index
@@ -48,7 +47,7 @@ class Hyrax::HomepageController < ApplicationController
     Hyrax::SearchService.new(
       config: blacklight_config,
       user_params: {
-        q: ""
+        q: ''
       },
       scope: self,
       search_builder_class: search_builder_class
@@ -56,10 +55,10 @@ class Hyrax::HomepageController < ApplicationController
   end
 
   def sort_field
-    "date_uploaded_dtsi desc"
+    'date_uploaded_dtsi desc'
   end
 
   def search_builder_class
-    IiifPrint::HomepageSearchBuilder
+    Hyrax::HomepageSearchBuilder
   end
 end
