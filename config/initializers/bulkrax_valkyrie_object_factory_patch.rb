@@ -17,6 +17,7 @@ Rails.application.config.to_prepare do
       def self.prepended(mod)
         mod.singleton_class.prepend(ClassMethods)
       end
+
     end
   end
   Bulkrax::ValkyrieObjectFactory.prepend Bulkrax::ValkyrieObjectFactoryDecorator
