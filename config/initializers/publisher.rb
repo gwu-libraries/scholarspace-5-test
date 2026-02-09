@@ -1,3 +1,5 @@
 # frozen_string_literal: true
 
-# Hyrax.publisher.subscribe(HyraxListener.new)
+require 'hyrax_listener'
+
+Hyrax.publisher.subscribe(HyraxListener.new)
