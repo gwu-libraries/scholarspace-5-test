@@ -45,5 +45,7 @@ Rails.application.configure do
   # Raises error for missing translations
   # config.i18n.raise_on_missing_translations = true
 
-  config.log_level = :warn
+  config.log_level = :debug
+  # Disable Sidekiq for tests
+  config.active_job.queue_adapter = :inline
 end
