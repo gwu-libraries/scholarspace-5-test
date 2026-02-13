@@ -15,8 +15,8 @@ RSpec.describe "Import files and works with Bulkrax" do
   end
   describe "Imported works and files" do
     it "Has the correct visibility" do
-      binding.pry
-      #puts @importer.current_run.inspect
+      #binding.pry
+      puts @importer.current_run.inspect
     end
   end
 
