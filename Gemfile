@@ -7,6 +7,7 @@ gem 'blacklight-access_controls'
 gem 'blacklight_iiif_search'
 gem 'bootsnap', '>= 1.1.0', require: false
 gem 'bootstrap', '~> 4.0'
+gem 'bulkrax'
 gem 'coffee-rails', '~> 4.2'
 gem 'dalli'
 gem 'derivative-rodeo'
@@ -30,8 +31,6 @@ gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
 gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'uglifier', '>= 1.3.0'
 gem 'whispercpp'
-
-# gem "bulkrax"
 
 group :development do
   gem 'better_errors' # add command line in browser when errors
