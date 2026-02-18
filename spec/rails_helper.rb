@@ -2,25 +2,27 @@
 require 'simplecov'
 SimpleCov.start
 
-require "spec_helper"
-ENV["RAILS_ENV"] ||= "test"
-require File.expand_path("../config/environment", __dir__)
+require 'spec_helper'
+ENV['RAILS_ENV'] ||= 'test'
+require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production
-if Rails.env.production?
-  abort("The Rails environment is running in production mode!")
-end
-require "rspec/rails"
+abort('The Rails environment is running in production mode!') if Rails.env.production?
+require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
-require "hyrax"
-require "valkyrie"
+require 'hyrax'
+require 'valkyrie'
 require 'capybara/rails'
+
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Memory::MetadataAdapter.new,
   :test_adapter
 )
+
+Valkyrie.config.metadata_adapter = :test_adapter
+
 Valkyrie::StorageAdapter.register(Valkyrie::Storage::Memory.new, :memory)
 
-# Valkyrie.config.storage_adapter = :memory
+Valkyrie.config.storage_adapter = :memory
 
 query_registration_target =
   Valkyrie::MetadataAdapter.find(:test_adapter).query_service.custom_queries
@@ -61,10 +63,10 @@ RSpec.configure do |config|
 end
 
 def sign_in_user(user)
-    visit "/users/sign_in"
+  visit '/users/sign_in'
 
-    fill_in("user_email", with: user.email)
-    fill_in("user_password", with: user.password)
-    
-    click_button("Log in")
+  fill_in('user_email', with: user.email)
+  fill_in('user_password', with: user.password)
+
+  click_button('Log in')
 end
