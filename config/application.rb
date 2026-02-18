@@ -1,6 +1,6 @@
-require_relative "boot"
+require_relative 'boot'
 
-require "rails/all"
+require 'rails/all'
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -18,12 +18,13 @@ module Scholarspace
     # the framework and any gems in your application.
     config.session_store :cookie_store,
                          key:
-                           "_#{ENV.fetch("APP_NAME", "scholarspace")}_session"
+                           "_#{ENV.fetch('APP_NAME', 'scholarspace')}_session"
 
     # use SideKiq by default
+    # config.active_job.queue_adapter = :inline
     config.active_job.queue_adapter = :sidekiq
 
-    if ENV["RAILS_LOG_TO_STDOUT"]
+    if ENV['RAILS_LOG_TO_STDOUT']
       logger = ActiveSupport::Logger.new($stdout)
       logger.formatter = config.log_formatter
       config.logger = ActiveSupport::TaggedLogging.new(logger)
@@ -31,7 +32,7 @@ module Scholarspace
 
     # The locale is set by a query parameter, so if it's not found render 404
     config.action_dispatch.rescue_responses.merge!(
-      "I18n::InvalidLocale" => :not_found
+      'I18n::InvalidLocale' => :not_found
     )
   end
 end
