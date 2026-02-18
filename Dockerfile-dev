@@ -75,7 +75,6 @@ USER root
 RUN apk --no-cache add bash \
   ffmpeg \
   mediainfo \
-  openjdk17-jre \
   perl \
   tesseract-ocr
 USER 8983:8983
