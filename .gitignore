@@ -39,7 +39,8 @@
 
 /public/assets
 /public/files
-/public/uv
+/public/uv/*
+!/public/uv/.keep
 /public/branding/*
 !public/branding/.keep
 
