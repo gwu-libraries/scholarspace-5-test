@@ -67,8 +67,18 @@ class HyraxListener
   # def on_object_failed_deposit
   # end
 
-  # def on_object_deposited
-  # end
+  def on_object_deposited(event)
+    # TODO: test and implement this
+    return if true
+    # here, toss the event if it is a fileset, then schedule job to process work level derivatives, rescheduling if not all files ready
+
+    # this event includes *both* works and filesets, we are only interested in the works
+    return unless Hyrax.config.curation_concerns.map(&:to_s).include?(event[:object].model_name.name)
+
+    CreateCustomDerivativesJob.set(wait: 1.minute).perform_later(
+      work_id: event[:object].id.to_s
+    )
+  end
 
   # def on_object_acl_updated
   # end

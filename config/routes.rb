@@ -1,39 +1,36 @@
-require "sidekiq/web"
+require 'sidekiq/web'
 
 Rails.application.routes.draw do
   concern :iiif_search, BlacklightIiifSearch::Routes.new
-  if Hyrax.config.iiif_image_server?
-    mount IiifPrint::Engine, at: "/"
-    mount Riiif::Engine => "images", :as => :riiif
-  end
+  mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
 
-  get "/uv/config/:id", to: "application#uv_config", as: "uv_config", defaults: { format: :json }
+  get '/uv/config/:id', to: 'application#uv_config', as: 'uv_config', defaults: { format: :json }
 
-  mount Blacklight::Engine => "/"
+  mount Blacklight::Engine => '/'
 
   concern :searchable, Blacklight::Routes::Searchable.new
 
   resource :catalog,
            only: [:index],
-           as: "catalog",
-           path: "/catalog",
-           controller: "catalog" do
+           as: 'catalog',
+           path: '/catalog',
+           controller: 'catalog' do
     concerns :searchable
   end
   devise_for :users
-  mount Hydra::RoleManagement::Engine => "/"
-  mount Sidekiq::Web => "/sidekiq"
-  mount Qa::Engine => "/authorities"
-  mount Hyrax::Engine, at: "/"
-  resources :welcome, only: "index"
-  root "hyrax/homepage#index"
+  mount Hydra::RoleManagement::Engine => '/'
+  mount Sidekiq::Web => '/sidekiq'
+  mount Qa::Engine => '/authorities'
+  mount Hyrax::Engine, at: '/'
+  resources :welcome, only: 'index'
+  root 'hyrax/homepage#index'
   curation_concerns_basic_routes
   concern :exportable, Blacklight::Routes::Exportable.new
 
   resources :solr_documents,
             only: [:show],
-            path: "/catalog",
-            controller: "catalog" do
+            path: '/catalog',
+            controller: 'catalog' do
     concerns :exportable
     concerns :iiif_search
   end
@@ -41,7 +38,7 @@ Rails.application.routes.draw do
   resources :bookmarks do
     concerns :exportable
 
-    collection { delete "clear" }
+    collection { delete 'clear' }
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end
