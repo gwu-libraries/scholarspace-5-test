@@ -69,3 +69,5 @@ group :development, :test do
   gem 'vcr'
   gem 'webmock'
 end
+
+gem "thor", "= 1.5"
