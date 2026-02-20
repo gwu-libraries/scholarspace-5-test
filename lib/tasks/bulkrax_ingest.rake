@@ -25,11 +25,16 @@ namespace :gwss do
     #importer.parser_fields['update_files'] = true
     @importer.save
     # Reference for deactivating listener at the conclusion of the upload
-    @listener = activate_listener
+    #@listener = activate_listener
     Bulkrax::ImporterJob.send(@importer.parser.perform_method, @importer.id)
 
   end
+
+  desc "Retrieve the status of a Bulkrax import"
+
 end
+
+
 
 
 def activate_listener
