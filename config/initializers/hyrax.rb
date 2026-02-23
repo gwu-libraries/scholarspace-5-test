@@ -3,15 +3,10 @@
 require 'hyrax/file_set_derivatives_service'
 
 Hyrax.config do |config|
-    # Injected via `rails g hyrax:work_resource ArchivalDocument`
-    config.register_curation_concern :archival_document
-    # Injected via `rails g hyrax:work_resource AcademicDocument`
-    config.register_curation_concern :academic_document
-    config.register_curation_concern :gw_work
-    config.register_curation_concern :gw_etd
-    config.register_curation_concern :gw_journal_issue
-    # Injected via `rails g hyrax:work_resource Page`
-    config.register_curation_concern :derived_page
+  # Injected via `rails g hyrax:work_resource ArchivalDocument`
+  config.register_curation_concern :archival_document
+  # Injected via `rails g hyrax:work_resource AcademicDocument`
+  config.register_curation_concern :academic_document
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
@@ -339,11 +334,30 @@ Qa::Authorities::Local.register_subauthority(
   'Qa::Authorities::Local::TableBasedAuthority'
 )
 
-  Rails.application.reloader.to_prepare do
-    # set bulkrax default work type to first curation_concern if it isn't already set
-    if Bulkrax.default_work_type.blank?
-      Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s
-    end
+Rails.application.reloader.to_prepare do
+  custom_queries = [
+    Hyrax::CustomQueries::Navigators::CollectionMembers,
+    Hyrax::CustomQueries::Navigators::ChildCollectionsNavigator,
+    Hyrax::CustomQueries::Navigators::ParentCollectionsNavigator,
+    Hyrax::CustomQueries::Navigators::ChildFileSetsNavigator,
+    Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
+    Hyrax::CustomQueries::Navigators::ParentWorkNavigator,
+    Hyrax::CustomQueries::Navigators::FindFiles,
+    Hyrax::CustomQueries::FindAccessControl,
+    Hyrax::CustomQueries::FindCollectionsByType,
+    Hyrax::CustomQueries::FindFileMetadata,
+    Hyrax::CustomQueries::FindIdsByModel,
+    Hyrax::CustomQueries::FindManyByAlternateIds,
+    Hyrax::CustomQueries::FindModelsByAccess,
+    Hyrax::CustomQueries::FindCountBy,
+    Hyrax::CustomQueries::FindByDateRange,
+    Hyrax::CustomQueries::FindByModelAndPropertyValue,
+    Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId,
+    Hyrax::CustomQueries::FindByPropertyValue
+
+  ]
+  custom_queries.each do |handler|
+    Hyrax.query_service.custom_queries.register_query_handler(handler)
   end
 end
 
