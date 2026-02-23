@@ -7,6 +7,9 @@ Hyrax.config do |config|
   config.register_curation_concern :archival_document
   # Injected via `rails g hyrax:work_resource AcademicDocument`
   config.register_curation_concern :academic_document
+  config.register_curation_concern :gw_work
+  config.register_curation_concern :gw_etd
+  config.register_curation_concern :gw_journal_issue
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
@@ -362,3 +365,10 @@ Rails.application.reloader.to_prepare do
 end
 
 ActiveFedora.init(solr_config_path: Rails.root.join('config', 'solr.yml'))
+
+Rails.application.reloader.to_prepare do
+  # set bulkrax default work type to first curation_concern if it isn't already set
+  if Bulkrax.default_work_type.blank?
+    Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s
+  end
+end

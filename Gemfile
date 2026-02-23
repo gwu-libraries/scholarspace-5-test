@@ -70,4 +70,4 @@ group :development, :test do
   gem 'webmock'
 end
 
-gem "thor", "= 1.5"
+#gem "thor", "= 1.5"
