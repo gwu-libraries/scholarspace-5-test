@@ -19,7 +19,9 @@ Rails.application.routes.draw do
   end
   devise_for :users
   mount Hydra::RoleManagement::Engine => '/'
-  mount Sidekiq::Web => '/sidekiq'
+  authenticate :user, ->(u) { u.admin? } do
+    mount Sidekiq::Web => '/sidekiq'
+  end
   mount Qa::Engine => '/authorities'
   mount Hyrax::Engine, at: '/'
   resources :welcome, only: 'index'
@@ -40,5 +42,7 @@ Rails.application.routes.draw do
 
     collection { delete 'clear' }
   end
+
+  match '*path', to: 'errors#not_found', via: :all, format: false, defaults: { format: 'html' }
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end
