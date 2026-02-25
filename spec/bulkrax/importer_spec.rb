@@ -9,10 +9,7 @@ RSpec.describe "Import files and works with Bulkrax" do
     @importer.field_mapping = Bulkrax.field_mappings[field_mapping_key]
     @importer.parser_fields['update_files'] = true
     @importer.save
-    #binding.pry
-    perform_enqueued_jobs do
-      Bulkrax::ImporterJob.send(@importer.parser.perform_method, @importer.id)
-    end
+    Bulkrax::ImporterJob.send(@importer.parser.perform_method, @importer.id)
   end
   describe "Imported works and files" do
     xit "Has the correct visibility" do
