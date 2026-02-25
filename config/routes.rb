@@ -3,7 +3,7 @@ require 'sidekiq/web'
 Rails.application.routes.draw do
   concern :iiif_search, BlacklightIiifSearch::Routes.new
   mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
-  get '/digitalstacks', to: 'digital_stacks_homepage#show'
+
   get '/uv/config/:id', to: 'application#uv_config', as: 'uv_config', defaults: { format: :json }
 
   mount Blacklight::Engine => '/'
