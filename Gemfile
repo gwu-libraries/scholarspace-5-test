@@ -26,6 +26,7 @@ gem 'riiif', '~> 2.1'
 gem 'rsolr', '>= 1.0', '< 3'
 gem 'rtesseract'
 gem 'sidekiq', '~> 6.4'
+gem 'thor'
 gem 'turbolinks', '~> 5'
 gem 'twitter-typeahead-rails', '0.11.1.pre.corejavascript'
 gem 'tzinfo-data', platforms: %i[windows jruby]
