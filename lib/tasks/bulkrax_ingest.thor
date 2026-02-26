@@ -1,5 +1,6 @@
 require 'thor'
 require 'fileutils'
+require 'pry'
 
 class BulkraxIngestTask < Thor
   # Pass the name of a file (expects .zip) for importing
@@ -9,7 +10,7 @@ class BulkraxIngestTask < Thor
   # Provide the ID (email address) of a user; otherwise, it will be extracted from the CSV's depositor field
   option :user, required: false, type: :string, aliases: :u
   def bulk_import(file)
-      user_email = options.fetch(:user) || get_depositor_from_csv(file)
+      user_email = options.fetch(:user, get_depositor_from_csv(file))
       user = get_user(user_email)
       # Use the default Admin Set if none provided
       admin_set_id = options[:admin_set].nil? ? Hyrax::AdminSetCreateService.find_or_create_default_admin_set.id : get_admin_sets(user, options[:admin_set])
@@ -39,27 +40,27 @@ class BulkraxIngestTask < Thor
       update_pending(importer)
     end
 
-    desc "get_importer_status", "updates the status of pending Bulkrax entries"
-    # If --next, task will re-schedule itself upon completion
+    desc "update_importer_status", "updates the status of pending Bulkrax entries"
+    # TO DO: handle failures not associated with specific entries
     option :import_id, required: false, type: :string, aliases: :i
-    def get_importer_status
+    def update_importer_status
       # Glob files in pending directory
-      pending = Dir.glob("tmp/imports/pending/*.csv")
+      pending = Dir.glob("tmp/imports/pending/*")
       # For each, retrieve the importer by its id, get the last run, and check the status
+      import_id = options.fetch(:import_id, nil)
       if import_id
-        pending = pending.select { |f| f.ends_with?("_#{import_id}.csv") }
+        # If import_id provided, use only files matching that ID
+        pending = pending.select { |f| f.ends_with?("_#{import_id}") }
       end
       pending.each do |file|
-        m = /.+_(\d+)\.csv/.match(file)
-        import_id = m[1]
-        next if not import_id
-        csv_file = File.readlink(file)
-        importer = Bulkrax::Importer.find(import_id.to_i)
+        # Extract the import ID from the file name
+        importer = get_importer(file)
+        next if not importer
         # If complete with failures inspect the failed entries
         status_rows = []
         importer.failed_statuses.each do |status|
           # If the failure is due to a failed entry, get its identifier
-          entry_id = status.statusable_id if status.statusable_type == "Bulkrax::Entry" else nil
+          entry_id = status.statusable_type == "Bulkrax::Entry" ? status.statusable_id : nil
           if entry_id
             # retrieve the entry associated with this status
             entry = importer.entries.find { |entry| entry.id = entry_id }
@@ -69,25 +70,11 @@ class BulkraxIngestTask < Thor
               row[key] = status[key]
             end
             # Convert backtrace from array to string
-            row[:error_backtrace] = row[:backtrace].join("\n")
+            row[:error_backtrace] = row[:error_backtrace].join("\n")
             status_rows << row
           end
         end
-        if not status_rows.empty?
-          # Create new CSV in processed folder with the same name as the original plus an _errors suffix
-          FileUtils.mkdir_p("tmp/imports/processed")
-          csv_name = File.basename(csv_file, ".*")
-          CSV.open("tmp/imports/processed/#[csv_name}_errors.csv", "w") do |csv|
-            headers = status_rows.flat_map(&:keys).uniq
-            csv << headers
-            status_rows.each { |row| csv << row.values_at(*headers) }
-          end
-        else
-          # Create symlink to original in processed folder
-          File.symlink(csv_file, "tmp/imports/processed/#{csv_name}.csv")
-        end
-        # Delete symlink in pending folder
-          File.delete(file)
+        update_files(status_rows, importer, file)
       end
     end
 end
@@ -95,11 +82,9 @@ end
   def update_pending(importer)
     # Check permissions when running as Docker command
     FileUtils.mkdir_p("tmp/imports/pending")
-    # path to unzipped CSV in tmp/imports
-    # per https://github.com/samvera/bulkrax/blob/33f3285b0ad9fc0d85fb633882798033ef496d0f/app/models/bulkrax/importer.rb#L258
-    csv_path = Dir.glob("tmp/imports/import_#{importer.path_string}/*.csv").first
-    # Create a link in the pending directory (to avoid duplicating the data on disk)
-    File.symlink(csv_path, "tmp/imports/pending/import_#{importer.id}.csv")
+    # path to unzipped CSV in tmp/imports always starts with the Importer.id
+    # The path may not exist yet at time of execution, so we just create an empty file in the pending directory to record the ID
+    FileUtils.touch("tmp/imports/pending/import_#{importer.id}")
   end
 
   def get_admin_sets(user, admin_set_title)
@@ -137,4 +122,33 @@ end
       user_email = csv[0]["depositor"]
       user_email
     end
+  end
+
+  def get_importer(file_name)
+    m = /import_(\d+)/.match(file_name)
+    import_id = m[1]
+    return if not import_id
+    # Retrieve importer with this ID
+    Bulkrax::Importer.find(import_id.to_i)
+  rescue
+    warn "No importer found for import ID #{import_id} from file #{file_name}. Perhaps it was deleted?"
+  end
+
+  def update_files(rows, importer, pending_file)
+    csv_file = Dir.glob("tmp/imports/import_#{importer.path_string}/*.csv").first
+    if not rows.empty?
+      # Create new CSV in processed folder with the same name as the original plus an _errors suffix
+      FileUtils.mkdir_p("tmp/imports/processed")
+      csv_name = File.basename(csv_file, ".*")
+      CSV.open("tmp/imports/processed/#{csv_name}_errors_from_importer_#{importer.id}.csv", "w") do |csv|
+        headers = rows.flat_map(&:keys).uniq
+        csv << headers
+        rows.each { |row| csv << row.values_at(*headers) }
+      end
+    else
+      # Create symlink to original in processed folder
+      File.symlink(csv_file, "tmp/imports/processed/#{csv_name}.csv")
+    end
+    # Delete file in pending folder
+    File.delete(pending_file)
   end
