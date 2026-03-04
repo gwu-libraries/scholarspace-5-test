@@ -17,15 +17,29 @@ class CreateCustomDerivativesJob < ApplicationJob
     @retries = retries + 1
 
     begin
+      identify_file_types
       create_derivatives
     rescue StandardError
       reschedule_job
     end
   end
 
+  def file_types
+    member_file_sets = @work.member_ids.map { |id| Hyrax.query_service.find_by(id: id) }
+    member_file_sets.map { |fs| fs.original_file.mime_type }.uniq
+  end
+
   def create_derivatives
+    reschedule_job if file_types.any? { |ft| ft.empty? }
+
+    if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
+      CustomDerivativesServices::AudioTranscriptDerivativesService.new(@work).call
+    end
+
+    return unless file_types.any? { |ft| ft.start_with?('image/') }
+
     CustomDerivativesServices::ImagesToPdfDerivativesService.new(@work).call
-    # CustomDerivativesServices::AudioTranscriptDerivativesService.new(@work).create_derivatives
+
     # CustomDerivativesServices::PdfToImagesDerivativesService.new(@work).create_derivates
     # raise StandardError, 'Not implemented yet'
   end

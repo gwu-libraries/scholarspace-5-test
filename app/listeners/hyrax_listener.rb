@@ -68,8 +68,6 @@ class HyraxListener
   # end
 
   def on_object_deposited(event)
-    # TODO: test and implement this
-    return if true
     # here, toss the event if it is a fileset, then schedule job to process work level derivatives, rescheduling if not all files ready
 
     # this event includes *both* works and filesets, we are only interested in the works
