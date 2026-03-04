@@ -24,8 +24,8 @@ Rails.application.configure do
   config.action_controller.perform_caching = false
 
   # Allowed hosts
-  if ENV["ALLOWED_HOST_REGEX"].present?
-    config.hosts << Regexp.new(ENV['ALLOWED_HOST_REGEX'])
+  if ENV["ALLOWED_HOSTS_REGEX"].present?
+    config.hosts << Regexp.new(ENV['ALLOWED_HOSTS_REGEX'])
   end
   if ENV['HOST_NAME'].present?
     config.hosts << ENV['HOST_NAME']
