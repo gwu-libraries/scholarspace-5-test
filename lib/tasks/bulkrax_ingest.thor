@@ -55,7 +55,8 @@ class BulkraxIngestTask < Thor
       pending.each do |file|
         # Extract the import ID from the file name
         importer = get_importer(file)
-        next if not importer
+        # Skip any still pending
+        next if (!importer) || (importer.last_run.statuses.select { |s| s.status_message.include? "Complete" }.empty?)
         # If complete with failures inspect the failed entries
         status_rows = []
         importer.failed_statuses.each do |status|
@@ -136,10 +137,10 @@ end
 
   def update_files(rows, importer, pending_file)
     csv_file = Dir.glob("tmp/imports/import_#{importer.path_string}/*.csv").first
+    csv_name = File.basename(csv_file, ".*")
     if not rows.empty?
       # Create new CSV in processed folder with the same name as the original plus an _errors suffix
       FileUtils.mkdir_p("tmp/imports/processed")
-      csv_name = File.basename(csv_file, ".*")
       CSV.open("tmp/imports/processed/#{csv_name}_errors_from_importer_#{importer.id}.csv", "w") do |csv|
         headers = rows.flat_map(&:keys).uniq
         csv << headers
