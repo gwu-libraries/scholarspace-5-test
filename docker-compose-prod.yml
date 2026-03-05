@@ -33,6 +33,7 @@ services:
         restart: unless-stopped
         networks:
             - scholarspace
+            - fedora
 
     worker:
         container_name: worker
@@ -67,6 +68,7 @@ services:
             - prod-tmp:/app/scholarspace/tmp
         networks:
             - scholarspace
+            - fedora
     nginx:
         container_name: nginx
         hostname: nginx
