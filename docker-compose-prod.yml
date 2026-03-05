@@ -103,7 +103,7 @@ services:
         ports:
             - 8080:8080
         networks:
-            - scholarspace
+            - fedora
     postgres:
         image: postgres:15-alpine
         container_name: postgres
@@ -129,9 +129,9 @@ services:
         volumes:
             - prod-pg-fcrepo:/var/lib/postgresql/data
         networks:
-            - scholarspace
-        ports:
-            - "5433:5432"
+            - fedora
+        #        ports:
+        #            - "5432:5432"
         restart: unless-stopped
 
     fits:
@@ -169,14 +169,16 @@ services:
         hostname: solr
         image: solr:8.11
         restart: unless-stopped
+        user: 8983:8983
         command:
             - sh
             - "-c"
             - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
         volumes:
             - solr_home:/var/solr/data:cached
+            - prod-derivatives:/app/scholarspace/derivatives
             - ./solr/conf:/opt/solr/server/configsets/hyraxconf
-            - ./solr/plugins:/opt/solr/lib
+            - ./solr/plugins:/opt/solr/contrib/plugins
         ulimits:
             nofile:
                 soft: 65536
@@ -213,3 +215,7 @@ networks:
         driver: bridge
         driver_opts:
             com.docker.network.bridge.name: br-scholarspace
+    fedora:
+        driver: bridge
+        driver_opts:
+            com.docker.network.bridge.name: br-fedora
