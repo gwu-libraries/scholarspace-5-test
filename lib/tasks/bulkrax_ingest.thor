@@ -56,9 +56,9 @@ class BulkraxIngestTask < Thor
         # Extract the import ID from the file name
         importer = get_importer(file)
         # Skip any still pending
-        next if (!importer) || (importer.last_run.statuses.select { |s| s.status_message.include? "Complete" }.empty?)
+        next if (!importer) || (importer.last_run.statuses.select { |s| s.status_message.include?("Complete") || s.status.message.include?("Failed") }.empty?)
         # If complete with failures inspect the failed entries
-        status_rows = []
+        failure_rows = []
         importer.failed_statuses.each do |status|
           # If the failure is due to a failed entry, get its identifier
           entry_id = status.statusable_type == "Bulkrax::Entry" ? status.statusable_id : nil
@@ -72,10 +72,12 @@ class BulkraxIngestTask < Thor
             end
             # Convert backtrace from array to string
             row[:error_backtrace] = row[:error_backtrace].join("\n")
-            status_rows << row
+            failure_rows << row
           end
         end
-        update_files(status_rows, importer, file)
+        # catch failures that occur prior to processing of entries
+        failure_report = importer.last_run.statuses.select { |s| s.status_message.include?("Failed") }
+        update_files(failure_report, failure_rows, importer, file)
       end
     end
 end
@@ -135,19 +137,22 @@ end
     warn "No importer found for import ID #{import_id} from file #{file_name}. Perhaps it was deleted?"
   end
 
-  def update_files(rows, importer, pending_file)
+  def update_files(failure_report, failure_rows, importer, pending_file)
     csv_file = Dir.glob("tmp/imports/import_#{importer.path_string}/*.csv").first
     csv_name = File.basename(csv_file, ".*")
-    if not rows.empty?
+    if not failure_rows.empty?
       # Create new CSV in processed folder with the same name as the original plus an _errors suffix
       FileUtils.mkdir_p("tmp/imports/processed")
       CSV.open("tmp/imports/processed/#{csv_name}_errors_from_importer_#{importer.id}.csv", "w") do |csv|
-        headers = rows.flat_map(&:keys).uniq
+        headers = failure_rows.flat_map(&:keys).uniq
         csv << headers
-        rows.each { |row| csv << row.values_at(*headers) }
+        failure_rows.each { |row| csv << row.values_at(*headers) }
       end
+    elsif not failure_report.empty?
+      # Save import failure to JSON
+      File.open("tmp/imports/processed/#{csv_name}.failure.json", "w") { |f| f.puts failure_report.to_json }
     else
-      # Create symlink to original in processed folder
+      # On success, create symlink to original in processed folder
       File.symlink(csv_file, "tmp/imports/processed/#{csv_name}.csv")
     end
     # Delete file in pending folder
