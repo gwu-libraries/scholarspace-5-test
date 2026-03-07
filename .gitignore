@@ -7,6 +7,8 @@
 # Ignore bundler config.
 /.bundle
 
+/.DS_Store
+
 # Ignore the default SQLite database.
 /db/*.sqlite3
 /db/*.sqlite3-journal
@@ -39,8 +41,7 @@
 
 /public/assets
 /public/files
-/public/uv/*
-!/public/uv/.keep
+/public/uv
 /public/branding/*
 !public/branding/.keep
 
@@ -61,4 +62,3 @@ terraform.tfstate
 terraform.tfstate.backup
 
 .prettierrc
-.DS_Store

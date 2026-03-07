@@ -22,6 +22,7 @@ RUN apk --no-cache upgrade && \
   imagemagick-svg \
   imagemagick-tiff \
   imagemagick-webp \
+  ffmpeg \
   jemalloc \
   ruby-grpc \
   tzdata \

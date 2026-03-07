@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'whisper'
+
 module CustomDerivativesServices
   class AudioTranscriptDerivativesService
     def initialize(work)
@@ -14,9 +16,6 @@ module CustomDerivativesServices
       Dir.glob("#{@working_dir}/av_files/*").each do |file_path|
         generate_vtt(file_path)
       end
-    rescue StandardError
-    ensure
-      cleanup_working_directory
     end
 
     def prepare_working_directory
@@ -43,7 +42,7 @@ module CustomDerivativesServices
     def copy_av_files_to_working_dir
       av_file_sets.each_with_index do |fs, _i|
         io = Hyrax.storage_adapter.find_by(id: fs.original_file.file_identifier)
-        destination_io = File.open("#{@working_dir}/av_files/#{fs.original_file.original_filename}")
+        destination_io = File.open("#{@working_dir}/av_files/#{fs.original_file.original_filename}", 'w')
 
         IO.copy_stream(io.stream, destination_io)
         destination_io.close
@@ -51,7 +50,8 @@ module CustomDerivativesServices
     end
 
     def generate_vtt(file_path)
-      title = @work.title&.first&.gsub(/\s+/, '_') || @work.id
+      # get the last part of the file path
+      title = file_path.split('/').last.split('.').first
 
       whisper = Whisper::Context.new('base')
 
@@ -60,9 +60,6 @@ module CustomDerivativesServices
       File.open("#{@working_dir}/transcripts/#{title}.vtt", 'w') do |file|
         file.write(vtt)
       end
-
-      require 'pry'
-      binding.pry
     end
   end
 end

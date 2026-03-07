@@ -76,7 +76,7 @@ Hyrax.config do |config|
   # config.persistent_hostpath = 'http://localhost/files/'
 
   # If you have ffmpeg installed and want to transcode audio and video set to true
-  config.enable_ffmpeg = true
+  config.enable_ffmpeg = false
 
   # Hyrax uses NOIDs for files and collections instead of Fedora UUIDs
   # where NOID = 10-character string and UUID = 32-character string w/ hyphens
@@ -368,7 +368,5 @@ ActiveFedora.init(solr_config_path: Rails.root.join('config', 'solr.yml'))
 
 Rails.application.reloader.to_prepare do
   # set bulkrax default work type to first curation_concern if it isn't already set
-  if Bulkrax.default_work_type.blank?
-    Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s
-  end
+  Bulkrax.default_work_type = Hyrax.config.curation_concerns.first.to_s if Bulkrax.default_work_type.blank?
 end

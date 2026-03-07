@@ -1,16 +1,39 @@
 {
   "name": "scholarspace",
+  "version": "1.0.0",
   "private": true,
-  "repository": "git@github.com:gwu-libraries/scholarspace-5-test.git",
-  "dependencies": {
-    "universalviewer": "^3.1.4"
+  "description": "If you're working on a PR for this project, create a feature branch off of `main`.",
+  "homepage": "https://github.com/gwu-libraries/scholarspace-5-test#readme",
+  "bugs": {
+    "url": "https://github.com/gwu-libraries/scholarspace-5-test/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/gwu-libraries/scholarspace-5-test.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
   },
   "scripts": {
     "preinstall": "rm -rf ./public/uv",
-    "postinstall": "yarn run uv-install && yarn run uv-config",
+    "postinstall": "yarn run uv-install && yarn run uv-config && yarn run ramp-install",
     "uv-install": "cp -r ./node_modules/universalviewer/dist ./public/uv",
+    "ramp-install": "cp -r ./node_modules/@samvera/ramp/dist ./public/ramp",
     "uv-config": "cp ./config/uv/uv.html ./public/uv/uv.html && cp ./config/uv/uv-config.json ./public/uv/uv-config.json"
+  },
+  "dependencies": {
+    "@samvera/ramp": "4.0.2",
+    "css-loader": "^7.1.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-on-rails": "^16.4.0-rc.6",
+    "style-loader": "^4.0.0",
+    "universalviewer": "^3.1.4",
+    "video.js": "^8.10.0"
   },
   "devDependencies": {}
 }
-

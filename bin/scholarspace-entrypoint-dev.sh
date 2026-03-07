@@ -6,4 +6,3 @@ if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
 fi
 
 exec "${@}"
-

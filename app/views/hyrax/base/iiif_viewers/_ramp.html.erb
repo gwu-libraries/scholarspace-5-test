@@ -1,0 +1,11 @@
+<%= javascript_include_tag "ramp", type: "module" %>
+<%= react_component(
+  "RampPlayer",
+  props: {
+    manifestUrl:
+      main_app.polymorphic_url(
+        [main_app, :manifest, presenter],
+        { locale: I18n.locale },
+      ),
+  },
+) %>
