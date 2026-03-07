@@ -23,6 +23,8 @@ gem 'pg', '~> 1.3'
 gem 'puma'
 gem 'rails', '~> 7.2', '< 8.0'
 gem 'react_on_rails', '= 14.2'
+# required by react_on_rails 14.x generators
+gem 'package_json'
 gem 'riiif', '~> 2.1'
 gem 'rsolr', '>= 1.0', '< 3'
 gem 'rtesseract'
