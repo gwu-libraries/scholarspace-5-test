@@ -47,6 +47,7 @@ module Hyrax
         attribute :degree, Solr::Array, "degree_tesim"
         attribute :advisor, Solr::Array, "advisor_tesim"
         attribute :committee_member, Solr::Array, "committee_member_tesim"
+        attribute :proquest_zipfile, Solr::String, "proquest_zipfile_tesim"
         attribute :alternative_title, Solr::Array, "alternative_title_tesim"
         attribute :identifier, Solr::Array, "identifier_tesim"
         attribute :based_near, Solr::Array, "based_near_tesim"
