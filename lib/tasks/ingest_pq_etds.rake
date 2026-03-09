@@ -189,7 +189,7 @@ namespace :gwss do
     end
 
     bulkrax_files_path = "#{bulkrax_zip_path}/files" 
-    FileUtils.makedirs("#{bulkrax_files_path}") unless File.exists?(bulkrax_files_path)
+    FileUtils.makedirs("#{bulkrax_files_path}") unless File.exist?(bulkrax_files_path)
 
     # get all ETD zip files in the args.filepath folder
     path_to_zips = args.filepath
@@ -205,7 +205,7 @@ namespace :gwss do
       zip_file = Zip::File.open(zip_path)
       zip_file_basename = File.basename(zip_path, '.zip') # e.g. etdadmin_upload_353614
       zip_file_dir = "#{bulkrax_files_path}/#{zip_file_basename}" # e.g. bulkrax_zip/files/etdadmin_upload_353614
-      Dir.mkdir(zip_file_dir) unless File.exists?(zip_file_dir)
+      Dir.mkdir(zip_file_dir) unless File.exist?(zip_file_dir)
 
       attachment_file_paths = []
       zip_file.each do |entry|
