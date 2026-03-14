@@ -1,11 +1,44 @@
-<%= javascript_include_tag "ramp", type: "module" %>
-<%= react_component(
-  "RampPlayer",
-  props: {
-    manifestUrl:
-      main_app.polymorphic_url(
-        [main_app, :manifest, presenter],
-        { locale: I18n.locale },
-      ),
-  },
-) %>
+<% content_for :page_js_packs do %>
+  <%= javascript_pack_tag "ramp-bundle", defer: true %>
+<% end %>
+
+<% content_for :page_css_packs do %>
+  <%= stylesheet_pack_tag "ramp-bundle" %>
+<% end %>
+
+<%
+  presenter = local_assigns[:presenter] || @presenter
+
+  transcript_files = (presenter.member_presenters || []).select do |member_presenter|
+    next false unless member_presenter.try(:file_set?)
+
+    mime_type = member_presenter.try(:mime_type).to_s.downcase
+    label = member_presenter.label.to_s
+    title = member_presenter.try(:title).to_a.first.to_s
+    filename = label.presence || title
+
+    mime_type == "text/vtt" || filename.downcase.end_with?(".vtt")
+  end
+
+  transcript_urls = transcript_files.map do |transcript_presenter|
+    {
+      id: transcript_presenter.id,
+      label: transcript_presenter.label.to_s.presence || transcript_presenter.try(:title).to_a.first.to_s,
+      url: without_params(download_path(id: transcript_presenter.id)),
+    }
+  end
+
+  ramp_props = {
+    manifestUrl: main_app.polymorphic_url([main_app, :manifest, presenter], { locale: nil }),
+    transcriptFiles: transcript_urls,
+  }
+%>
+
+<div style="width: min(96vw, 1800px); margin-left: 50%; transform: translateX(-50%);">
+  <div id="ramp-viewer-container" style="overflow: hidden; height: 80vh; min-height: 500px;">
+    <%= react_component(
+      "Ramp",
+      props: ramp_props,
+    ) %>
+  </div>
+</div>

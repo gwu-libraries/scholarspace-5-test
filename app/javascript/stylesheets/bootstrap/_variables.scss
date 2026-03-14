@@ -1,0 +1,5 @@
+// Bootstrap 3 → Bootstrap 4/5 path compatibility shim.
+// Hyrax gem imports "bootstrap/variables" using the Bootstrap 3 file structure.
+// Bootstrap 4/5 moved these files into the scss/ subdirectory.
+// Variables are already in scope from the top-level @import "~bootstrap/scss/bootstrap".
+@import "../../../../node_modules/bootstrap/scss/variables";
