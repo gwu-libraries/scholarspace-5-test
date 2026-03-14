@@ -40,8 +40,9 @@
 /config/master.key
 
 /public/assets
+/public/packs
+/public/packs-test
 /public/files
-/public/uv
 /public/branding/*
 !public/branding/.keep
 
@@ -62,3 +63,5 @@ terraform.tfstate
 terraform.tfstate.backup
 
 .prettierrc
+
+/coverage/*

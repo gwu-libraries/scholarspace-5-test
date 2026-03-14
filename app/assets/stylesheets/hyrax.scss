@@ -2,12 +2,12 @@
  *= require jquery-ui
  *= require select2
  *= require_self
-*/
+ */
 
 @import "bootstrap-default-overrides";
 @import "bootstrap";
-@import "blacklight/blacklight";
 @import "font-awesome";
+@import "blacklight/blacklight";
 @import "blacklight_gallery/gallery";
 @import "blacklight_gallery/masonry";
 @import "blacklight_gallery/slideshow";
