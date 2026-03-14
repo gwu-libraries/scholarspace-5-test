@@ -1,11 +1,11 @@
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
+get 'demo', to: 'demo#index'
 mount Bulkrax::Engine, at: '/'
   concern :iiif_search, BlacklightIiifSearch::Routes.new
   mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
 
-  get '/uv/config/:id', to: 'application#uv_config', as: 'uv_config', defaults: { format: :json }
 
   mount Blacklight::Engine => '/'
 
