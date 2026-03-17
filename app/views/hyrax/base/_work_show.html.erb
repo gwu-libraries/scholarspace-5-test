@@ -1,0 +1,57 @@
+<% content_for :head do %>
+  <style>
+    #content-wrapper.container {
+      width: min(96vw, 1800px);
+      max-width: min(96vw, 1800px);
+    }
+  </style>
+<% end %>
+
+<h1>
+  Title: <%= @presenter.title.first %>
+</h1>
+
+<% representative_presenter = @presenter.representative_presenter %>
+
+<%# if its a video or audio, use ramp%>
+<% if representative_presenter&.video? || representative_presenter&.audio? %>
+  <%= render "hyrax/base/iiif_viewers/ramp", presenter: @presenter %>
+<% elsif representative_presenter&.pdf? %>
+<%# if its a pdf, we want to be able to toggle between pdfjs or clover %>
+<% default_viewer = default_viewer_for_work(@presenter) %>
+<% add_page_js_pack("viewer-toggle-bundler") %>
+  <%= react_component(
+    "ViewerToggle",
+    props: {
+      defaultViewer: default_viewer,
+      pdfTargetId: "pdf-viewer-container-#{@presenter.id}",
+      imagesTargetId: "clover-viewer-container-#{@presenter.id}"
+    }
+  ) %>
+
+  <div id="pdf-viewer-container-<%= @presenter.id %>" style="<%= 'display: block;' if default_viewer == 'pdf' %><%= 'display: none;' if default_viewer == 'images' %>">
+    <%= render "hyrax/base/iiif_viewers/pdf_viewer", presenter: @presenter, file_id: representative_presenter.id %>
+  </div>
+
+  <div id="clover-viewer-container-<%= @presenter.id %>" style="<%= 'display: none;' if default_viewer == 'pdf' %><%= 'display: block;' if default_viewer == 'images' %>">
+    <%= render "hyrax/base/iiif_viewers/clover", presenter: @presenter %>
+  </div>
+<% else %>
+  <%= render "hyrax/base/iiif_viewers/clover", presenter: @presenter %>
+<% end %>
+
+<% @presenter.description.each_with_index do |description, index| %>
+  <div id=<%="description-#{index}"%>>
+    Description: <%= iconify_auto_link(description) %>
+  </div>
+<% end %>
+
+<div>
+  <%= render 'items', presenter: @presenter %>
+</div>
+
+<div>
+  <% @presenter.member_of_collection_ids.each do |collection_id| %>
+    <span class='hide analytics-event' data-category="work-in-collection" data-action="work-in-collection-view" data-name="<%= collection_id %>" ></span>
+  <% end %>
+</div>
