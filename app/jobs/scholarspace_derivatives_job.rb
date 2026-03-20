@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class ScholarspaceDerivativesJob < ApplicationJob
-  include ScholarspaceDerivativesServices::Concerns::DerivativeClassifiable
-
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
@@ -19,21 +17,22 @@ class ScholarspaceDerivativesJob < ApplicationJob
     schedule_derivatives_jobs
   end
 
-  def file_types
-    source_member_file_sets.filter_map { |file_set| file_set.original_file&.mime_type }.uniq
-  end
-
+  
   def member_file_sets
     @work.member_ids.filter_map { |id| Hyrax.query_service.find_by(id: id) }
   end
+  
+  def original_member_file_sets
+    member_file_sets.reject(&:service_file)
+  end
 
-  def source_member_file_sets
-    member_file_sets.reject { |file_set| derivative_generated_file_set?(file_set, parent_resource: @work) }
+  def file_types
+    original_member_file_sets.filter_map { |file_set| file_set.original_file&.mime_type }.uniq
   end
 
   # check if every file in the work has been characterized
   def files_ready_for_derivatives?
-    source_member_file_sets.all? { |file_set| file_set.original_file&.mime_type.present? }
+    original_member_file_sets.all? { |file_set| file_set.original_file&.mime_type.present? }
   end
 
   def schedule_derivatives_jobs
