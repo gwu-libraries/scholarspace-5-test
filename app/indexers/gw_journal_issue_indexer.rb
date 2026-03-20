@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class GwJournalIssueIndexer < Hyrax::Indexers.PcdmObjectIndexer(
-  GwWork
+  GwJournalIssue
 )
   include Hyrax.Indexer(:basic_metadata)
   include Hyrax.Indexer(:academic_document)
   include Hyrax.Indexer(:gw_journal_issue)
+  include OcrTextIndexable
+  include VttTextIndexable
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr
