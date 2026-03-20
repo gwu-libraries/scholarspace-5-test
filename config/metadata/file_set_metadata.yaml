@@ -159,3 +159,14 @@ attributes:
         index_keys:
             - "bulkrax_identifier_tesim"
         predicate: https://iro.bl.uk/resource#bulkraxIdentifier
+    service_file:
+        type: boolean
+        multiple: false
+        index_keys:
+            - "service_file_bsi"
+        form:
+            display: false
+            required: false
+            primary: false
+            multiple: false
+        predicate: "http://pcdm.org/use#ServiceFile"
