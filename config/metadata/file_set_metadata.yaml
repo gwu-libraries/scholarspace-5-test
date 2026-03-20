@@ -160,7 +160,7 @@ attributes:
             - "bulkrax_identifier_tesim"
         predicate: https://iro.bl.uk/resource#bulkraxIdentifier
     service_file:
-        type: boolean
+        type: bool
         multiple: false
         index_keys:
             - "service_file_bsi"
