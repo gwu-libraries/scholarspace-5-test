@@ -2,6 +2,11 @@
 :queues:
   - [ingest, 4]
   - [batch, 2]
+  - [derivatives_orchestrator, 1]
+  - [derivatives_pdf_to_images, 1]
+  - [derivatives_images_to_pdf, 1]
+  - [derivatives_audio_transcript, 1]
+  - [derivatives_thumbnail, 1]
   - [default, 1]
 
 test: # n/a
