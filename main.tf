@@ -356,7 +356,7 @@ resource "aws_instance" "web_server" {
   chown ubuntu:ubuntu .env
   chmod 600 .env
 
-  ./bin/prod
+  bin/prod
   EOF
 
   tags = {
