@@ -7,6 +7,8 @@ site_prefix           = "scholarspace"
 # Use an AMI available in aws_region
 instance_ami  = "ami-020cba7c55df1f615"
 instance_type = "t2.small"
+root_volume_size_gb = 80
+root_volume_type    = "gp3"
 
 # Must match an existing EC2 key pair in your AWS account
 key_name = "main-key"
@@ -18,6 +20,9 @@ ssh_allowed_cidrs = []
 
 # Repository cloned on EC2 boot
 repo_clone_url = "https://github.com/gwu-libraries/scholarspace-5-test.git"
+
+# SSM SecureString parameter containing full .env content for production bootstrap.
+ssm_env_parameter_name = "/scholarspace/prod/env"
 
 # Maps to S3_BUCKET_NAME and S3_PREFIX in .env
 s3_bucket_name = "your-scholarspace-prod-bucket-name"

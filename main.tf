@@ -50,14 +50,27 @@ variable "site_prefix" {
 }
 
 variable "instance_ami" {
-  description = "AMI used for application instances"
-  default     = "ami-020cba7c55df1f615"
+  description = "Optional AMI override. Leave null to auto-select latest Ubuntu 22.04 ARM64 AMI."
+  default     = null
   type        = string
+  nullable    = true
 }
 
 variable "instance_type" {
   description = "EC2 instance type used for each environment"
   default     = "t3.small"
+  type        = string
+}
+
+variable "root_volume_size_gb" {
+  description = "Root EBS volume size for the EC2 instance in GiB"
+  default     = 80
+  type        = number
+}
+
+variable "root_volume_type" {
+  description = "Root EBS volume type"
+  default     = "gp3"
   type        = string
 }
 
@@ -85,6 +98,11 @@ variable "deploy_git_ref" {
   type        = string
 }
 
+variable "ssm_env_parameter_name" {
+  description = "SSM Parameter Store name containing full .env content as SecureString"
+  type        = string
+}
+
 variable "s3_bucket_name" {
   type = string
 }
@@ -92,6 +110,70 @@ variable "s3_bucket_name" {
 variable "s3_prefix" {
   type    = string
   default = ""
+}
+
+data "aws_ami" "ubuntu_arm64" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+locals {
+  ssm_env_parameter_arn = "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${trim(var.ssm_env_parameter_name, "/")}"
+}
+
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "ec2_ssm_env_read" {
+  statement {
+    actions = [
+      "ssm:GetParameter",
+    ]
+    resources = [local.ssm_env_parameter_arn]
+  }
+}
+
+resource "aws_iam_role" "web_server_role" {
+  name               = "${var.site_prefix}-prod-web-server-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+}
+
+resource "aws_iam_role_policy" "web_server_ssm_env_read" {
+  name   = "${var.site_prefix}-prod-web-server-ssm-env-read"
+  role   = aws_iam_role.web_server_role.id
+  policy = data.aws_iam_policy_document.ec2_ssm_env_read.json
+}
+
+resource "aws_iam_instance_profile" "web_server_profile" {
+  name = "${var.site_prefix}-prod-web-server-profile"
+  role = aws_iam_role.web_server_role.name
 }
 
 resource "aws_vpc" "app_vpc" {
@@ -228,28 +310,34 @@ resource "aws_key_pair" "app_key_pair" {
 }
 
 resource "aws_instance" "web_server" {
-  ami                         = var.instance_ami
+  ami                         = coalesce(var.instance_ami, data.aws_ami.ubuntu_arm64.id)
   instance_type               = var.instance_type
   availability_zone           = var.aws_availability_zone
   key_name                    = aws_key_pair.app_key_pair.key_name
   subnet_id                   = aws_subnet.app_subnet.id
   vpc_security_group_ids      = [aws_security_group.allow_web_traffic.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.web_server_profile.name
+
+  root_block_device {
+    volume_size = var.root_volume_size_gb
+    volume_type = var.root_volume_type
+    encrypted   = true
+  }
 
   user_data = <<-EOF
   #!/bin/bash
   set -euo pipefail
 
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update
-  apt-get install -y git curl docker-compose-plugin
-
-  curl -fsSL https://get.docker.com -o get-docker.sh
-  sh get-docker.sh
+  curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+  sh /tmp/get-docker.sh
   usermod -aG docker ubuntu || true
   systemctl enable docker
   systemctl start docker
   timedatectl set-timezone America/New_York
+
+  apt-get update
+  apt-get install -y git curl docker-compose-plugin awscli
 
   mkdir -p /opt/scholarspace
   chown -R ubuntu:ubuntu /opt/scholarspace
@@ -257,6 +345,16 @@ resource "aws_instance" "web_server" {
 
   git clone -b ${var.deploy_git_ref} ${var.repo_clone_url}
   cd scholarspace-5-test
+
+  aws ssm get-parameter \
+    --region ${var.aws_region} \
+    --name "${var.ssm_env_parameter_name}" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text > .env
+
+  chown ubuntu:ubuntu .env
+  chmod 600 .env
 
   ./bin/prod
   EOF
