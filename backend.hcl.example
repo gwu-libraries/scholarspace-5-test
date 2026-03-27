@@ -1,7 +1,8 @@
 # Copy to backend.hcl and fill in values for your account/environment.
 # Use with: terraform init -migrate-state -backend-config=backend.hcl
 
-bucket         = "your-s3-backend-bucket-name"
-key            = "terraform/scholarspace.tfstate"
-region         = "us-east-1"
+bucket         = "scholarspace-tf-test"
+key            = "terraform/prod/scholarspace.tfstate"
+# Backend region must match the state bucket region.
+region         = "us-west-2"
 encrypt        = true

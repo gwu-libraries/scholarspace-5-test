@@ -16,5 +16,6 @@ docker compose \
 
 exec docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-init.yml" \
   -f "$RAILS_ROOT/docker-compose-prod.yml" \
   up --build "$@"

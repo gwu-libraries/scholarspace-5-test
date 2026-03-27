@@ -7,33 +7,17 @@ terraform {
   }
 
   # terraform init -migrate-state -backend-config=backend.hcl
-  backend "s3" {}
+  # backend "s3" {}
 
   required_version = ">= 1.2.0"
 }
 
 provider "aws" {
-  region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  region = var.aws_region
 }
 
 variable "aws_region" {
-  description = "AWS region for all resources"
-  default     = "us-east-1"
-  type        = string
-}
-
-variable "aws_access_key" {
-  type      = string
-  default   = null
-  sensitive = true
-}
-
-variable "aws_secret_key" {
-  type      = string
-  default   = null
-  sensitive = true
+  type = string
 }
 
 variable "vpc_cidr" {
@@ -56,7 +40,6 @@ variable "ssh_allowed_cidrs" {
 
 variable "aws_availability_zone" {
   description = "aws availability zone"
-  default     = "us-east-1a"
   type        = string
 }
 
@@ -74,19 +57,31 @@ variable "instance_ami" {
 
 variable "instance_type" {
   description = "EC2 instance type used for each environment"
-  default     = "t2.small"
+  default     = "t3.small"
   type        = string
 }
 
 variable "key_name" {
-  description = "Existing AWS key pair name for SSH"
-  default     = "main-key"
+  description = "Name for Terraform-managed EC2 key pair"
+  default     = "scholarspace-prod-key"
+  type        = string
+}
+
+variable "public_key_path" {
+  description = "Absolute path to the SSH public key (.pub) used for EC2 access"
+  default     = "~/.ssh/id_rsa.pub"
   type        = string
 }
 
 variable "repo_clone_url" {
   description = "Repository URL cloned on instance boot"
   default     = "https://github.com/gwu-libraries/scholarspace-5-test.git"
+  type        = string
+}
+
+variable "deploy_git_ref" {
+  description = "Git ref (branch/tag/sha) deployed on instance boot"
+  default     = "tf-experiment"
   type        = string
 }
 
@@ -227,11 +222,16 @@ resource "aws_s3_bucket_public_access_block" "app_bucket_public_access" {
   restrict_public_buckets = true
 }
 
+resource "aws_key_pair" "app_key_pair" {
+  key_name   = var.key_name
+  public_key = file(var.public_key_path)
+}
+
 resource "aws_instance" "web_server" {
   ami                         = var.instance_ami
   instance_type               = var.instance_type
   availability_zone           = var.aws_availability_zone
-  key_name                    = var.key_name
+  key_name                    = aws_key_pair.app_key_pair.key_name
   subnet_id                   = aws_subnet.app_subnet.id
   vpc_security_group_ids      = [aws_security_group.allow_web_traffic.id]
   associate_public_ip_address = true
@@ -255,9 +255,7 @@ resource "aws_instance" "web_server" {
   chown -R ubuntu:ubuntu /opt/scholarspace
   cd /opt/scholarspace
 
-  if [ ! -d scholarspace-5-test ]; then
-    git clone ${var.repo_clone_url}
-  fi
+  git clone -b ${var.deploy_git_ref} ${var.repo_clone_url}
   cd scholarspace-5-test
 
   ./bin/prod
