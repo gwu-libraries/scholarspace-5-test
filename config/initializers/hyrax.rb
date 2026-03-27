@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'hyrax/file_set_derivatives_service'
-
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
   config.register_curation_concern :archival_document
@@ -102,7 +100,7 @@ Hyrax.config do |config|
 
   # Option to enable/disable full text extraction from PDFs
   # Default is true, set to false to disable full text extraction
-  config.extract_full_text = true
+  config.extract_full_text = false
 
   # How many seconds back from the current time that we should show by default of the user's activity on the user's dashboard
   # config.activity_to_show_default_seconds_since_now = 24*60*60
@@ -317,9 +315,10 @@ Hyrax.config do |config|
   # See app/services/hyrax/identifier/registrar.rb for the registrar interface
   # config.identifier_registrars = {}
 
-  config.derivative_services = [
-    Hyrax::FileSetDerivativesService
-  ]
+  # we are not using any of the built in hyrax derivative services, 
+  # everything is being handled through custom listener/job scheduling
+  # so this can/should remain empty
+  config.derivative_services = []
 end
 
 Date::DATE_FORMATS[:standard] = '%m/%d/%Y'

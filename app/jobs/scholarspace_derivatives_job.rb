@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+
 class ScholarspaceDerivativesJob < ApplicationJob
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
@@ -9,17 +11,18 @@ class ScholarspaceDerivativesJob < ApplicationJob
 
   def perform(work_id:, retries: 0)
     @work_id = work_id
-    @work = Hyrax.query_service.find_by(id: @work_id)
-    return unless @work
-
     @retries = retries + 1
 
-    schedule_derivatives_jobs
+    with_work_lock(@work_id) do
+      @work = Hyrax.query_service.find_by(id: @work_id)
+      return unless @work
+
+      schedule_derivatives_jobs
+    end
   end
 
-  
   def member_file_sets
-    @work.member_ids.filter_map { |id| Hyrax.query_service.find_by(id: id) }
+    Array(@work.member_ids).filter_map { |id| find_member_file_set(id) }
   end
   
   def original_member_file_sets
@@ -44,7 +47,6 @@ class ScholarspaceDerivativesJob < ApplicationJob
     PdfToImagesDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
     ImagesToPdfDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/') }
     AudioTranscriptDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
-    ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s)
   end
 
   def reschedule_job
@@ -55,5 +57,22 @@ class ScholarspaceDerivativesJob < ApplicationJob
       work_id: @work_id,
       retries: @retries
     )
+  end
+
+  def find_member_file_set(id)
+    Hyrax.query_service.find_by(id: id)
+  end
+
+  def with_work_lock(work_id)
+    lock_root = Rails.root.join('tmp', 'derivatives-work-locks').to_s
+    FileUtils.mkdir_p(lock_root)
+    lock_path = File.join(lock_root, "#{work_id}.lock")
+
+    File.open(lock_path, File::RDWR | File::CREAT, 0o644) do |lock_file|
+      lock_file.flock(File::LOCK_EX)
+      yield
+    ensure
+      lock_file.flock(File::LOCK_UN)
+    end
   end
 end

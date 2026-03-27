@@ -13,6 +13,7 @@ import "jquery-ui";
 import "@rails/ujs";
 import "popper.js";
 import "bootstrap";
+import ReactOnRails from "react-on-rails";
 
 // Import stylesheets
 import "stylesheets/application.css";

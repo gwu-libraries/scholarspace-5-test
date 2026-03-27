@@ -19,6 +19,8 @@ class CatalogController < ApplicationController
   include BlacklightIiifSearch::Controller
 
   configure_blacklight do |config|
+    config.search_state_fields << :solr_document_id
+
     # config.add_index_field "all_text_tsimv",
     config.add_index_field 'all_text_tsimv',
                            highlight: true,
@@ -27,6 +29,7 @@ class CatalogController < ApplicationController
     # configuration for Blacklight IIIF Content Search
     config.iiif_search = {
       full_text_field: 'all_text_tsimv',
+      ocr_highlight_field: 'ocr_text',
       object_relation_field: 'is_page_of_ssim',
       supported_params: %w[q page ocr_text]
     }

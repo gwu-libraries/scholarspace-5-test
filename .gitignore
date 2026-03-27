@@ -61,6 +61,10 @@ nginx/certs/*
 .terraform.lock.hcl
 terraform.tfstate
 terraform.tfstate.backup
+backend.hcl
+*.hcl
+*.tfvars
+terraform.tfvars
 
 .prettierrc
 
@@ -68,3 +72,5 @@ terraform.tfstate.backup
 
 /vendor/bundle/*
 /vendor/bundle/cache/*
+
+.cache/*

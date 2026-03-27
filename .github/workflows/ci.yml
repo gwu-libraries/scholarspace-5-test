@@ -3,10 +3,12 @@ name: CI
 on:
   # allow running action manually
   workflow_dispatch:
-  # trigger on push to master branch
+
+  # trigger on pull request to either main or staging branches
   pull_request:
     branches:
       - main
+      - staging
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
@@ -32,25 +34,5 @@ jobs:
           cp example.env .env
        # Start all of the docker containers and wait until positive response from healthchecks
       - name: Start Docker containers
-        run: |
-          docker compose up --wait
-      # Sleep for 30 seconds, sometimes still get a 'wait for containers to start' message 
-      - name: Sleep for 30 seconds
-        run: |
-          sleep 30s
-        shell: bash
-      # troubleshooting
-      - name: docker ps
-        run: |
-          docker ps
-      - name: Create dev/test databases
-        run: |
-          docker exec rails /bin/sh -lc "bundle exec rails db:create"
-      - name: Migrate dev/test databases
-        run: |
-          docker exec rails /bin/sh -lc "bundle exec rails db:migrate"
-      - name: Run RSpec tests
-        run: |
-          docker exec rails /bin/sh -lc "bundle exec rspec"
-        
+        run: ./bin/test
         

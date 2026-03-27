@@ -1,0 +1,28 @@
+# Copy this file to terraform.tfvars (or use -var-file) and update values for your AWS account.
+
+aws_region            = "us-east-1"
+aws_availability_zone = "us-east-1a"
+site_prefix           = "scholarspace"
+
+# Use an AMI available in aws_region
+instance_ami  = "ami-020cba7c55df1f615"
+instance_type = "t2.small"
+
+# Must match an existing EC2 key pair in your AWS account
+key_name = "main-key"
+
+# Optional: enable SSH from specific CIDR ranges only.
+# Example:
+# ssh_allowed_cidrs = ["203.0.113.10/32"]
+ssh_allowed_cidrs = []
+
+# Repository cloned on EC2 boot
+repo_clone_url = "https://github.com/gwu-libraries/scholarspace-5-test.git"
+
+# Maps to S3_BUCKET_NAME and S3_PREFIX in .env
+s3_bucket_name = "your-scholarspace-prod-bucket-name"
+s3_prefix = ""
+
+# Production network settings
+vpc_cidr    = "10.0.0.0/16"
+subnet_cidr = "10.0.1.0/24"

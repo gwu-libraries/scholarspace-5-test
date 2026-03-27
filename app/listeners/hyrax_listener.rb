@@ -22,6 +22,8 @@
 # @see https://www.rubydoc.info/gems/hyrax/Hyrax/Publisher
 # @see https://dry-rb.org/gems/dry-events
 class HyraxListener
+  DERIVATIVES_ENQUEUE_DEBOUNCE = 5.minutes
+
   # def on_batch_created
   # end
 
@@ -34,8 +36,27 @@ class HyraxListener
   # def on_collection_membership_update
   # end
 
-  # def on_file_characterized
-  # end
+  def on_file_characterized(event)
+    file_set = event[:file_set]
+    return unless file_set
+
+    work = Hyrax.custom_queries.find_parent_work(resource: file_set)
+    return unless work
+
+    # short circuit if the characterized file is a service file (derivative)
+    return if file_set.service_file
+
+    # Deposits with many files can emit many characterized events in a short window.
+    # Debounce orchestration per work to avoid enqueuing duplicate heavy jobs.
+    return if derivatives_enqueue_debounced?(work.id.to_s)
+
+    ScholarspaceDerivativesJob.set(wait: 2.minutes).perform_later(
+      work_id: work.id.to_s
+    )
+  rescue StandardError
+    # if something breaks in custom derivative process, let others process
+    nil
+  end
 
   # def on_file_downloaded
   # end
@@ -67,16 +88,8 @@ class HyraxListener
   # def on_object_failed_deposit
   # end
 
-  def on_object_deposited(event)
-    # here, toss the event if it is a fileset, then schedule job to process work level derivatives, rescheduling if not all files ready
-
-    # this event includes *both* works and filesets, we are only interested in the works
-    return unless Hyrax.config.curation_concerns.map(&:to_s).include?(event[:object].model_name.name)
-
-    CreateCustomDerivativesJob.set(wait: 1.minute).perform_later(
-      work_id: event[:object].id.to_s
-    )
-  end
+  # def on_object_deposited
+  # end
 
   # def on_object_acl_updated
   # end
@@ -86,4 +99,15 @@ class HyraxListener
 
   # def on_object_metadata_updated
   # end
+
+  private
+
+  def derivatives_enqueue_debounced?(work_id)
+    cache_key = "derivatives:orchestration:scheduled:#{work_id}"
+    already_scheduled = Rails.cache.read(cache_key)
+    return true if already_scheduled
+
+    Rails.cache.write(cache_key, true, expires_in: DERIVATIVES_ENQUEUE_DEBOUNCE)
+    false
+  end
 end

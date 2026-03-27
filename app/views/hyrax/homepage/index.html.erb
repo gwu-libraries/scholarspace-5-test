@@ -1,0 +1,19 @@
+<% provide :page_title, application_name %>
+
+<%
+  content_for :head do
+    javascript_pack_tag('homepage-bundler', defer: true)
+  end
+
+  homepage_props = Hyrax::HomepageSerializer.new(
+    view_context: self,
+    presenter: @presenter,
+    featured_work_list: @featured_work_list,
+    recent_documents: @recent_documents,
+    featured_researcher: @featured_researcher,
+  ).as_json
+%>
+
+<div class="row home-content">
+  <%= react_component('Homepage', props: homepage_props, prerender: false) %>
+</div>

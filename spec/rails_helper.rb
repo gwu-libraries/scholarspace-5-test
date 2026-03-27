@@ -20,22 +20,35 @@ Valkyrie::MetadataAdapter.register(
 
 Valkyrie.config.metadata_adapter = :test_adapter
 
-Valkyrie::StorageAdapter.register(Valkyrie::Storage::Memory.new, :memory)
+test_storage_path = Rails.root.join('tmp', 'test_storage')
+FileUtils.mkdir_p(test_storage_path)
+Valkyrie::StorageAdapter.register(
+  Valkyrie::Storage::Disk.new(base_path: test_storage_path),
+  :test_disk_storage
+)
 
-Valkyrie.config.storage_adapter = :memory
+Valkyrie.config.storage_adapter = :test_disk_storage
 
 query_registration_target =
   Valkyrie::MetadataAdapter.find(:test_adapter).query_service.custom_queries
 custom_queries = [
   Hyrax::CustomQueries::Navigators::CollectionMembers,
-  Hyrax::CustomQueries::Navigators::ChildFilesetsNavigator,
+  Hyrax::CustomQueries::Navigators::ChildFileSetsNavigator,
   Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
+  Hyrax::CustomQueries::Navigators::ParentCollectionsNavigator,
+  Hyrax::CustomQueries::Navigators::ParentWorkNavigator,
+  Hyrax::CustomQueries::Navigators::FindFiles,
   Hyrax::CustomQueries::FindAccessControl,
   Hyrax::CustomQueries::FindCollectionsByType,
-  Hyrax::CustomQueries::FindManyByAlternateIds,
-  Hyrax::CustomQueries::FindIdsByModel,
   Hyrax::CustomQueries::FindFileMetadata,
-  Hyrax::CustomQueries::Navigators::FindFiles
+  Hyrax::CustomQueries::FindIdsByModel,
+  Hyrax::CustomQueries::FindManyByAlternateIds,
+  Hyrax::CustomQueries::FindModelsByAccess,
+  Hyrax::CustomQueries::FindCountBy,
+  Hyrax::CustomQueries::FindByDateRange,
+  Hyrax::CustomQueries::FindByModelAndPropertyValue,
+  Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId,
+  Hyrax::CustomQueries::FindByPropertyValue
 ]
 custom_queries.each do |handler|
   query_registration_target.register_query_handler(handler)
@@ -66,6 +79,10 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
   config.include FactoryBot::Syntax::Methods
   config.include ActiveJob::TestHelper
+
+  config.after(:suite) do
+    FileUtils.rm_rf(Rails.root.join('tmp', 'test_storage'))
+  end
 end
 
 def sign_in_user(user)

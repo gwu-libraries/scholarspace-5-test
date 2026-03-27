@@ -4,11 +4,11 @@
     <title>Scholarspace</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-<%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
 
-<%= yield :page_css_packs %>
-<%= yield :page_js_packs %>
+    <%= yield :page_css_packs %>
+    <%= yield :page_js_packs %>
   </head>
 
   <body>

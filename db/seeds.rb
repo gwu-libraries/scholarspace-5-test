@@ -1,17 +1,26 @@
 # Hyrax::TestDataSeeder.new.generate_seed_data if seed_release_testing
 
 # ActiveFedora.fedora.connection.send(:init_base_path)
-Hyrax::RequiredDataSeeder.new.generate_seed_data
+FactoryBot.create(:admin_set_collection_type)
+FactoryBot.create(:user_collection_type)
+
+Hyrax::AdminSetCreateService.find_or_create_default_admin_set
+Hyrax::CollectionType.find_or_create_default_collection_type
 
 admin_role = Role.find_or_create_by(name: Hyrax.config.admin_user_group_name)
-admin_user =
-  User.create(email: ENV["ADMIN_USER"], password: ENV["ADMIN_PASSWORD"])
+admin_email = ENV["ADMIN_USER"]
+admin_password = ENV["ADMIN_PASSWORD"]
 
-admin_user.roles << admin_role
+raise "ADMIN_USER is required for db:seed" if admin_email.blank?
+
+admin_user = User.find_or_initialize_by(email: admin_email)
+admin_user.password = admin_password if admin_user.new_record? || admin_password.present?
+admin_user.save!
+
+admin_user.roles << admin_role unless admin_user.roles.include?(admin_role)
 
 
 # puts "\n== Creating default collection types"
-# Hyrax::CollectionType.find_or_create_default_collection_type
 # Hyrax::CollectionType.find_or_create_admin_set_type
 
 # puts "\n== Creating default admin set"

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+APP_UID="${APP_UID:-1001}"
+APP_GID="${APP_GID:-101}"
+
+# Set environment variables for production
+export APP_UID APP_GID
+export RAILS_ENV=production
+
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-init.yml" \
+  run --rm --no-deps -T app-volumes-init
+
+exec docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-prod.yml" \
+  up --build "$@"

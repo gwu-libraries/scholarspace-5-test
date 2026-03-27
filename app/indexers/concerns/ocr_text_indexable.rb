@@ -12,8 +12,15 @@ module OcrTextIndexable
   # essentially this points a field ("ocr_text") in the solr document 
   # to a stored HOCR document.
 
-  # HOWEVER! because our hocr documents are being persisted in fedora,
-  # we need them available on disk as well.
+  # HOWEVER! because our hocr documents are being persisted in fedora on S3, in
+  # case they have been fixed or modified and we want to maintain those changes,
+  # we need them available on disk as well. This creates a copy of the HOCR
+  # document from fedora on local disk and updates the :ocr_text pointe in the 
+  # solr document. 
+
+  # this does create an additional hocr document in the cache whenever a new version
+  # of one is deposited, but it updates the pointer to the new doc. These won't be updated
+  # with much frequency and are just xml files, so ¯\_(ツ)_/¯
 
   included do
     # Override to_solr to include OCR source pointers for Solr OCR Highlighting.
@@ -30,7 +37,9 @@ module OcrTextIndexable
 
   def extract_ocr_source_pointer
     hocr_pointers = resource.member_ids.filter_map do |member_id|
-      member = Hyrax.query_service.find_by(id: member_id)
+      member = find_member_by_id(member_id)
+      next unless member
+
       files = hocr_files_for_member(member)
       next if files.empty?
 
@@ -70,8 +79,8 @@ module OcrTextIndexable
       original_filename: file.original_filename.to_s
     )
 
-    persist_ocr_file(file_identifier: file_identifier, pointer_path: pointer_path)
-    pointer_path
+    copied = persist_ocr_file(file_identifier: file_identifier, pointer_path: pointer_path)
+    pointer_path if copied
   end
 
   def ocr_pointer_path(file_identifier:, original_filename:)
@@ -81,15 +90,27 @@ module OcrTextIndexable
   end
 
   def persist_ocr_file(file_identifier:, pointer_path:)
-    io = Hyrax.storage_adapter.find_by(id: file_identifier)
+    io = find_storage_file_by_id(file_identifier)
+    return unless io
+
     FileUtils.mkdir_p(File.dirname(pointer_path))
 
     File.open(pointer_path, 'wb') do |destination_io|
       IO.copy_stream(io.stream, destination_io)
     end
+
+    true
+  end
+
+  def find_member_by_id(member_id)
+    Hyrax.query_service.find_by(id: member_id)
+  end
+
+  def find_storage_file_by_id(file_identifier)
+    Hyrax.storage_adapter.find_by(id: file_identifier)
   end
 
   def ocr_pointer_root
-    '/solr-ocr-index-cache'
+    '/.cache/solr-ocr-index-cache'
   end
 end

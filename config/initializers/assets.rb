@@ -8,9 +8,6 @@ Rails.application.config.assets.version = '1.0'
 # Add Yarn node_modules folder to the asset load path.
 Rails.application.config.assets.paths << Rails.root.join('node_modules')
 
-# Hybrid setup:
-# - Sprockets compiles engine/application assets (Hyrax/Blacklight CSS+JS)
-# - Shakapacker compiles custom JS bundles (e.g., React)
 Rails.application.config.assets.precompile = %w(
 	application.css
 	application.js

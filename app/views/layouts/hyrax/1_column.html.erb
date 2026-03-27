@@ -1,0 +1,17 @@
+<% content_for(:navbar) do %>
+  <%= render '/controls' %>
+<% end %>
+
+<% content_for(:head) do %>
+  <% page_css_packs = Array(@page_css_packs).map(&:to_s).uniq %>
+  <% page_js_packs = Array(@page_js_packs).map(&:to_s).uniq %>
+
+  <% if page_css_packs.present? %>
+    <%= stylesheet_pack_tag(*page_css_packs) %>
+  <% end %>
+  <% if page_js_packs.present? %>
+    <%= javascript_pack_tag(*page_js_packs, defer: true) %>
+  <% end %>
+<% end %>
+
+<%= render template: 'layouts/hyrax' %>

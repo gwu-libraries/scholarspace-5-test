@@ -1,0 +1,38 @@
+<%= csrf_meta_tags %>
+<%= csp_meta_tag %>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="resourcesync" href="<%= hyrax.capability_list_url %>" />
+<meta name="generator" content="Samvera Hyrax <%= ::Hyrax::VERSION %>" />
+
+<% if Hyrax.config.realtime_notifications? && signed_in? %>
+  <%= tag :meta, name: 'current-user', data: { user_key: current_user.user_key } %>
+<% end %>
+
+<%= yield :twitter_meta %>
+<%= yield :gscholar_meta %>
+
+<title><%= content_for?(:page_title) ? yield(:page_title) : default_page_title %></title>
+
+<%= stylesheet_link_tag 'application' %>
+
+<%= javascript_include_tag 'application' %>
+
+<%= render 'shared/appearance_styles' %>
+
+<% if Hyrax.config.analytics? %>
+  <% analytics_id = Hyrax::Analytics.config.analytics_id %>
+  <% if analytics_id.present? %>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<%= analytics_id %>"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', '<%= analytics_id %>');
+      window.analytics = gtag;
+    </script>
+    <meta name="analytics-provider" content="ga4">
+  <% end %>
+<% end %>
+
+<%= render partial: '/head_tag_extras', formats: [:html] %>

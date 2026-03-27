@@ -2,6 +2,14 @@
 
 FactoryBot.define do
   factory :academic_document, class: "AcademicDocument" do
+    to_create do |obj|
+      if Hyrax.persister.respond_to?(:save!)
+        Hyrax.persister.save!(resource: obj)
+      else
+        Hyrax.persister.save(resource: obj)
+      end
+    end
+
     transient do
       user {}
       # Set to true (or a hash) if you want to create an admin set
@@ -25,7 +33,11 @@ FactoryBot.define do
 
     after(:create) do |work, _evaluator|
       if work.try(:member_of_collections) && work.member_of_collections.present?
-        work.save!
+        if Hyrax.persister.respond_to?(:save!)
+          Hyrax.persister.save!(resource: work)
+        else
+          Hyrax.persister.save(resource: work)
+        end
       end
     end
 

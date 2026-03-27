@@ -8,7 +8,7 @@ class ArchivalDocumentIndexer < Hyrax::Indexers.PcdmObjectIndexer(
   include Hyrax.Indexer(:basic_metadata)
   include Hyrax.Indexer(:archival_document)
   include OcrTextIndexable
-  include VttTextIndexable
+  include VttIndexable
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr
