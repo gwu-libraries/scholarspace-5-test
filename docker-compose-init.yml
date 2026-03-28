@@ -1,0 +1,49 @@
+# Requires Docker Compose v2
+name: ${COMPOSE_PROJECT_NAME:-scholarspace}
+
+# this runs before any other containers and is just for creating all of the directories
+# for our setup, as well as changes the permissions for said directories. Moved this functionality out
+# of Dockerfile. Also seems to address the issue we were hitting before of solr directory
+# permissions not persisting, and why we had to set user to 8983 previously. 
+
+services:
+  app-volumes-init:
+    image: alpine:3.21
+    user: root
+    command:
+      - sh
+      - "-lc"
+      - >-
+        mkdir -p /app/scholarspace/tmp/cache/assets/sprockets
+        /app/scholarspace/tmp/test_storage
+        /app/scholarspace/storage
+        /app/scholarspace/uploads
+        /.cache/solr-ocr-index-cache
+        /.cache/whispercpp
+        && chown -R ${APP_UID:-1001}:${APP_GID:-101}
+        /app/scholarspace/tmp/test_storage
+        /app/scholarspace/tmp
+        /app/scholarspace/storage
+        /app/scholarspace/uploads
+        /.cache/solr-ocr-index-cache
+        /.cache/whispercpp
+        && chmod -R ug+rwX 
+        /app/scholarspace/tmp/test_storage
+        /app/scholarspace/tmp
+        /app/scholarspace/storage
+        /app/scholarspace/uploads
+        /.cache/solr-ocr-index-cache
+        /.cache/whispercpp
+    restart: "no"
+    volumes:
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - whispercpp-cache:/.cache/whispercpp
+volumes:
+  storage:
+  uploads:
+  tmp:
+  solr-ocr-index-cache:
+  whispercpp-cache:
