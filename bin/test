@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+APP_UID="${APP_UID:-1001}"
+APP_GID="${APP_GID:-101}"
+
+exec env APP_UID="$APP_UID" APP_GID="$APP_GID" docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-init.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  up -d --build "$@"
