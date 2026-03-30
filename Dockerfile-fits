@@ -1,13 +1,14 @@
-# Custom FITS servlet image with ARM64 MediaInfo library support
+# FITS servlet image with ARM64 MediaInfo library support
 FROM ghcr.io/samvera/fitsservlet:1.6.0
 
-# Install MediaInfo which provides the ARM64 native libraries
 RUN apt-get update -qq && \
     apt-get install -y -qq mediainfo && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy ARM64 MediaInfo libraries to FITS tools directory
-# This enables FITS to use MediaInfo on ARM64 (including Apple Silicon)
-RUN cp /usr/lib/aarch64-linux-gnu/libmediainfo.so.0 /opt/fits/tools/mediainfo/linux/libmediainfo.so.0 && \
-    cp /usr/lib/aarch64-linux-gnu/libzen.so.0 /opt/fits/tools/mediainfo/linux/libzen.so.0 && \
-    echo "ARM64 MediaInfo libraries installed for FITS"
+# Resolve library paths dynamically so this works on ARM64 and x86_64.
+RUN set -eux; \
+    MEDIAINFO_LIB="$(ldconfig -p | awk '/libmediainfo\.so\.0/{print $NF; exit}')"; \
+    ZEN_LIB="$(ldconfig -p | awk '/libzen\.so\.0/{print $NF; exit}')"; \
+    cp "$MEDIAINFO_LIB" /opt/fits/tools/mediainfo/linux/libmediainfo.so.0; \
+    cp "$ZEN_LIB" /opt/fits/tools/mediainfo/linux/libzen.so.0; \
+    echo "MediaInfo libraries installed for FITS from: $MEDIAINFO_LIB and $ZEN_LIB"
