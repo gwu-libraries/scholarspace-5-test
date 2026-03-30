@@ -10,7 +10,7 @@ To deploy via Terraform on AWS, there are a few steps necessary:
 - Configure the AWS CLI (https://docs.aws.amazon.com/cli/). Be sure to use an IAM identity that has permissions to manage resources in the given AWS region.
 - Make a copy of `example.env` at `.env` and complete environment variables. 
 - Store the values of your `.env` in AWS Secrets Manager. This can be done via CLI with:
-  - `aws ssm put-parameter --region YOUR-AWS-REGION --name /YOUR/KEY/NAME --type SecureString --value .env --overwrite`
+  - `aws ssm put-parameter --region YOUR-AWS-REGION --name /YOUR/KEY/NAME --type SecureString --value "$(cat .env)" --overwrite`
   - Adjust the `YOUR-AWS-REGION` and `/YOUR/KEY/NAME` with your AWS region and a name for the secure string, e.g. `/scholarspace/prod/env`. This value is pulled and decrypted as part of `user_data` script in `main.tf` on deployment.
 - Make a copy of `terraform.tfvars.example` named `terraform.tfvars`. This is also where you can configure the EC2 instance type and root volume size. Other necessary variables to configure:
   - `public_key_path` - point to a `.pub` file you have stored locally. `key_name` is the name of the corresponding private key, but can just be name and not a file path. 
