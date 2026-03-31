@@ -6,6 +6,8 @@ If you're working on a PR for this project, create a feature branch off of `main
 
 ## Production Environment
 
+Currently slow because docker images are building on deployment instead of pulling from image repository! Needs to be fixed.
+
 To deploy via Terraform on AWS, there are a few steps necessary:
 - Configure the AWS CLI (https://docs.aws.amazon.com/cli/). Be sure to use an IAM identity that has permissions to manage resources in the given AWS region.
 - Make a copy of `example.env` at `.env` and complete environment variables. 
@@ -20,6 +22,8 @@ To deploy via Terraform on AWS, there are a few steps necessary:
 - Install the Terraform CLI (https://developer.hashicorp.com/terraform/install).
 - Run `terraform init` to create the terraform backend file. 
 - Run `terraform plan` to see what changes will be applied, and if satisfied, run `terraform apply` to provision the AWS resources. The output should be the public IP for the EC2 instance, though it may take 10-20 minutes for full provisioning, building of docker images, etc. 
+
+If you would like to monitor the docker build process on deployment, you can `tail -f /var/log/cloud-init-output.log`. 
 
 If deploying NOT with Terraform, configure `.env` file and your own server/cloud infrastructure, and run `bin/prod`. This should create and migrate the database and start the docker containers in production mode. 
 
