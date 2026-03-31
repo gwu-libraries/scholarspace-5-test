@@ -159,6 +159,30 @@ data "aws_iam_policy_document" "ec2_ssm_env_read" {
   }
 }
 
+data "aws_iam_policy_document" "ec2_s3_access" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation",
+      "s3:ListBucketMultipartUploads",
+    ]
+    resources = [aws_s3_bucket.app_bucket.arn]
+  }
+
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:DeleteObjectVersion",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+    ]
+    resources = ["${aws_s3_bucket.app_bucket.arn}/*"]
+  }
+}
+
 resource "aws_iam_role" "web_server_role" {
   name               = "${var.site_prefix}-prod-web-server-role"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
@@ -168,6 +192,12 @@ resource "aws_iam_role_policy" "web_server_ssm_env_read" {
   name   = "${var.site_prefix}-prod-web-server-ssm-env-read"
   role   = aws_iam_role.web_server_role.id
   policy = data.aws_iam_policy_document.ec2_ssm_env_read.json
+}
+
+resource "aws_iam_role_policy" "web_server_s3_access" {
+  name   = "${var.site_prefix}-prod-web-server-s3"
+  role   = aws_iam_role.web_server_role.id
+  policy = data.aws_iam_policy_document.ec2_s3_access.json
 }
 
 resource "aws_iam_instance_profile" "web_server_profile" {
