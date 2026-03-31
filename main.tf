@@ -385,6 +385,12 @@ resource "aws_instance" "web_server" {
   chown ubuntu:ubuntu .env
   chmod 600 .env
 
+  openssl req -x509 -newkey rsa:4096 \
+    -keyout nginx/certs/key.pem \
+    -out nginx/certs/certificate.pem \
+    -sha256 -days 3650 -nodes \
+    -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+
   bin/prod
   EOF
 
