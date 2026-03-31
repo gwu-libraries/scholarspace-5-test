@@ -30,6 +30,9 @@
 # Ignore Ruby artifacts
 /.ruby-*
 
+# Ignore local vendored gems installed by Bundler
+/vendor/bundle/
+
 # Ignore uploaded files in development
 /storage/*
 !/storage/.keep
