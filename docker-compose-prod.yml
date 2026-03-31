@@ -14,7 +14,7 @@ services:
         - RAILS_ENV=production
     command: sh -lc 'RAILS_ENV=production bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 15s
       timeout: 10s
       retries: 10
