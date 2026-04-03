@@ -1,0 +1,13 @@
+# Prevent host platform artifacts from being baked into images.
+node_modules
+public/packs
+
+# Keep local runtime/build outputs out of Docker context.
+log
+tmp
+coverage
+
+# Keep git metadata and editor settings out of build context.
+.git
+.gitignore
+.vscode
