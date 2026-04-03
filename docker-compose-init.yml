@@ -16,34 +16,44 @@ services:
       - >-
         mkdir -p /app/scholarspace/tmp/cache/assets/sprockets
         /app/scholarspace/tmp/test_storage
+        /app/scholarspace/node_modules
         /app/scholarspace/storage
         /app/scholarspace/uploads
+        /.cache/yarn
         /.cache/solr-ocr-index-cache
         /.cache/whispercpp
         && chown -R ${APP_UID:-1001}:${APP_GID:-101}
+        /app/scholarspace/node_modules
         /app/scholarspace/tmp/test_storage
         /app/scholarspace/tmp
         /app/scholarspace/storage
         /app/scholarspace/uploads
+        /.cache/yarn
         /.cache/solr-ocr-index-cache
         /.cache/whispercpp
         && chmod -R ug+rwX 
+        /app/scholarspace/node_modules
         /app/scholarspace/tmp/test_storage
         /app/scholarspace/tmp
         /app/scholarspace/storage
         /app/scholarspace/uploads
+        /.cache/yarn
         /.cache/solr-ocr-index-cache
         /.cache/whispercpp
     restart: "no"
     volumes:
+      - node_modules:/app/scholarspace/node_modules
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
+      - yarn-cache:/.cache/yarn
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - whispercpp-cache:/.cache/whispercpp
 volumes:
+  node_modules:
   storage:
   uploads:
   tmp:
+  yarn-cache:
   solr-ocr-index-cache:
   whispercpp-cache:
