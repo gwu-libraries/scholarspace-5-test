@@ -42,6 +42,8 @@
 
 /public/assets
 /public/files
+/public/packs/*
+!/public/packs/.keep
 /public/uv/*
 !/public/uv/.keep
 /public/branding/*
