@@ -22,6 +22,9 @@ services:
       - RAILS_ENV=test
       - RAILS_ROOT=/app/scholarspace
       - HOME=/app/scholarspace # this is needed because alpine (the image we're using), uses HOME
+      - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+      - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+      - HYRAX_DERIVATIVES_PATH=/app/scholarspace/tmp/derivatives
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -41,6 +44,7 @@ services:
       - .:/app/scholarspace
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - whispercpp-cache:/.cache/whispercpp
 
@@ -60,6 +64,8 @@ services:
       - RAILS_ENV=test
       - RAILS_ROOT=/app/scholarspace
       - HOME=/app/scholarspace
+      - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+      - VALKYRIE_STORAGE_ADAPTER=fedora_storage
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -84,10 +90,32 @@ services:
       - whispercpp-cache:/.cache/whispercpp
 
   solr:
+    ports:
+      - "18983:8983"
     command:
       - sh
       - "-c"
       - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_test /opt/solr/server/configsets/hyraxconf"
+
+  postgres:
+    ports:
+      - "15432:5432"
+
+  redis:
+    ports:
+      - "16379:6379"
+
+  memcached:
+    ports:
+      - "11212:11211"
+
+  fedora:
+    ports:
+      - "18080:8080"
+
+  fits:
+    ports:
+      - "18081:8081"
 
 networks:
   default:

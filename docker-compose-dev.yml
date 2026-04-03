@@ -101,10 +101,32 @@ services:
         condition: service_healthy
 
   solr:
+    ports:
+      - "62821:8983"
     command:
       - sh
       - "-c"
       - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  memcached:
+    ports:
+      - "11211:11211"
+
+  fedora:
+    ports:
+      - "8080:8080"
+
+  fits:
+    ports:
+      - "8081:8081"
 
 volumes:
   node_modules:

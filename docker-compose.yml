@@ -6,8 +6,6 @@ services:
     image: postgres:15-alpine
     env_file:
       - .env
-    ports:
-      - "5432:5432"
     volumes:
       - type: volume
         source: db
@@ -23,8 +21,6 @@ services:
     image: bitnami/redis:latest
     env_file:
       - .env
-    ports:
-      - "6379:6379"
     volumes:
       - type: volume
         source: redis
@@ -35,15 +31,11 @@ services:
 
   memcached:
     image: bitnami/memcached
-    ports:
-      - "11211:11211"
     restart: always
 
   fedora:
     image: fcrepo/fcrepo:6.5.1-tomcat9
     restart: always
-    ports:
-      - "8080:8080"
     environment:
       - >-
         CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
@@ -69,15 +61,11 @@ services:
     build:
       dockerfile: Dockerfile-fits
       context: .
-    ports:
-      - "8081:8081"
     restart: always
 
   solr:
     image: solr:8.11
     user: 8983:8983
-    ports:
-      - "62821:8983"
     command:
       - sh
       - "-c"

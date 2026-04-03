@@ -92,6 +92,8 @@ services:
         condition: service_healthy
 
   fedora:
+    ports:
+      - "8080:8080"
     environment:
       - >-
         CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
@@ -102,10 +104,28 @@ services:
         -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true -Dfcrepo.storage=ocfl-s3 -Dfcrepo.aws.region=${AWS_REGION:-us-west-2} -Dfcrepo.ocfl.s3.bucket=${S3_BUCKET_NAME} -Dfcrepo.ocfl.s3.prefix=${S3_PREFIX}
 
   solr:
+    ports:
+      - "62821:8983"
     command:
       - sh
       - "-c"
       - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  memcached:
+    ports:
+      - "11211:11211"
+
+  fits:
+    ports:
+      - "8081:8081"
 
 networks:
   default:
