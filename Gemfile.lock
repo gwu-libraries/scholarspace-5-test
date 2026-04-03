@@ -1314,6 +1314,9 @@ GEM
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     whispercpp (1.3.5)
+    with_advisory_lock (5.3.0)
+      activerecord (>= 6.1)
+      zeitwerk (>= 2.6)
     xpath (3.2.0)
       nokogiri (~> 1.8)
     yaml-ld (0.0.3)
@@ -1401,6 +1404,7 @@ DEPENDENCIES
   web-console (>= 3.3.0)
   webmock
   whispercpp
+  with_advisory_lock
 
 BUNDLED WITH
    2.7.1
