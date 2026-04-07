@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   helper Openseadragon::OpenseadragonHelper
+  helper Shakapacker::Helper
   # Adds a few additional behaviors into the application controller
   include Blacklight::Controller
   include Hydra::Controller::ControllerBehavior
