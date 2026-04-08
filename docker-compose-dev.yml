@@ -10,10 +10,7 @@ services:
       args:
         - BUILD_ENV=dev
         - BUNDLE_GEMFILE=Gemfile
-    # i don't know that the bundle check || bundle install portion is needed anymore, 
-    # but it is a fallback that installs gems if they aren't already installed, though
-    # they should be as part of Dockerfile
-    command: sh -lc 'bundle check || bundle install; yarn install --force; yarn build:dev; bundle exec rails db:prepare; bundle exec rails db:seed; exec ./bin/rails server -p 3000 -b 0.0.0.0'
+    command: sh -lc 'yarn install --force; yarn build:dev; bundle exec rails db:prepare; bundle exec rails db:seed; exec ./bin/rails server -p 3000 -b 0.0.0.0'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 15s
@@ -70,7 +67,7 @@ services:
       args:
         - BUILD_ENV=dev
         - BUNDLE_GEMFILE=Gemfile
-    command: sh -lc 'bundle check || bundle install; exec bundle exec sidekiq'
+    command: sh -lc 'exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
