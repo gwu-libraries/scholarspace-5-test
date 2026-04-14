@@ -17,25 +17,34 @@ Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Memory::MetadataAdapter.new,
   :test_adapter
 )
-
 Valkyrie.config.metadata_adapter = :test_adapter
 
-Valkyrie::StorageAdapter.register(Valkyrie::Storage::Memory.new, :memory)
-
-Valkyrie.config.storage_adapter = :memory
+Valkyrie::StorageAdapter.register(
+  Valkyrie::Storage::Memory.new,
+  :test_storage
+)
+Valkyrie.config.storage_adapter = :test_storage
 
 query_registration_target =
   Valkyrie::MetadataAdapter.find(:test_adapter).query_service.custom_queries
 custom_queries = [
   Hyrax::CustomQueries::Navigators::CollectionMembers,
-  Hyrax::CustomQueries::Navigators::ChildFilesetsNavigator,
+  Hyrax::CustomQueries::Navigators::ChildFileSetsNavigator,
   Hyrax::CustomQueries::Navigators::ChildWorksNavigator,
+  Hyrax::CustomQueries::Navigators::ParentCollectionsNavigator,
+  Hyrax::CustomQueries::Navigators::ParentWorkNavigator,
+  Hyrax::CustomQueries::Navigators::FindFiles,
   Hyrax::CustomQueries::FindAccessControl,
   Hyrax::CustomQueries::FindCollectionsByType,
-  Hyrax::CustomQueries::FindManyByAlternateIds,
-  Hyrax::CustomQueries::FindIdsByModel,
   Hyrax::CustomQueries::FindFileMetadata,
-  Hyrax::CustomQueries::Navigators::FindFiles
+  Hyrax::CustomQueries::FindIdsByModel,
+  Hyrax::CustomQueries::FindManyByAlternateIds,
+  Hyrax::CustomQueries::FindModelsByAccess,
+  Hyrax::CustomQueries::FindCountBy,
+  Hyrax::CustomQueries::FindByDateRange,
+  Hyrax::CustomQueries::FindByModelAndPropertyValue,
+  Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId,
+  Hyrax::CustomQueries::FindByPropertyValue
 ]
 custom_queries.each do |handler|
   query_registration_target.register_query_handler(handler)
@@ -50,6 +59,10 @@ rescue ActiveRecord::PendingMigrationError => e
   exit 1
 end
 RSpec.configure do |config|
+  # Ensure that if we are running js tests, we are using latest webpack assets
+  # This will use the defaults of :js and :server_rendering meta tags
+  ReactOnRails::TestHelper.configure_rspec_to_compile_assets(config)
+
   config.include Capybara::DSL
   # config.fixture_path = "#{::Rails.root}/spec/fixtures"
   config.use_transactional_fixtures = true
@@ -60,7 +73,12 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+  config.include FactoryBot::Syntax::Methods
   config.include ActiveJob::TestHelper
+
+  config.after(:each) do
+    Valkyrie::MetadataAdapter.find(:test_adapter).persister.wipe!
+  end
 end
 
 def sign_in_user(user)
