@@ -44,10 +44,20 @@ class ScholarspaceDerivativesJob < ApplicationJob
       return
     end
 
+    # generate a thumbnail
     ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/', 'video/') || ft == 'application/pdf' }
+
+    #  we're not using this PdfToImagesJob for the time being since it's not working well with our current pdfs and we don't have a pressing need for it, but we can revisit in the future if we want to generate images from pdfs for any reason
+
     # PdfToImagesDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
+
+    # if a collection of images, generate a pdf
     ImagesToPdfDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/') }
+
+    # if a/v, generate a transcript
     AudioTranscriptDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
+
+    # if a pdf, extract text for full text search and OCR highlighting
     PdfTextExtractionJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
   end
 
