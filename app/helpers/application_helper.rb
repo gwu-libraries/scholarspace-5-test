@@ -1,8 +1,7 @@
 module ApplicationHelper
+  # module for that provides methods for loading js and css on pages using react-on-rails
+  include PagePacksHelper
 
-  # This is just used in stripping the "?locale=en" when setting the path to the 
-  # pdf for pdfjs in 'hyrax/academic_documents/show.html.erb' 
-  def without_params(input_str)
-    input_str.include?('?') ? input_str[0...input_str.index('?')] : input_str
-  end
+  # module with a few methods for changed work show page approach
+  include WorkViewerHelper
 end
