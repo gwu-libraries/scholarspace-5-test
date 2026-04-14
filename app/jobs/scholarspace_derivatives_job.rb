@@ -44,10 +44,11 @@ class ScholarspaceDerivativesJob < ApplicationJob
       return
     end
 
-    ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/') || ft == 'application/pdf' }
-    PdfToImagesDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
+    ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/', 'video/') || ft == 'application/pdf' }
+    # PdfToImagesDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
     ImagesToPdfDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/') }
     AudioTranscriptDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
+    PdfTextExtractionJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
   end
 
   def reschedule_job
