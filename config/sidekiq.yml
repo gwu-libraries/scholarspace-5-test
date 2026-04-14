@@ -6,6 +6,7 @@
   - [derivatives_images_to_pdf, 1]
   - [derivatives_audio_transcript, 1]
   - [derivatives_thumbnail, 1]
+  - [derivatives_pdf_hocr_embedding, 1]
   - [default, 1]
 
 test:
