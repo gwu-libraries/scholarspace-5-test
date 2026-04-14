@@ -1,2 +1,5 @@
 batch_upload:
   enabled: "true"
+
+iiif_av:
+  enabled: "true"
