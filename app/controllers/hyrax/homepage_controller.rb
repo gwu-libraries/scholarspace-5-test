@@ -12,11 +12,14 @@ class Hyrax::HomepageController < ApplicationController
 
   def index
     @presenter = presenter_class.new(current_ability, collections)
-    @featured_researcher = ContentBlock.for(:researcher)
     @marketing_text = ContentBlock.for(:marketing)
-    @featured_work_list = FeaturedWorkList.new
     @announcement_text = ContentBlock.for(:announcement)
     recent
+    @homepage_props = HomepageSerializer.new(
+      view_context: view_context,
+      recent_documents: @recent_documents,
+      collections: @presenter.collections
+    ).as_json
   end
 
   private
