@@ -41,7 +41,10 @@ ReactOnRails.register({
 
 forceBackgroundDownloadLinks();
 
-document.addEventListener("turbo:render", () => {
+function bootReactOnRails() {
   ensureDownloadIframe();
   ReactOnRails.reactOnRailsPageLoaded();
-});
+}
+
+document.addEventListener("turbolinks:load", bootReactOnRails);
+document.addEventListener("turbo:render", bootReactOnRails);

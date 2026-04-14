@@ -5,6 +5,9 @@ ReactOnRails.register({
   Homepage,
 });
 
-document.addEventListener('turbo:render', () => {
+function bootReactOnRails() {
   ReactOnRails.reactOnRailsPageLoaded();
-});
+}
+
+document.addEventListener('turbolinks:load', bootReactOnRails);
+document.addEventListener('turbo:render', bootReactOnRails);
