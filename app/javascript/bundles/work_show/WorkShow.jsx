@@ -1,12 +1,16 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import ViewerToggle from '../viewers/viewer_toggle/ViewerToggle';
 import WorkItemsTabs from './WorkItemsTabs';
 
-const Ramp = lazy(() => import('../viewers/ramp/Ramp'));
-const PdfViewer = lazy(() => import('../viewers/pdf_viewer/PdfViewer'));
-const Clover = lazy(() => import('../viewers/clover/Clover'));
+const loadRamp = () => import('../viewers/ramp/Ramp');
+const loadPdfViewer = () => import('../viewers/pdf_viewer/PdfViewer');
+const loadClover = () => import('../viewers/clover/Clover');
+
+const Ramp = lazy(loadRamp);
+const PdfViewer = lazy(loadPdfViewer);
+const Clover = lazy(loadClover);
 
 const viewerShellStyle = {
   width: '100vw',
@@ -23,6 +27,10 @@ const cloverContainerStyle = {
 
 const ViewerSection = ({ viewer, presenterId }) => {
   const [activeViewer, setActiveViewer] = useState(viewer.defaultViewer || 'pdf');
+
+  useEffect(() => {
+    if (viewer.type === 'pdf_or_images') loadPdfViewer();
+  }, [viewer.type]);
 
   const renderViewer = () => {
     if (viewer.type === 'ramp') {
@@ -44,7 +52,12 @@ const ViewerSection = ({ viewer, presenterId }) => {
 
       return (
         <div className="work-show-pdf-viewer">
-          <PdfViewer fileUrl={viewer.pdfUrl} />
+          <PdfViewer
+            fileUrl={viewer.pdfUrl}
+            hocrUrl={viewer.hocrUrl}
+            enableTextLayer={false}
+            enableAnnotationLayer={false}
+          />
         </div>
       );
     }
@@ -79,6 +92,7 @@ ViewerSection.propTypes = {
     type: PropTypes.oneOf(['ramp', 'pdf_or_images', 'clover']).isRequired,
     manifestUrl: PropTypes.string,
     pdfUrl:      PropTypes.string,
+    hocrUrl:     PropTypes.string,
     defaultViewer: PropTypes.oneOf(['pdf', 'images']),
     transcriptFiles: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,

@@ -35,6 +35,43 @@
   margin: 0 auto 1rem;
 }
 
+.pageFrame {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto 1rem;
+}
+
+.pageFrame .page {
+  margin: 0;
+}
+
+.hocrOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+  overflow: hidden;
+}
+
+.hocrWord {
+  position: absolute;
+  line-height: 1;
+  white-space: nowrap;
+  color: transparent;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  overflow: hidden;
+}
+
+.hocrWord::selection {
+  background: rgba(96, 165, 250, 0.35);
+  color: transparent;
+}
+
 .page :global(canvas) {
   width: 100% !important;
   height: auto !important;
