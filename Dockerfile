@@ -41,7 +41,6 @@ RUN apk --no-cache upgrade && \
   yarn \
   libxml2 \
   libxml2-dev \
-  ocrmypdf \
   poppler-utils \
   cmake \
   $EXTRA_APK_PACKAGES
