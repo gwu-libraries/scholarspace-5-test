@@ -47,6 +47,8 @@ module Hyrax
         attribute :degree, Solr::Array, "degree_tesim"
         attribute :advisor, Solr::Array, "advisor_tesim"
         attribute :committee_member, Solr::Array, "committee_member_tesim"
+        attribute :alt_text, Solr::Array, "alt_text_tesim"
+        attribute :thumbnail_alt_text, Solr::Array, "thumbnail_alt_text_tesim"
         attribute :alternative_title, Solr::Array, "alternative_title_tesim"
         attribute :identifier, Solr::Array, "identifier_tesim"
         attribute :based_near, Solr::Array, "based_near_tesim"
@@ -95,6 +97,12 @@ module Hyrax
         attribute :modified_date, Solr::Date, "system_modified_dtsi"
         attribute :embargo_release_date, Solr::Date, Hydra.config.permissions.embargo.release_date
         attribute :lease_expiration_date, Solr::Date, Hydra.config.permissions.lease.expiration_date
+      end
+
+      def alt_text_for_view
+        return alt_text.first.presence || title.first if file_set?
+
+        thumbnail_alt_text.first || "#{title.first} #{I18n.t('hyrax.homepage.admin_sets.thumbnail')}"
       end
     end
   end
