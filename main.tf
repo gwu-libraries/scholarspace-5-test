@@ -57,7 +57,7 @@ variable "instance_ami" {
 
 variable "instance_type" {
   description = "EC2 instance type used for each environment"
-  default     = "t3.small"
+  default     = "t3.large"
   type        = string
 }
 

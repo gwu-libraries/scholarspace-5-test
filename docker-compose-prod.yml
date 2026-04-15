@@ -12,7 +12,7 @@ services:
         - EXTRA_APK_PACKAGES=less
         - BUNDLE_GEMFILE=Gemfile
         - RAILS_ENV=production
-    command: sh -lc 'RAILS_ENV=production bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0'
+    command: sh -lc 'RAILS_ENV=production bundle exec rails db:prepare && exec bundle exec puma -C config/puma.rb'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 15s
@@ -27,6 +27,7 @@ services:
     environment:
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=production
+      - PUMA_ENV=production
     ports:
       - "3000:3000"
     volumes:
