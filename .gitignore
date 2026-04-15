@@ -19,6 +19,7 @@
 !/tmp/derivatives/.keep
 !/tmp/uploads/.keep
 !/tmp/uploads/cache/.keep
+!/tmp/pids/.keep
 
 # From Rails 5.1
 /node_modules
