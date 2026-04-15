@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'hyrax/file_set_derivatives_service'
-
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
   config.register_curation_concern :archival_document
@@ -54,11 +52,11 @@ Hyrax.config do |config|
   config.max_days_between_fixity_checks = 7
 
   # Options to control the file uploader
-  # config.uploader = {
-  #   limitConcurrentUploads: 6,
-  #   maxNumberOfFiles: 100,
-  #   maxFileSize: 500.megabytes
-  # }
+  config.uploader = {
+    limitConcurrentUploads: 6,
+    maxNumberOfFiles: 100,
+    maxFileSize: 100.gigabytes
+  }
 
   # Date you wish to start collecting Google Analytic statistics for
   # Leaving it blank will set the start date to when ever the file was uploaded by
@@ -317,9 +315,16 @@ Hyrax.config do |config|
   # See app/services/hyrax/identifier/registrar.rb for the registrar interface
   # config.identifier_registrars = {}
 
-  config.derivative_services = [
-    Hyrax::FileSetDerivativesService
-  ]
+  config.derivative_services = []
+
+  # Extended timeouts for large file uploads to Fedora
+  config.fedora_connection_builder = lambda { |url|
+    Faraday.new(url, request: { timeout: 7200, open_timeout: 60 }) do |f|
+      f.request :multipart
+      f.request :url_encoded
+      f.adapter Faraday.default_adapter
+    end
+  }
 end
 
 Date::DATE_FORMATS[:standard] = '%m/%d/%Y'
