@@ -57,7 +57,7 @@ variable "instance_ami" {
 
 variable "instance_type" {
   description = "EC2 instance type used for each environment"
-  default     = "t3.large"
+  default     = "c7i.xlarge"
   type        = string
 }
 
@@ -247,6 +247,17 @@ resource "aws_route_table" "app_route_table" {
 resource "aws_route_table_association" "app_rta" {
   subnet_id      = aws_subnet.app_subnet.id
   route_table_id = aws_route_table.app_route_table.id
+}
+
+resource "aws_vpc_endpoint" "s3_gateway" {
+  vpc_id            = aws_vpc.app_vpc.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.app_route_table.id]
+
+  tags = {
+    Name = "${var.site_prefix}_prod_s3_gateway_endpoint"
+  }
 }
 
 resource "aws_security_group" "allow_web_traffic" {
