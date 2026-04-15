@@ -17,7 +17,7 @@ Rails.application.reloader.to_prepare do
   end
 
   if Hyrax.config.use_valkyrie?
-    Riiif::Image.file_resolver = Hyrax::Riiif::FileResolver.new
+    Riiif::Image.file_resolver = Hyrax::Riiif::EncodedIdFileResolver.new
   else
     Riiif::Image.file_resolver = Riiif::HttpFileResolver.new
 
