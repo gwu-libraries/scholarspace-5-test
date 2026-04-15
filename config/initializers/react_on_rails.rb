@@ -41,9 +41,9 @@ ReactOnRails.configure do |config|
   # different. You should have ONE server bundle which can create all of your server rendered
   # React components.
   #
-  # SSR is disabled (all react_component calls use prerender: false).
-  # Setting this to "" prevents react-on-rails from booting a Node JS execution pool.
-  config.server_bundle_js_file = ""
+  # SSR is enabled for server-side rendering of React components.
+  # This points to the server bundle which handles rendering all React components.
+  config.server_bundle_js_file = "server-bundle.js"
 
   ################################################################################
   ################################################################################
