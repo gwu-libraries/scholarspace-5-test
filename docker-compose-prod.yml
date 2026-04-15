@@ -12,7 +12,7 @@ services:
         - EXTRA_APK_PACKAGES=less
         - BUNDLE_GEMFILE=Gemfile
         - RAILS_ENV=production
-    command: sh -lc 'RAILS_ENV=production bundle exec rails db:prepare && exec bundle exec puma -C config/puma.rb'
+    command: sh -lc 'RAILS_ENV=production bundle exec rails db:prepare && exec bundle exec puma -C config/puma.rb -b tcp://0.0.0.0:3000'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 15s
