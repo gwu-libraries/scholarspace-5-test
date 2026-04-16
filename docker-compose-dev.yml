@@ -91,6 +91,44 @@ services:
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - whispercpp-cache:/.cache/whispercpp
 
+  worker_whisper:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - BUILD_ENV=dev
+        - BUNDLE_GEMFILE=Gemfile
+    command: sh -lc 'exec bundle exec sidekiq'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - .env
+    environment:
+      - HOME=/app
+      - YARN_CACHE_FOLDER=/.cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
+      - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-1}
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+      whisper-model-preload:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/.cache/yarn
+      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - whispercpp-cache:/.cache/whispercpp
+
   nginx:
     image: nginx:latest
     ports:

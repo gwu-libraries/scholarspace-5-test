@@ -1,5 +1,13 @@
 ---
+# allows for splitting of jobs into seperate sidekiq containers, with one just for whisper audio transcription
+<%
+only_audio_transcript = ENV['SIDEKIQ_ONLY_AUDIO_TRANSCRIPT'] == 'true'
+%>
+
 :queues:
+<% if only_audio_transcript %>
+  - [derivatives_audio_transcript, 1]
+<% else %>
   - [ingest, 4]
   - [batch, 2]
   - [derivatives_pdf_to_images, 1]
@@ -8,6 +16,7 @@
   - [derivatives_thumbnail, 1]
   - [derivatives_pdf_text_extraction, 1]
   - [default, 1]
+<% end %>
 
 test:
   :concurrency: 1
