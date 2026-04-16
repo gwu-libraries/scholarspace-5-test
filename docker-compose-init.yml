@@ -49,6 +49,32 @@ services:
       - yarn-cache:/.cache/yarn
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - whispercpp-cache:/.cache/whispercpp
+
+  whisper-model-preload:
+    image: scholarspace-worker-prod:${RAILS_TAG:-latest}
+    env_file:
+      - .env
+    environment:
+      - RAILS_ENV=production
+    command: >-
+      sh -lc 'bundle exec rails runner "ENV[\"XDG_CACHE_HOME\"] = \"/.cache/whispercpp\"; Whisper::Context.new(ENV.fetch(\"WHISPER_PRELOAD_MODEL\", \"base\"))"'
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rails:
+        condition: service_healthy
+    restart: "no"
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    volumes:
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - whispercpp-cache:/.cache/whispercpp
 volumes:
   node_modules:
   storage:
