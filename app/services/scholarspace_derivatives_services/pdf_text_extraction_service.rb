@@ -6,6 +6,7 @@ require 'fileutils'
 module ScholarspaceDerivativesServices
   class PdfTextExtractionService
     include Concerns::FileSetAttachable
+    include Concerns::HocrGeneratable
 
     def initialize(work)
       @work = work
@@ -49,10 +50,14 @@ module ScholarspaceDerivativesServices
       temp_dir = Dir.mktmpdir('pdf_extraction_')
       begin
         pdf_path = fetch_pdf_file(pdf_file_set, temp_dir)
-        return unless pdf_path && has_embedded_text?(pdf_path)
+        return unless pdf_path
+
+        # Only generate HOCR for scanned PDFs (no embedded text).
+        # PDFs with embedded text will be indexed naturally without HOCR.
+        return if has_embedded_text?(pdf_path)
 
         hocr_filename = expected_hocr_filename_for(pdf_file_set)
-        hocr_path = extract_pdf_text_to_hocr(pdf_path, temp_dir, hocr_filename)
+        hocr_path = extract_hocr_for_scanned_pdf(pdf_path, temp_dir, hocr_filename)
         return unless hocr_path && File.exist?(hocr_path)
 
         attach_hocr_to_work(hocr_path, pdf_file_set)
@@ -82,26 +87,43 @@ module ScholarspaceDerivativesServices
       false
     end
 
-    def extract_pdf_text_to_hocr(pdf_path, temp_dir, hocr_filename)
+    def extract_hocr_for_scanned_pdf(pdf_path, temp_dir, hocr_filename)
       output_stem = File.basename(hocr_filename, '.hocr')
       output_base = File.join(temp_dir, output_stem)
       hocr_path = "#{output_base}.hocr"
 
-      # pdftohtml with -hocr flag extracts both text and layout as HOCR
-      cmd = ['pdftohtml', '-hocr', pdf_path, output_base]
+      # Convert first page of PDF to image for tesseract OCR
+      image_path = convert_pdf_page_to_image(pdf_path, temp_dir)
+      return nil unless image_path
+
+      # Use tesseract to OCR the image and generate HOCR
+      generate_hocr_file(
+        image_path: image_path,
+        output_hocr_path: hocr_path,
+        error_message: "Tesseract OCR failed for work #{@work.id}"
+      )
+      Rails.logger.info("Generated HOCR from scanned PDF for work #{@work.id}")
+      hocr_path
+    rescue StandardError => e
+      Rails.logger.warn("Failed to extract HOCR from scanned PDF for work #{@work.id}: #{e.class} #{e.message}")
+      nil
+    end
+
+    def convert_pdf_page_to_image(pdf_path, temp_dir)
+      # pdftoppm converts PDF to image; -png outputs PNG, -f 1 -l 1 converts only first page
+      cmd = ['pdftoppm', '-png', '-f', '1', '-l', '1', pdf_path, temp_dir]
       _stdout, stderr, status = Open3.capture3(*cmd)
 
       unless status.success?
-        Rails.logger.warn("pdftohtml extraction failed for work #{@work.id}: #{stderr.to_s.strip}")
+        Rails.logger.warn("Failed to convert PDF to image for work #{@work.id}: #{stderr.to_s.strip}")
         return nil
       end
 
-      return hocr_path if File.exist?(hocr_path)
-
-      Rails.logger.warn("pdftohtml did not generate HOCR file for work #{@work.id}")
-      nil
+      # pdftoppm creates filename with -1 suffix
+      pdftoppm_output = File.join(temp_dir, 'page-1.png')
+      File.exist?(pdftoppm_output) ? pdftoppm_output : nil
     rescue StandardError => e
-      Rails.logger.warn("Failed to extract PDF text to HOCR for work #{@work.id}: #{e.class} #{e.message}")
+      Rails.logger.warn("Error converting PDF page to image for work #{@work.id}: #{e.class} #{e.message}")
       nil
     end
 
@@ -123,7 +145,7 @@ module ScholarspaceDerivativesServices
         Hyrax.persister.save(resource: @work)
         Hyrax.index_adapter.save(resource: @work)
         Hyrax.index_adapter.save(resource: file_set)
-        Rails.logger.info("PdfTextExtractionService extracted HOCR from PDF for work #{@work.id}")
+        Rails.logger.info("PdfTextExtractionService extracted HOCR from scanned PDF for work #{@work.id}")
       end
 
       file_set
