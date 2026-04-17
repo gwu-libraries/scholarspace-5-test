@@ -4,15 +4,15 @@ import PropTypes from 'prop-types';
 import ViewerToggle from '../viewers/viewer_toggle/ViewerToggle';
 
 const loadRamp = () => import(
-  /* webpackChunkName: "viewer-ramp", webpackPrefetch: false, webpackPreload: false */
+  /* webpackChunkName: "viewer-ramp" */
   '../viewers/ramp/Ramp'
 );
 const loadPdfViewer = () => import(
-  /* webpackChunkName: "viewer-pdf", webpackPrefetch: false, webpackPreload: false */
+  /* webpackChunkName: "viewer-pdf" */
   '../viewers/pdf_viewer/PdfViewer'
 );
 const loadClover = () => import(
-  /* webpackChunkName: "viewer-clover", webpackPrefetch: false, webpackPreload: false */
+  /* webpackChunkName: "viewer-clover" */
   '../viewers/clover/Clover'
 );
 
