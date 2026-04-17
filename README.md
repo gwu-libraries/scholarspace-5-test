@@ -50,13 +50,18 @@ This is designed to run on Docker locally and ideally autorefresh when files are
 
 # Customizations/Deviations from Hyrax
 
+## Solr Indexing with HOCR
+
+We are utilizing the [Solr OCR Highlighting](https://github.com/dbmdz/solr-ocrhighlighting/) plugin, which allows for indexing of bounding boxes that can be utilized in IIIF content search. See `app/indexers/concerns/ocr_text_indexable.rb` for information on how this indexing process works.
+
 ## Derivatives
 
 We are not utilizing the Hyrax derivative pipeline, and instead opting to only generate the derivatives we need for display purposes. The purpose of this change is to:
-1. Persist derivatives in Fedora. Service files - including HOCR, VTT, and thumbnail images - may be created or edited by archivists and librarians and we want to ensure that their work is preserved. This adds to the repository size, but also preserves a record of how files should be presented to end users. 
-2. Provide a workflow for admin users to modify these service files, primarily for correction of machine generated transcriptions of A/V content or OCR extraction. 
+1. Persist derivatives in Fedora. Service files - including HOCR, VTT, and thumbnail images - may be created or edited by archivists and librarians and we want to ensure that their work is preserved. This adds to the repository size, thus the desire to limit the number of derivatives generated to only necessary ones, but also preserves a record of how files should be presented to end users. 
+2. Provide a workflow for admin/content-admin users to modify these service files, primarily for correction of machine generated transcriptions of A/V content or OCR extraction, and have these changes reflected in the display. 
+3. Provide some more customizability to our pipeline, such as using Whisper for generating VTT files. 
 
-Derivative we are generating:
+Derivatives we are generating:
 
 
 | Derivative | Scenario | Purpose |
@@ -67,3 +72,49 @@ Derivative we are generating:
 | .pdf file | On deposit of a collection of images | In the situation where a user has a collection of scanned images representing pages of text, they can upload a series of images for OCR extraction and joining into a PDF for rendering as a text document. |
 | *_HOCR.hocr | On deposit of a PDF without preembedded text, and on deposit of images or collections of images. | These files are used for several display and accessibility purposes. For PDF files without embedded text, this is used for overlaying text on top of PDF. For images, this is used for OCR extraction, text indexing of image content, and IIIF search via Clover. This modification is so users can edit HOCR files and have the changes reflected in search and rendering, without updating the actual deposited file by re-embedding text. (There are pros and cons to this approach, with the primary con being not using built in browser PDF embed functionality/PDFJS. It is possible we decide to switch the workflow to re-embed PDFs with text as HOCR files are edited to achieve that, but for now a future problem)|
 
+## Display Changes
+
+### React on Rails
+
+We are utilizing React on Rails to be able to embed React components, without necessitating rewriting all view pages in one pass to work with React. At the moment, this is primarily used on the work show pages and is configured for use in the homepage, and ultimately we will probably want to move our catalog page to use this setup for browsing and advanced search functionality. 
+
+React components are defined in `/app/javascript/bundles` and `/app/javascript/packs`. These are picked up by our asset pipeline, and can be used in views like so:
+
+```ruby
+<%
+  provide :page_title, application_name
+  add_page_js_pack('homepage-bundler')
+%>
+
+<% content_for(:head) do %>
+  <%= render_page_pack_tags %>
+<% end %>
+
+<div class="row home-content">
+  <%= react_component(
+    'Homepage',
+    props: @homepage_props,
+    prerender: false,
+    html_options: { data: { turbo_cache: false } }
+  ) %>
+</div>
+
+```
+
+Our current approach involves defining serializer classes, under `/app/serializers` for each page that we are converting into React components, which parse the IIIF manifest and any other information from the respective controllers into JSON, which is passed to the `<%= react_component(...)%>` block as props.
+
+### Clover
+
+We are utilizing Clover as our IIIF viewer for image content. Along with some tweaks to IIIF manifest generation and Solr indexing, this allows us to us IIIF content search on OCRed image documents. 
+
+### Ramp
+
+We are utilizing RAMP as our A/V content viewer, primarily because it provides a nice interface when given an associated VTT transcription file, allowing for auto-scrolling of transcripts with A/V playing, embedded captions, and the ability to do search within a transcript and jump to relevant time stamps in the A/V location. 
+
+### PDF Viewer
+
+We are not using PDFJS for the reasons mentioned above with the pros/cons of dealing with editable embedded text. The current system involves using React to generate an overlay for the PDF rendering with bounding boxes and words from the HOCR file if the PDF does not have pre-embedded text, and otherwise just using the version with pre-embedded text. 
+
+## Fedora 6
+
+???
