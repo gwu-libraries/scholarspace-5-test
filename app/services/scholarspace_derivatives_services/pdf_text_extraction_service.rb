@@ -42,7 +42,7 @@ module ScholarspaceDerivativesServices
 
     def expected_hocr_filename_for(pdf_file_set)
       original_filename = pdf_file_set.original_file.original_filename.to_s
-      base_name = File.basename(original_filename, '.pdf')
+      base_name = File.basename(original_filename, File.extname(original_filename))
       "#{base_name}_HOCR.hocr"
     end
 
@@ -110,8 +110,9 @@ module ScholarspaceDerivativesServices
     end
 
     def convert_pdf_page_to_image(pdf_path, temp_dir)
+      output_prefix = File.join(temp_dir, 'page')
       # pdftoppm converts PDF to image; -png outputs PNG, -f 1 -l 1 converts only first page
-      cmd = ['pdftoppm', '-png', '-f', '1', '-l', '1', pdf_path, temp_dir]
+      cmd = ['pdftoppm', '-png', '-f', '1', '-l', '1', pdf_path, output_prefix]
       _stdout, stderr, status = Open3.capture3(*cmd)
 
       unless status.success?

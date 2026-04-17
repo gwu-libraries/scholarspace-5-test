@@ -4,6 +4,10 @@ module WorkViewerHelper
     has_source_image_files?(presenter) ? 'images' : 'pdf'
   end
 
+  def has_images_for_work?(presenter)
+    has_source_image_files?(presenter)
+  end
+
   def pdf_viewer_file_id_for_work(presenter)
     pdf_presenter_for_work(presenter)&.id ||
       pdf_file_set_id_for_work(presenter)

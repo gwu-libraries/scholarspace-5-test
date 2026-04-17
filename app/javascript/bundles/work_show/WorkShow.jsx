@@ -26,7 +26,8 @@ const cloverContainerStyle = {
 };
 
 const ViewerSection = ({ viewer, presenterId }) => {
-  const [activeViewer, setActiveViewer] = useState(viewer.defaultViewer || 'pdf');
+  const defaultViewer = viewer.hasImages ? (viewer.defaultViewer || 'pdf') : 'pdf';
+  const [activeViewer, setActiveViewer] = useState(defaultViewer);
 
   useEffect(() => {
     if (viewer.type === 'pdf_or_images') loadPdfViewer();
@@ -55,7 +56,7 @@ const ViewerSection = ({ viewer, presenterId }) => {
           <PdfViewer
             fileUrl={viewer.pdfUrl}
             hocrUrl={viewer.hocrUrl}
-            enableTextLayer={false}
+            enableTextLayer
             enableAnnotationLayer={false}
           />
         </div>
@@ -71,7 +72,7 @@ const ViewerSection = ({ viewer, presenterId }) => {
 
   return (
     <>
-      {viewer.type === 'pdf_or_images' && (
+      {viewer.type === 'pdf_or_images' && viewer.hasImages && (
         <ViewerToggle
           defaultViewer={viewer.defaultViewer}
           activeViewer={activeViewer}
@@ -93,6 +94,7 @@ ViewerSection.propTypes = {
     manifestUrl: PropTypes.string,
     pdfUrl:      PropTypes.string,
     hocrUrl:     PropTypes.string,
+    hasImages: PropTypes.bool,
     defaultViewer: PropTypes.oneOf(['pdf', 'images']),
     transcriptFiles: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,

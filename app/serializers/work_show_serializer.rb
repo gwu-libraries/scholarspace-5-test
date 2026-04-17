@@ -46,6 +46,7 @@ class WorkShowSerializer
 
       {
         type: 'pdf_or_images',
+        hasImages: view_context.has_images_for_work?(presenter),
         defaultViewer: view_context.default_viewer_for_work(presenter),
         pdfUrl: view_context.pdf_download_url_for_file(pdf_id),
         hocrUrl: view_context.hocr_download_url_for_work(presenter, pdf_file_id: pdf_id),
