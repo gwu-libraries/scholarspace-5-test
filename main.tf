@@ -32,6 +32,19 @@ variable "subnet_cidr" {
   default     = "10.0.1.0/24"
 }
 
+
+
+variable "subnet_cidr_secondary" {
+  description = "CIDR block for secondary production subnet (required for ALB HA)"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+variable "aws_availability_zone_secondary" {
+  description = "Secondary AWS availability zone"
+  type        = string
+}
+
 variable "ssh_allowed_cidrs" {
   description = "CIDR blocks allowed for SSH access. Leave empty to disable SSH ingress."
   type        = list(string)
@@ -223,6 +236,18 @@ resource "aws_subnet" "app_subnet" {
   }
 }
 
+
+
+resource "aws_subnet" "app_subnet_secondary" {
+  vpc_id            = aws_vpc.app_vpc.id
+  cidr_block        = var.subnet_cidr_secondary
+  availability_zone = var.aws_availability_zone_secondary
+
+  tags = {
+    Name = "${var.site_prefix}_prod_subnet_secondary"
+  }
+}
+
 resource "aws_internet_gateway" "app_gateway" {
   vpc_id = aws_vpc.app_vpc.id
 
@@ -266,19 +291,11 @@ resource "aws_security_group" "allow_web_traffic" {
   vpc_id      = aws_vpc.app_vpc.id
 
   ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "Allow HTTP from ALB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   dynamic "ingress" {
@@ -418,4 +435,391 @@ output "prod_public_url" {
 output "prod_s3_bucket_name" {
   description = "S3 bucket used by prod"
   value       = aws_s3_bucket.app_bucket.bucket
+}
+
+# Target Group for ALB
+resource "aws_lb_target_group" "scholarspace" {
+  name        = "${var.site_prefix}-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.app_vpc.id
+  target_type = "instance"
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    interval            = 30
+    path                = "/"
+    matcher             = "200,404"
+  }
+
+  tags = {
+    Name = "${var.site_prefix}-target-group"
+  }
+}
+
+# Register EC2 instance with target group
+resource "aws_lb_target_group_attachment" "scholarspace" {
+  target_group_arn = aws_lb_target_group.scholarspace.arn
+  target_id        = aws_instance.web_server.id
+  port             = 80
+}
+
+# Application Load Balancer
+resource "aws_lb" "scholarspace" {
+  name               = "${var.site_prefix}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = [aws_subnet.app_subnet.id, aws_subnet.app_subnet_secondary.id]
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "${var.site_prefix}-alb"
+  }
+}
+
+# ALB Listener (HTTP)
+resource "aws_lb_listener" "scholarspace_http" {
+  load_balancer_arn = aws_lb.scholarspace.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.scholarspace.arn
+  }
+}
+
+# ALB Listener (HTTPS - optional, requires certificate)
+# Uncomment and configure if you have an SSL certificate
+# resource "aws_lb_listener" "scholarspace_https" {
+#   load_balancer_arn = aws_lb.scholarspace.arn
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+#   certificate_arn   = var.ssl_certificate_arn
+#
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.scholarspace.arn
+#   }
+# }
+
+# Security group for ALB
+resource "aws_security_group" "alb_sg" {
+  name        = "${var.site_prefix}-alb-sg"
+  description = "Security group for ALB"
+  vpc_id      = aws_vpc.app_vpc.id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.site_prefix}-alb-sg"
+  }
+}
+
+# AWS WAF Web ACL
+resource "aws_wafv2_web_acl" "scholarspace" {
+  name        = "${var.site_prefix}-waf"
+  description = "WAF rules for Scholarspace bot control and DDoS protection"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  # Rate limiting rule - block IPs making >2000 requests in 5 min
+  rule {
+    name     = "RateLimitRule"
+    priority = 0
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 2000
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "RateLimitRule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rule - Bot Control (detects bots, scrapers, etc)
+  rule {
+    name     = "AWSManagedRulesBotControl"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_bot_control_rule_set {
+            inspection_level = "COMMON"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "BotControlRule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rule - Known Bad Inputs
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "KnownBadInputsRule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # Custom rule - Block common scanner user agents
+  rule {
+    name     = "BlockScannerUserAgents"
+    priority = 3
+
+    action {
+      block {}
+    }
+
+    statement {
+      or_statement {
+        statement {
+          byte_match_statement {
+            search_string = "sqlmap"
+            field_to_match {
+              single_header {
+                name = "user-agent"
+              }
+            }
+            text_transformation {
+              priority = 0
+              type     = "LOWERCASE"
+            }
+            positional_constraint = "CONTAINS"
+          }
+        }
+
+        statement {
+          byte_match_statement {
+            search_string = "nikto"
+            field_to_match {
+              single_header {
+                name = "user-agent"
+              }
+            }
+            text_transformation {
+              priority = 0
+              type     = "LOWERCASE"
+            }
+            positional_constraint = "CONTAINS"
+          }
+        }
+
+        statement {
+          byte_match_statement {
+            search_string = "nmap"
+            field_to_match {
+              single_header {
+                name = "user-agent"
+              }
+            }
+            text_transformation {
+              priority = 0
+              type     = "LOWERCASE"
+            }
+            positional_constraint = "CONTAINS"
+          }
+        }
+
+        statement {
+          byte_match_statement {
+            search_string = "masscan"
+            field_to_match {
+              single_header {
+                name = "user-agent"
+              }
+            }
+            text_transformation {
+              priority = 0
+              type     = "LOWERCASE"
+            }
+            positional_constraint = "CONTAINS"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "BlockScannerUserAgents"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rule - IP Reputation List
+  rule {
+    name     = "AWSManagedRulesAmazonIpReputationList"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "IpReputationListRule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rule - Common Rule Set (OWASP)
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 5
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        rule_action_override {
+          name = "SizeRestrictions_BODY"
+
+          action_to_use {
+            count {}
+          }
+        }
+
+        rule_action_override {
+          name = "CrossSiteScripting_BODY"
+
+          action_to_use {
+            count {}
+          }
+        }
+
+        rule_action_override {
+          name = "GenericLFI_BODY"
+
+          action_to_use {
+            count {}
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "CommonRuleSetMetric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.site_prefix}-waf-metrics"
+    sampled_requests_enabled   = true
+  }
+
+  tags = {
+    Name = "${var.site_prefix}-waf"
+  }
+}
+
+# Associate WAF with ALB
+resource "aws_wafv2_web_acl_association" "scholarspace_alb" {
+  resource_arn = aws_lb.scholarspace.arn
+  web_acl_arn  = aws_wafv2_web_acl.scholarspace.arn
+}
+
+# CloudWatch Log Group for WAF logs
+resource "aws_cloudwatch_log_group" "waf_log_group" {
+  name              = "/aws/waf/${var.site_prefix}"
+  retention_in_days = 30
+
+  tags = {
+    Name = "${var.site_prefix}-waf-logs"
+  }
+}
+
+# Output ALB DNS name
+output "alb_dns_name" {
+  value       = aws_lb.scholarspace.dns_name
+  description = "DNS name of the load balancer"
+}
+
+output "alb_arn" {
+  value       = aws_lb.scholarspace.arn
+  description = "ARN of the load balancer"
+}
+
+output "waf_web_acl_arn" {
+  value       = aws_wafv2_web_acl.scholarspace.arn
+  description = "ARN of the WAF Web ACL"
 }
