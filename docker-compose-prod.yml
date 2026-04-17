@@ -96,10 +96,13 @@ services:
     environment:
       - RAILS_ENV=production
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
-      - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-1}
+      - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-2}
+      - MALLOC_ARENA_MAX=2
     depends_on:
       rails:
         condition: service_healthy
+      whisper-model-preload:
+        condition: service_completed_successfully
     volumes:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
