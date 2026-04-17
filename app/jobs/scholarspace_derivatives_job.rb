@@ -33,6 +33,10 @@ class ScholarspaceDerivativesJob < ApplicationJob
     original_member_file_sets.filter_map { |file_set| file_set.original_file&.mime_type }.uniq
   end
 
+  def has_pdf_source_files?
+    original_member_file_sets.any? { |file_set| pdf_file_set?(file_set) }
+  end
+
   # check if every file in the work has been characterized
   def files_ready_for_derivatives?
     original_member_file_sets.all? { |file_set| file_set.original_file&.mime_type.present? }
@@ -45,7 +49,7 @@ class ScholarspaceDerivativesJob < ApplicationJob
     end
 
     # generate a thumbnail
-    ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/', 'video/') || ft == 'application/pdf' }
+    ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/', 'video/') } || has_pdf_source_files?
 
     #  we're not using this PdfToImagesJob for the time being since it's not working well with our current pdfs and we don't have a pressing need for it, but we can revisit in the future if we want to generate images from pdfs for any reason
 
@@ -58,7 +62,7 @@ class ScholarspaceDerivativesJob < ApplicationJob
     AudioTranscriptDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
 
     # if a pdf, extract text for full text search and OCR highlighting
-    PdfTextExtractionJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
+    PdfTextExtractionJob.perform_later(work_id: @work.id.to_s) if has_pdf_source_files?
   end
 
   def reschedule_job
@@ -73,6 +77,13 @@ class ScholarspaceDerivativesJob < ApplicationJob
 
   def find_member_file_set(id)
     Hyrax.query_service.find_by(id: id)
+  end
+
+  def pdf_file_set?(file_set)
+    mime_type = file_set.original_file&.mime_type.to_s.downcase
+    filename = file_set.original_file&.original_filename.to_s.downcase
+
+    mime_type.start_with?('application/pdf') || filename.end_with?('.pdf')
   end
 
   def with_work_lock(work_id)

@@ -23,8 +23,7 @@ module ScholarspaceDerivativesServices
 
     def find_pdf_file_sets_needing_extraction
       member_file_sets.select do |file_set|
-        # Only process PDFs that are original files (not derivatives)
-        next false unless file_set.original_file&.mime_type.to_s == 'application/pdf'
+        next false unless pdf_file_set?(file_set)
         next false if file_set.service_file
 
         # Check if HOCR already exists for this PDF
@@ -81,10 +80,22 @@ module ScholarspaceDerivativesServices
       stdout, _stderr, status = Open3.capture3('pdftotext', pdf_path, '-')
       return false unless status.success?
 
-      stdout.to_s.gsub(/\s+/, '').present?
+      text_likely_embedded?(stdout.to_s)
     rescue StandardError => e
       Rails.logger.warn("Unable to check PDF text for work #{@work.id}: #{e.class} #{e.message}")
       false
+    end
+
+    def text_likely_embedded?(raw_text)
+      normalized = raw_text.to_s.encode('UTF-8', invalid: :replace, undef: :replace, replace: ' ')
+                        .gsub(/\s+/, ' ')
+                        .strip
+      return false if normalized.blank?
+
+      word_count = normalized.scan(/\b[A-Za-z0-9]{2,}\b/).size
+      alnum_count = normalized.scan(/[A-Za-z0-9]/).size
+
+      word_count >= 5 || alnum_count >= 30
     end
 
     def extract_hocr_for_scanned_pdf(pdf_path, temp_dir, hocr_filename)
@@ -154,6 +165,13 @@ module ScholarspaceDerivativesServices
 
     def member_file_sets
       @member_file_sets ||= @work.member_ids.map { |id| Hyrax.query_service.find_by(id: id) }
+    end
+
+    def pdf_file_set?(file_set)
+      mime_type = file_set.original_file&.mime_type.to_s.downcase
+      filename = file_set.original_file&.original_filename.to_s.downcase
+
+      mime_type.start_with?('application/pdf') || filename.end_with?('.pdf')
     end
   end
 end
