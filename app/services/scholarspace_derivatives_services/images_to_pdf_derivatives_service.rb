@@ -4,6 +4,8 @@ require 'open3'
 
 module ScholarspaceDerivativesServices
   class ImagesToPdfDerivativesService
+    JOINED_PDF_FILENAME = 'joined_images_pdf.pdf'
+
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
     include Concerns::HocrMergeable
@@ -134,7 +136,7 @@ module ScholarspaceDerivativesServices
     end
 
     def joined_pdf_filename
-      'joined_images_pdf.pdf'
+      JOINED_PDF_FILENAME
     end
 
     def hocr_filename_for(file_set)

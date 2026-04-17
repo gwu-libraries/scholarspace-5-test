@@ -8,5 +8,6 @@ class ImagesToPdfDerivativesJob < ApplicationJob
     return unless work
 
     ScholarspaceDerivativesServices::ImagesToPdfDerivativesService.new(work).call
+    PdfTextExtractionJob.perform_later(work_id: work.id.to_s)
   end
 end

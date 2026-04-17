@@ -23,8 +23,7 @@ module ScholarspaceDerivativesServices
 
     def find_pdf_file_sets_needing_extraction
       member_file_sets.select do |file_set|
-        next false unless pdf_file_set?(file_set)
-        next false if file_set.service_file
+        next false unless extraction_target_pdf_file_set?(file_set)
 
         # Check if HOCR already exists for this PDF
         hocr_file_set = find_hocr_for_pdf(file_set)
@@ -51,12 +50,8 @@ module ScholarspaceDerivativesServices
         pdf_path = fetch_pdf_file(pdf_file_set, temp_dir)
         return unless pdf_path
 
-        # Only generate HOCR for scanned PDFs (no embedded text).
-        # PDFs with embedded text will be indexed naturally without HOCR.
-        return if has_embedded_text?(pdf_path)
-
         hocr_filename = expected_hocr_filename_for(pdf_file_set)
-        hocr_path = extract_hocr_for_scanned_pdf(pdf_path, temp_dir, hocr_filename)
+        hocr_path = extract_hocr_for_pdf(pdf_path, temp_dir, hocr_filename)
         return unless hocr_path && File.exist?(hocr_path)
 
         attach_hocr_to_work(hocr_path, pdf_file_set)
@@ -76,29 +71,7 @@ module ScholarspaceDerivativesServices
       pdf_path
     end
 
-    def has_embedded_text?(pdf_path)
-      stdout, _stderr, status = Open3.capture3('pdftotext', pdf_path, '-')
-      return false unless status.success?
-
-      text_likely_embedded?(stdout.to_s)
-    rescue StandardError => e
-      Rails.logger.warn("Unable to check PDF text for work #{@work.id}: #{e.class} #{e.message}")
-      false
-    end
-
-    def text_likely_embedded?(raw_text)
-      normalized = raw_text.to_s.encode('UTF-8', invalid: :replace, undef: :replace, replace: ' ')
-                        .gsub(/\s+/, ' ')
-                        .strip
-      return false if normalized.blank?
-
-      word_count = normalized.scan(/\b[A-Za-z0-9]{2,}\b/).size
-      alnum_count = normalized.scan(/[A-Za-z0-9]/).size
-
-      word_count >= 5 || alnum_count >= 30
-    end
-
-    def extract_hocr_for_scanned_pdf(pdf_path, temp_dir, hocr_filename)
+    def extract_hocr_for_pdf(pdf_path, temp_dir, hocr_filename)
       output_stem = File.basename(hocr_filename, '.hocr')
       output_base = File.join(temp_dir, output_stem)
       hocr_path = "#{output_base}.hocr"
@@ -113,10 +86,10 @@ module ScholarspaceDerivativesServices
         output_hocr_path: hocr_path,
         error_message: "Tesseract OCR failed for work #{@work.id}"
       )
-      Rails.logger.info("Generated HOCR from scanned PDF for work #{@work.id}")
+      Rails.logger.info("Generated HOCR from PDF for work #{@work.id}")
       hocr_path
     rescue StandardError => e
-      Rails.logger.warn("Failed to extract HOCR from scanned PDF for work #{@work.id}: #{e.class} #{e.message}")
+      Rails.logger.warn("Failed to extract HOCR from PDF for work #{@work.id}: #{e.class} #{e.message}")
       nil
     end
 
@@ -154,10 +127,8 @@ module ScholarspaceDerivativesServices
       )
 
       if file_set
-        Hyrax.persister.save(resource: @work)
-        Hyrax.index_adapter.save(resource: @work)
-        Hyrax.index_adapter.save(resource: file_set)
-        Rails.logger.info("PdfTextExtractionService extracted HOCR from scanned PDF for work #{@work.id}")
+        reindex_work_and_file_set(file_set)
+        Rails.logger.info("PdfTextExtractionService extracted HOCR from PDF for work #{@work.id}")
       end
 
       file_set
@@ -165,6 +136,24 @@ module ScholarspaceDerivativesServices
 
     def member_file_sets
       @member_file_sets ||= @work.member_ids.map { |id| Hyrax.query_service.find_by(id: id) }
+    end
+
+    def reindex_work_and_file_set(file_set)
+      Hyrax.persister.save(resource: @work)
+      Hyrax.index_adapter.save(resource: @work)
+      Hyrax.index_adapter.save(resource: file_set)
+    end
+
+    def extraction_target_pdf_file_set?(file_set)
+      return false unless pdf_file_set?(file_set)
+      return true unless file_set.service_file
+
+      image_joined_pdf_file_set?(file_set)
+    end
+
+    def image_joined_pdf_file_set?(file_set)
+      filename = file_set.original_file&.original_filename.to_s
+      filename.casecmp(ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME).zero?
     end
 
     def pdf_file_set?(file_set)
