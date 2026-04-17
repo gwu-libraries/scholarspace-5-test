@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import * as styles from './Ramp.module.css';
+import 'video.js/dist/video-js.css';
+import '@samvera/ramp/dist/ramp.css';
 import {
   IIIFPlayer,
   MediaPlayer,

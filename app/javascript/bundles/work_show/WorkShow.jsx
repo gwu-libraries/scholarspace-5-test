@@ -2,15 +2,24 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import ViewerToggle from '../viewers/viewer_toggle/ViewerToggle';
-import WorkItemsTabs from './WorkItemsTabs';
 
-const loadRamp = () => import('../viewers/ramp/Ramp');
-const loadPdfViewer = () => import('../viewers/pdf_viewer/PdfViewer');
-const loadClover = () => import('../viewers/clover/Clover');
+const loadRamp = () => import(
+  /* webpackChunkName: "viewer-ramp", webpackPrefetch: false, webpackPreload: false */
+  '../viewers/ramp/Ramp'
+);
+const loadPdfViewer = () => import(
+  /* webpackChunkName: "viewer-pdf", webpackPrefetch: false, webpackPreload: false */
+  '../viewers/pdf_viewer/PdfViewer'
+);
+const loadClover = () => import(
+  /* webpackChunkName: "viewer-clover", webpackPrefetch: false, webpackPreload: false */
+  '../viewers/clover/Clover'
+);
 
 const Ramp = lazy(loadRamp);
 const PdfViewer = lazy(loadPdfViewer);
 const Clover = lazy(loadClover);
+const WorkItemsTabs = lazy(() => import('./WorkItemsTabs'));
 
 const viewerShellStyle = {
   width: '100vw',
@@ -28,10 +37,6 @@ const cloverContainerStyle = {
 const ViewerSection = ({ viewer, presenterId }) => {
   const defaultViewer = viewer.hasImages ? (viewer.defaultViewer || 'pdf') : 'pdf';
   const [activeViewer, setActiveViewer] = useState(defaultViewer);
-
-  useEffect(() => {
-    if (viewer.type === 'pdf_or_images') loadPdfViewer();
-  }, [viewer.type]);
 
   const renderViewer = () => {
     if (viewer.type === 'ramp') {
@@ -111,6 +116,27 @@ const WorkShow = ({
   canViewServiceFiles,
 }) => {
   const safeDescriptions = descriptions || [];
+  const [showWorkItemsTabs, setShowWorkItemsTabs] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const schedule =
+      window.requestIdleCallback ||
+      ((cb) => setTimeout(cb, 0));
+    const cancel =
+      window.cancelIdleCallback ||
+      ((id) => clearTimeout(id));
+
+    const handle = schedule(() => {
+      if (!cancelled) setShowWorkItemsTabs(true);
+    });
+
+    return () => {
+      cancelled = true;
+      cancel(handle);
+    };
+  }, []);
 
   return (
     <div>
@@ -125,11 +151,15 @@ const WorkShow = ({
         </p>
       ))}
 
-      <WorkItemsTabs
-        originalMembers={originalMembers}
-        serviceMembers={serviceMembers}
-        canViewServiceFiles={canViewServiceFiles}
-      />
+      {showWorkItemsTabs && (
+        <Suspense fallback={<p>Loading files...</p>}>
+          <WorkItemsTabs
+            originalMembers={originalMembers}
+            serviceMembers={serviceMembers}
+            canViewServiceFiles={canViewServiceFiles}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

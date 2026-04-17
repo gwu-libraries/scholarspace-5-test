@@ -1,5 +1,5 @@
 import ReactOnRails from "react-on-rails";
-import WorkShow from "../bundles/work_show/WorkShow";
+import WorkShowPdfOnly from "../bundles/work_show/WorkShowPdfOnly";
 
 const DOWNLOAD_IFRAME_NAME = "work-show-global-download";
 
@@ -34,7 +34,7 @@ function forceBackgroundDownloadLinks() {
 }
 
 ReactOnRails.register({
-  WorkShow,
+  WorkShowPdfOnly,
 });
 
 forceBackgroundDownloadLinks();
