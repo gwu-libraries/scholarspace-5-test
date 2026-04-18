@@ -69,6 +69,7 @@ services:
       - .env
     environment:
       - RAILS_ENV=production
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
     depends_on:
       rails:
         condition: service_healthy
