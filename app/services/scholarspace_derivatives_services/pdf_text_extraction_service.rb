@@ -195,16 +195,17 @@ module ScholarspaceDerivativesServices
         return nil
       end
 
-      # pdftoppm creates filename with -1 suffix
-      pdftoppm_output = File.join(temp_dir, 'page-1.png')
-      if File.exist?(pdftoppm_output)
+      # pdftoppm zero-pads page numbers based on total page count, so the suffix
+      # may be -1, -01, -001, etc. Glob for any page-*.png to handle all cases.
+      pdftoppm_output = Dir.glob(File.join(temp_dir, 'page-*.png')).min
+      if pdftoppm_output
         pdftoppm_output
       else
         log_pdf_extraction(
           :warn,
           event: 'convert_pdf_to_image_missing_output',
           pdf_path: pdf_path,
-          expected_output: pdftoppm_output
+          expected_glob: File.join(temp_dir, 'page-*.png')
         )
         nil
       end
