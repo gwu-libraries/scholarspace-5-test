@@ -7,6 +7,8 @@ module ScholarspaceDerivativesServices
   class PdfTextExtractionService
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
+    include Concerns::HocrMergeable
+    include Concerns::DerivativeCacheable
 
     def initialize(work)
       @work = work
@@ -144,80 +146,99 @@ module ScholarspaceDerivativesServices
     end
 
     def extract_hocr_for_pdf(pdf_path, temp_dir, hocr_filename)
-      output_stem = File.basename(hocr_filename, '.hocr')
-      output_base = File.join(temp_dir, output_stem)
-      hocr_path = "#{output_base}.hocr"
+      merged_hocr_path = File.join(temp_dir, hocr_filename)
 
-      # Convert first page of PDF to image for tesseract OCR
-      image_path = convert_pdf_page_to_image(pdf_path, temp_dir)
-      return nil unless image_path
+      # Convert all PDF pages to images and OCR each page so overlay text is available
+      # across the entire document, not just page one.
+      image_paths = convert_pdf_to_images(pdf_path, temp_dir)
+      return nil if image_paths.empty?
 
-      # Use tesseract to OCR the image and generate HOCR
-      generate_hocr_file(
-        image_path: image_path,
-        output_hocr_path: hocr_path,
-        error_message: "Tesseract OCR failed for work #{@work.id}"
-      )
+      hocr_pages_dir = File.join(temp_dir, 'hocr_pages')
+      FileUtils.mkdir_p(hocr_pages_dir)
+
+      hocr_paths = image_paths.each_with_index.map do |image_path, index|
+        page_hocr_path = File.join(hocr_pages_dir, format('page_%04d_HOCR.hocr', index + 1))
+        generate_hocr_file(
+          image_path: image_path,
+          output_hocr_path: page_hocr_path,
+          error_message: "Tesseract OCR failed for work #{@work.id}"
+        )
+      end
+      return nil if hocr_paths.empty?
+
+      @working_dir = temp_dir
+      @joined_hocr_filename = hocr_filename
+      merged_path = merge_hocr_files(hocr_paths)
+      return nil unless merged_path && File.exist?(merged_path)
+
       log_pdf_extraction(
         :info,
         event: 'extract_hocr_success',
         pdf_path: pdf_path,
-        image_path: image_path,
-        hocr_path: hocr_path
+        image_count: image_paths.size,
+        hocr_path: merged_path
       )
-      hocr_path
+      merged_path
     rescue StandardError => e
       log_pdf_extraction(
         :warn,
         event: 'extract_hocr_failed',
         pdf_path: pdf_path,
-        hocr_path: hocr_path,
+        hocr_path: merged_hocr_path,
         error_class: e.class.to_s,
         error_message: e.message
       )
       nil
     end
 
-    def convert_pdf_page_to_image(pdf_path, temp_dir)
+    def convert_pdf_to_images(pdf_path, temp_dir)
       output_prefix = File.join(temp_dir, 'page')
-      # pdftoppm converts PDF to image; -png outputs PNG, -f 1 -l 1 converts only first page
-      cmd = ['pdftoppm', '-png', '-f', '1', '-l', '1', pdf_path, output_prefix]
+      # pdftoppm converts all PDF pages to PNG files prefixed as page-*.png
+      cmd = ['pdftoppm', '-png', pdf_path, output_prefix]
       _stdout, stderr, status = Open3.capture3(*cmd)
 
       unless status.success?
         log_pdf_extraction(
           :warn,
-          event: 'convert_pdf_to_image_failed',
+          event: 'convert_pdf_to_images_failed',
           pdf_path: pdf_path,
           command: cmd.join(' '),
           error_message: stderr.to_s.strip
         )
-        return nil
+        return []
       end
 
-      # pdftoppm zero-pads page numbers based on total page count, so the suffix
-      # may be -1, -01, -001, etc. Glob for any page-*.png to handle all cases.
-      pdftoppm_output = Dir.glob(File.join(temp_dir, 'page-*.png')).min
-      if pdftoppm_output
-        pdftoppm_output
+      image_paths = Dir.glob(File.join(temp_dir, 'page-*.png')).sort
+      if image_paths.any?
+        log_pdf_extraction(
+          :info,
+          event: 'convert_pdf_to_images_success',
+          pdf_path: pdf_path,
+          image_count: image_paths.size
+        )
+        image_paths
       else
         log_pdf_extraction(
           :warn,
-          event: 'convert_pdf_to_image_missing_output',
+          event: 'convert_pdf_to_images_missing_output',
           pdf_path: pdf_path,
           expected_glob: File.join(temp_dir, 'page-*.png')
         )
-        nil
+        []
       end
     rescue StandardError => e
       log_pdf_extraction(
         :warn,
-        event: 'convert_pdf_to_image_error',
+        event: 'convert_pdf_to_images_error',
         pdf_path: pdf_path,
         error_class: e.class.to_s,
         error_message: e.message
       )
-      nil
+      []
+    end
+
+    def joined_hocr_filename
+      @joined_hocr_filename || 'merged_HOCR.hocr'
     end
 
     def attach_hocr_to_work(hocr_path, source_pdf_file_set)
@@ -253,6 +274,12 @@ module ScholarspaceDerivativesServices
 
       if file_set
         reindex_work_and_file_set(file_set)
+        # Cache the hOCR derivative for fast future downloads
+        cache_derivative_file(
+          file_path: hocr_path,
+          file_set: file_set,
+          derivative_type: 'hocr'
+        )
         log_pdf_extraction(
           :info,
           event: 'attach_hocr_success',

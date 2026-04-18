@@ -80,6 +80,9 @@ services:
       - type: volume
         source: solr-ocr-index-cache
         target: /.cache/solr-ocr-index-cache
+      - type: volume
+        source: derivatives-cache
+        target: /.cache/derivatives
     ulimits:
       nofile:
         soft: 65536
@@ -101,4 +104,5 @@ volumes:
   fedora:
   solr_home:
   solr-ocr-index-cache:
+  derivatives-cache:
   whispercpp-cache:

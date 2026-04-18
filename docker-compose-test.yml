@@ -46,6 +46,7 @@ services:
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
 
   worker:
@@ -87,6 +88,7 @@ services:
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
 
   solr:

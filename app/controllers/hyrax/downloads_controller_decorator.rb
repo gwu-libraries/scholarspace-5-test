@@ -44,7 +44,14 @@ module Hyrax
             self.status = 200
             return unless stale?(last_modified: file_metadata.updated_at, template: false)
 
-            file = Valkyrie::StorageAdapter.find_by(id: file_metadata.file_identifier)
+            # Try cache first for PDFs and hOCR files
+            cached_stream = derivative_cache_lookup(file_metadata)
+            if cached_stream
+              file = cached_stream
+            else
+              file = Valkyrie::StorageAdapter.find_by(id: file_metadata.file_identifier)
+            end
+
             prepare_file_headers_valkyrie(metadata: file_metadata, file: file)
 
             if request.headers['Range']
@@ -68,7 +75,29 @@ module Hyrax
         def disposition
             'attachment'
         end
+
+        private
+
+        def derivative_cache_lookup(file_metadata)
+            return nil unless is_pdf_or_hocr?(file_metadata)
+
+            cached_stream = DerivativeCacheService.instance.fetch_stream(
+                file_identifier: file_metadata.file_identifier,
+                original_filename: file_metadata.original_filename
+            )
+
+            return nil unless cached_stream
+
+            # Wrap stream so it has .stream method like Valkyrie file objects
+            Struct.new(:stream).new(cached_stream)
+        end
+
+        def is_pdf_or_hocr?(file_metadata)
+            return false if file_metadata.original_filename.blank?
+
+            filename = file_metadata.original_filename.to_s.downcase
+            filename.end_with?('.pdf', '.hocr')
+        end
     end
-end
 
 Hyrax::DownloadsController.prepend Hyrax::DownloadsControllerDecorator

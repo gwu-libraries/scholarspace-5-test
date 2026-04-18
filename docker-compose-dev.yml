@@ -40,6 +40,7 @@ services:
       - tmp:/app/scholarspace/tmp
       - yarn-cache:/.cache/yarn
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
+      - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
     depends_on:
       app-volumes-init:
