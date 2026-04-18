@@ -13,6 +13,7 @@ module PagePacksHelper
 
   def render_page_pack_tags
     return "".html_safe unless shakapacker_manifest_available?
+    return "".html_safe if @page_pack_tags_rendered
 
     page_css_packs = Array(@page_css_packs).map(&:to_s).uniq
     page_js_packs = Array(@page_js_packs).map(&:to_s).uniq
@@ -21,6 +22,7 @@ module PagePacksHelper
     tags << stylesheet_pack_tag(*page_css_packs) if page_css_packs.present?
     tags << javascript_pack_tag(*page_js_packs, defer: true) if page_js_packs.present?
 
+    @page_pack_tags_rendered = true
     safe_join(tags, "\n")
   end
 end
