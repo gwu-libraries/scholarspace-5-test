@@ -21,6 +21,10 @@ class DerivativeCacheService
     File.open(cache_path, 'rb')
   end
 
+  def cached?(file_identifier:, original_filename: nil)
+    File.exist?(path_for(file_identifier, original_filename))
+  end
+
   def store_from_path(file_identifier:, original_filename:, source_path:)
     cache_path = path_for(file_identifier, original_filename)
     FileUtils.mkdir_p(File.dirname(cache_path))

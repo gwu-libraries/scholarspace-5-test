@@ -40,8 +40,7 @@ module WorkViewerHelper
   end
 
   def pdf_file_set_id_for_work(presenter)
-    Array(presenter.member_ids).each do |member_id|
-      file_set = find_member_file_set(member_id)
+    member_file_sets_for(presenter).each do |file_set|
       return file_set.id.to_s if file_set && pdf_file_set?(file_set)
     end
     nil
@@ -54,7 +53,7 @@ module WorkViewerHelper
     return nil unless pdf_file_set
 
     expected_name = expected_hocr_filename_for_pdf_file_set(pdf_file_set)
-    member_file_sets = Array(presenter.member_ids).filter_map { |id| find_member_file_set(id) }
+    member_file_sets = member_file_sets_for(presenter)
 
     if expected_name.present?
       exact_match = member_file_sets.find do |file_set|
@@ -79,15 +78,24 @@ module WorkViewerHelper
   end
 
   def has_source_image_files?(presenter)
-    presenter.member_ids.filter_map { |id| find_member_file_set(id) }.any? do |file_set|
+    member_file_sets_for(presenter).any? do |file_set|
       next false unless file_set.original_file&.mime_type.to_s.start_with?('image/')
 
       !file_set.service_file
     end
   end
 
+  def member_file_sets_for(presenter)
+    @member_file_sets_by_presenter ||= {}
+    @member_file_sets_by_presenter[presenter.id.to_s] ||= Array(presenter.member_ids).filter_map do |member_id|
+      find_member_file_set(member_id)
+    end
+  end
+
   def find_member_file_set(member_id)
-    Hyrax.query_service.find_by(id: member_id)
+    @member_file_set_by_id ||= {}
+    key = member_id.to_s
+    @member_file_set_by_id[key] ||= Hyrax.query_service.find_by(id: member_id)
   end
 
   def pdf_file_set?(file_set)
