@@ -16,11 +16,12 @@ module ScholarspaceDerivativesServices
         merged_doc = build_merged_hocr_document(hocr_paths)
         return nil unless merged_doc
 
-        merge_output_path = "#{@working_dir}/hocr/#{joined_hocr_filename}"
+        output_dir = "#{@working_dir}/hocr"
+        FileUtils.mkdir_p(output_dir)
+        merge_output_path = "#{output_dir}/#{joined_hocr_filename}"
         File.write(merge_output_path, merged_doc.to_xml(indent: 2))
         merge_output_path
-      rescue StandardError => e
-        Rails.logger.warn("Failed to merge HOCR files for work #{@work.id}: #{e.class} #{e.message}")
+      rescue StandardError
         nil
       end
 
