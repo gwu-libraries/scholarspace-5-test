@@ -99,5 +99,6 @@ module Hyrax
             filename.end_with?('.pdf', '.hocr')
         end
     end
+end
 
 Hyrax::DownloadsController.prepend Hyrax::DownloadsControllerDecorator
