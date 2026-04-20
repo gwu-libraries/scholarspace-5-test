@@ -15,7 +15,7 @@ const Homepage = ({
 }) => {
   return (
     <>
-      <div className="col-sm-6">
+      <div className="col-sm-6 homepage-recent-works">
         <h2>{recentWorksTitle}</h2>
         <ResultList items={recentDocuments} emptyText={noRecentWorksText} />
       </div>

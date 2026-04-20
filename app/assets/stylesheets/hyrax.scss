@@ -15,3 +15,51 @@
 @import "hyrax/blacklight_gallery";
 @import "hyrax/hyrax";
 @import "hyrax/login_signup";
+
+.home-content .homepage-recent-works .homepage-work-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.home-content .homepage-recent-works .homepage-work-list-item {
+	margin-bottom: 1rem;
+}
+
+.home-content .homepage-recent-works .recent-work-card {
+	align-items: flex-start;
+	background: #fff;
+	border: 1px solid #dde2e8;
+	border-radius: 6px;
+	display: flex;
+	gap: 0.9rem;
+	max-width: 100%;
+	padding: 0.9rem 1rem;
+}
+
+.home-content .homepage-recent-works .recent-work-card-thumbnail-link {
+	flex-shrink: 0;
+}
+
+.home-content .homepage-recent-works .recent-work-card-body {
+	min-width: 0;
+}
+
+.home-content .homepage-recent-works .recent-work-card-body h3 {
+	font-size: 1.15rem;
+	margin: 0 0 0.45rem;
+}
+
+.home-content .homepage-recent-works .recent-work-card-body p {
+	margin: 0 0 0.45rem;
+}
+
+.home-content .homepage-recent-works .recent-work-card-body p:last-child {
+	margin-bottom: 0;
+}
+
+@media (max-width: 767px) {
+	.home-content .homepage-recent-works .recent-work-card {
+		padding: 0.8rem;
+	}
+}

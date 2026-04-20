@@ -6,16 +6,16 @@ const ResultList = ({ items, emptyText }) => {
   if (items.length === 0) return <p>{emptyText}</p>;
 
   return (
-    <ol>
+    <ol className="homepage-work-list">
       {items.map((item) => (
-        <li key={item.id}>
-          <div>
+        <li key={item.id} className="homepage-work-list-item">
+          <div className="recent-work-card">
             {item.thumbnailUrl && (
-              <a href={item.url}>
+              <a href={item.url} className="recent-work-card-thumbnail-link">
                 <img src={item.thumbnailUrl} alt="" width="90" />
               </a>
             )}
-            <div>
+            <div className="recent-work-card-body">
               <h3>
                 <a href={item.url}>{item.title}</a>
               </h3>
