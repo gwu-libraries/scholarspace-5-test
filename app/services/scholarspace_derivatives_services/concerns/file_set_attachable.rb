@@ -4,6 +4,7 @@ module ScholarspaceDerivativesServices
   module Concerns
     module FileSetAttachable
       include WorkLockable
+      include DerivativeCacheable
 
     private
 
@@ -30,6 +31,11 @@ module ScholarspaceDerivativesServices
         file_set.service_file = true
         file_set = Hyrax.persister.save(resource: file_set)
         Hyrax.index_adapter.save(resource: file_set)
+        cache_derivative_file(
+          file_path: file_path,
+          file_set: file_set,
+          derivative_type: derivative_type_for(file_path)
+        )
       end
       file_set
     ensure
@@ -39,23 +45,32 @@ module ScholarspaceDerivativesServices
     def attach_multiple_files_to_work(file_paths:, user:, service_file: false, source_file_set: nil)
       return [] if file_paths.empty?
 
-      file_sets = file_paths.filter_map do |file_path|
+      attached_pairs = file_paths.filter_map do |file_path|
         next unless File.exist?(file_path)
 
         file_io = File.open(file_path, 'rb')
         begin
           file_set = create_file_set_for_upload(file_path: file_path, user: user, io: file_io, source_file_set: source_file_set, skip_derivatives: service_file)
           attach_file_set_to_work(file_set)
-          file_set
+          { file_set: file_set, file_path: file_path }
         ensure
           file_io.close
         end
       end
 
+      file_sets = attached_pairs.map { |pair| pair[:file_set] }
+
       if service_file
-        file_sets = file_sets.map do |fs|
+        file_sets = attached_pairs.map do |pair|
+          fs = pair[:file_set]
           fs.service_file = true
-          Hyrax.persister.save(resource: fs)
+          fs = Hyrax.persister.save(resource: fs)
+          cache_derivative_file(
+            file_path: pair[:file_path],
+            file_set: fs,
+            derivative_type: derivative_type_for(pair[:file_path])
+          )
+          fs
         end
         file_sets.each do |fs|
           Hyrax.index_adapter.save(resource: fs)
@@ -116,6 +131,11 @@ module ScholarspaceDerivativesServices
 
     def reload_work
       Hyrax.query_service.find_by(id: @work.id)
+    end
+
+    def derivative_type_for(file_path)
+      extension = File.extname(file_path.to_s).delete('.').downcase
+      extension.presence || 'derivative'
     end
 
     end

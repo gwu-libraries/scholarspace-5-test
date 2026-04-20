@@ -4,6 +4,7 @@ require 'nokogiri'
 
 module FullTextIndexable
   extend ActiveSupport::Concern
+  MAX_INDEX_VALUE_CHARS = 3000
 
   def to_solr
     super.tap do |index_document|
@@ -73,7 +74,36 @@ module FullTextIndexable
 
   def append_plain_text_to_index(index_document, plain_text)
     existing_values = Array(index_document[:all_text_tsimv]).filter_map(&:presence)
-    index_document[:all_text_tsimv] = existing_values + [plain_text]
+    index_document[:all_text_tsimv] = existing_values + split_plain_text_for_index(plain_text)
+  end
+
+  def split_plain_text_for_index(text, max_chars: MAX_INDEX_VALUE_CHARS)
+    normalized_text = normalize_plain_text(text)
+    return [] if normalized_text.blank?
+
+    segments = []
+    current_segment = +''
+
+    normalized_text.split.each do |token|
+      if token.length > max_chars
+        segments << current_segment if current_segment.present?
+        current_segment = +''
+        token.scan(/.{1,#{max_chars}}/).each { |chunk| segments << chunk }
+        next
+      end
+
+      if current_segment.blank?
+        current_segment = token.dup
+      elsif current_segment.length + token.length + 1 <= max_chars
+        current_segment << " #{token}"
+      else
+        segments << current_segment
+        current_segment = token.dup
+      end
+    end
+
+    segments << current_segment if current_segment.present?
+    segments
   end
 
   def read_file_content(file)

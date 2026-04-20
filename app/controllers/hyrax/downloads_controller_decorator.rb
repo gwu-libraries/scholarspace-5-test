@@ -48,19 +48,22 @@ module Hyrax
             file ||= fetch_or_cache_derivative_file(file_metadata)
             file ||= Valkyrie::StorageAdapter.find_by(id: file_metadata.file_identifier)
 
-            prepare_file_headers_valkyrie(metadata: file_metadata, file: file)
+            file_for_range_and_headers = file.respond_to?(:stream) ? file.stream : file
+            file_stream = file.respond_to?(:stream) ? file.stream : file
+
+            prepare_file_headers_valkyrie(metadata: file_metadata, file: file_for_range_and_headers)
 
             if request.headers['Range']
                 if request.head?
-                    prepare_range_headers_valkyrie(file: file)
+                    prepare_range_headers_valkyrie(file: file_for_range_and_headers)
                     head status
                 else
-                    send_data send_range_valkyrie(file: file), data_options(file_metadata)
+                    send_data send_range_valkyrie(file: file_for_range_and_headers), data_options(file_metadata)
                 end
             elsif request.head?
                 head status
             else
-                stream_body file.stream
+                stream_body file_stream
             end
         end
 
@@ -101,9 +104,7 @@ module Hyrax
             return nil unless cached_stream
 
             Rails.logger.info("Derivative cache hit for #{file_metadata.file_identifier}")
-
-            # Wrap stream so it has .stream method like Valkyrie file objects
-            Struct.new(:stream).new(cached_stream)
+            cached_stream
         end
 
         def is_pdf_or_hocr?(file_metadata)
