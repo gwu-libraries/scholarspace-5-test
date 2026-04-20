@@ -100,12 +100,6 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
-    build:
-      dockerfile: Dockerfile
-      context: .
-      args:
-        - BUILD_ENV=dev
-        - BUNDLE_GEMFILE=Gemfile
     command: sh -lc 'exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
