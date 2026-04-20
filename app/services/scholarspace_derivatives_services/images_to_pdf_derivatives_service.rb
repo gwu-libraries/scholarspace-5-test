@@ -79,7 +79,14 @@ module ScholarspaceDerivativesServices
       @joined_pdf_path = "#{@working_dir}/pdfs/#{joined_pdf_filename}"
       return if image_paths.empty?
 
-      cmd = ['magick', 'convert', *image_paths, @joined_pdf_path]
+      cmd = [
+        'magick',
+        'convert',
+        '-quality', '82',
+        '-density', '96x96',
+        *image_paths,
+        @joined_pdf_path
+      ]
 
       _stdout, _stderr, status = Open3.capture3(*cmd)
       raise 'Unable to create joined PDF from images' unless status.success?

@@ -112,7 +112,7 @@ module ScholarspaceDerivativesServices
     def convert_pdf_to_images(pdf_path, temp_dir)
       output_prefix = File.join(temp_dir, 'page')
       # pdftoppm converts all PDF pages to PNG files prefixed as page-*.png
-      cmd = ['pdftoppm', '-png', pdf_path, output_prefix]
+      cmd = ['pdftoppm', '-r', '150', '-png', pdf_path, output_prefix]
       _stdout, stderr, status = Open3.capture3(*cmd)
 
       return [] unless status.success?

@@ -60,11 +60,14 @@ module ScholarspaceDerivativesServices
     def split_pdf_to_images(pdf_path, pdf_file_set)
       stem = split_stem_for(pdf_file_set)
       output_pattern = "#{@working_dir}/images/#{stem}_page_%04d.jpg"
+      # Use optimized settings for web viewing: lower density/quality, smaller file sizes
+      # -density 96 (web standard) instead of 150, -quality 82 instead of 90
+      # Results in ~40% smaller images while maintaining readability for display
       cmd = [
         'magick',
-        '-density', '150',
+        '-density', '96',
         pdf_path,
-        '-quality', '90',
+        '-quality', '82',
         output_pattern
       ]
 
