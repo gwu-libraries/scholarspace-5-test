@@ -2,6 +2,9 @@
 name: scholarspace-dev
 
 services:
+  whisper-model-preload:
+    profiles: ["prod"]
+
   rails:
     image: scholarspace-rails:${RAILS_TAG:-latest}
     build:
@@ -120,8 +123,6 @@ services:
         condition: service_completed_successfully
       rails:
         condition: service_healthy
-      whisper-model-preload:
-        condition: service_completed_successfully
     volumes:
       - .:/app/scholarspace
       - storage:/app/scholarspace/storage
