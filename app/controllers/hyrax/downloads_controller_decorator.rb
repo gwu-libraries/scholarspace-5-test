@@ -44,13 +44,9 @@ module Hyrax
             self.status = 200
             return unless stale?(last_modified: file_metadata.updated_at, template: false)
 
-            # Try cache first for PDFs and hOCR files
-            cached_stream = derivative_cache_lookup(file_metadata)
-            if cached_stream
-              file = cached_stream
-            else
-              file = Valkyrie::StorageAdapter.find_by(id: file_metadata.file_identifier)
-            end
+            file = derivative_cache_lookup(file_metadata)
+            file ||= fetch_or_cache_derivative_file(file_metadata)
+            file ||= Valkyrie::StorageAdapter.find_by(id: file_metadata.file_identifier)
 
             prepare_file_headers_valkyrie(metadata: file_metadata, file: file)
 
@@ -78,6 +74,22 @@ module Hyrax
 
         private
 
+        def fetch_or_cache_derivative_file(file_metadata)
+            return nil unless is_pdf_or_hocr?(file_metadata)
+
+            begin
+                DerivativeCacheService.instance.store_from_storage(
+                    file_identifier: file_metadata.file_identifier,
+                    original_filename: file_metadata.original_filename
+                )
+                Rails.logger.info("Derivative cache seeded for #{file_metadata.file_identifier}")
+                derivative_cache_lookup(file_metadata)
+            rescue StandardError => e
+                Rails.logger.warn("Derivative cache seed failed for #{file_metadata.file_identifier}: #{e.message}")
+                nil
+            end
+        end
+
         def derivative_cache_lookup(file_metadata)
             return nil unless is_pdf_or_hocr?(file_metadata)
 
@@ -87,6 +99,8 @@ module Hyrax
             )
 
             return nil unless cached_stream
+
+            Rails.logger.info("Derivative cache hit for #{file_metadata.file_identifier}")
 
             # Wrap stream so it has .stream method like Valkyrie file objects
             Struct.new(:stream).new(cached_stream)

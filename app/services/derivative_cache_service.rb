@@ -28,10 +28,23 @@ class DerivativeCacheService
     cache_path
   end
 
+  def store_from_storage(file_identifier:, original_filename:)
+    cache_path = path_for(file_identifier, original_filename)
+    FileUtils.mkdir_p(File.dirname(cache_path))
+
+    storage_file = Valkyrie::StorageAdapter.find_by(id: file_identifier)
+    File.open(cache_path, 'wb') do |destination_io|
+      IO.copy_stream(storage_file.stream, destination_io)
+    end
+
+    cache_path
+  end
+
   private
 
   def path_for(file_identifier, filename)
-    extension = filename ? File.extname(filename.to_s).downcase : '.bin'
+    extension = File.extname(filename.to_s).downcase
+    extension = '.bin' if extension.empty?
     digest = Digest::SHA256.hexdigest(file_identifier.to_s)
     File.join(@cache_root, digest[0, 2], "#{digest}#{extension}")
   end

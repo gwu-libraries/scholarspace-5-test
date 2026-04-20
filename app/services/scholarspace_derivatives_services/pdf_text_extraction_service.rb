@@ -2,6 +2,7 @@
 
 require 'open3'
 require 'fileutils'
+require 'thread'
 
 module ScholarspaceDerivativesServices
   class PdfTextExtractionService
@@ -132,6 +133,12 @@ module ScholarspaceDerivativesServices
         IO.copy_stream(io.stream, destination_io)
       end
 
+      cache_derivative_file(
+        file_path: pdf_path,
+        file_set: file_set,
+        derivative_type: 'pdf'
+      )
+
       pdf_path
     rescue StandardError => e
       log_pdf_extraction(
@@ -156,14 +163,7 @@ module ScholarspaceDerivativesServices
       hocr_pages_dir = File.join(temp_dir, 'hocr_pages')
       FileUtils.mkdir_p(hocr_pages_dir)
 
-      hocr_paths = image_paths.each_with_index.map do |image_path, index|
-        page_hocr_path = File.join(hocr_pages_dir, format('page_%04d_HOCR.hocr', index + 1))
-        generate_hocr_file(
-          image_path: image_path,
-          output_hocr_path: page_hocr_path,
-          error_message: "Tesseract OCR failed for work #{@work.id}"
-        )
-      end
+      hocr_paths = generate_hocr_files_in_parallel(image_paths: image_paths, hocr_pages_dir: hocr_pages_dir)
       return nil if hocr_paths.empty?
 
       @working_dir = temp_dir
@@ -235,6 +235,43 @@ module ScholarspaceDerivativesServices
         error_message: e.message
       )
       []
+    end
+
+    def generate_hocr_files_in_parallel(image_paths:, hocr_pages_dir:)
+      ocr_workers = [2, image_paths.length].min
+      queue = Queue.new
+      image_paths.each_with_index { |image_path, index| queue << [index, image_path] }
+      hocr_paths = Array.new(image_paths.length)
+      errors = Queue.new
+
+      threads = Array.new(ocr_workers) do
+        Thread.new do
+          loop do
+            break if errors.size.positive?
+
+            begin
+              index, image_path = queue.pop(true)
+            rescue ThreadError
+              break
+            end
+
+            page_hocr_path = File.join(hocr_pages_dir, format('page_%04d_HOCR.hocr', index + 1))
+            hocr_paths[index] = generate_hocr_file(
+              image_path: image_path,
+              output_hocr_path: page_hocr_path,
+              error_message: "Tesseract OCR failed for work #{@work.id}"
+            )
+          rescue StandardError => e
+            errors << e
+            break
+          end
+        end
+      end
+
+      threads.each(&:join)
+      raise errors.pop unless errors.empty?
+
+      hocr_paths.compact
     end
 
     def joined_hocr_filename
