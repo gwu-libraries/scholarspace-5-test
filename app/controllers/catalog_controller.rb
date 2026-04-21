@@ -56,7 +56,7 @@ class CatalogController < ApplicationController
       qt: 'search',
       rows: 10,
       qf:
-        'title_tesim description_tesim creator_tesim keyword_tesim all_text_tsimv'
+        'title_tesim description_tesim creator_tesim keyword_tesim all_text_tsimv vtt_text_tesim'
     }
 
     # solr field configuration for document/show views
@@ -232,7 +232,7 @@ class CatalogController < ApplicationController
       all_names = config.show_fields.values.map(&:field).join(' ')
       title_name = 'title_tesim'
       field.solr_parameters = {
-        qf: "#{all_names} file_format_tesim all_text_tsimv",
+        qf: "#{all_names} file_format_tesim all_text_tsimv vtt_text_tesim",
         pf: title_name.to_s
       }
     end
@@ -331,7 +331,7 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field('all_text') do |field|
-      solr_name = 'all_text_tsimv'
+      solr_name = 'all_text_tsimv vtt_text_tesim'
       field.solr_local_parameters = { qf: solr_name, pf: solr_name }
     end
 
