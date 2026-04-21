@@ -21,7 +21,7 @@ module Scholarspace
                            "_#{ENV.fetch('APP_NAME', 'scholarspace')}_session"
 
     # use SideKiq by default
-    # config.active_job.queue_adapter = :inline
+    #config.active_job.queue_adapter = :inline
     config.active_job.queue_adapter = :sidekiq
 
     if ENV['RAILS_LOG_TO_STDOUT']

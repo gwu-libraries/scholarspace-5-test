@@ -1,6 +1,6 @@
 require 'thor'
 require 'fileutils'
-require 'pry'
+require 'sidekiq/api'
 
 class BulkraxIngestTask < Thor
   # Pass the name of a file (expects .zip) for importing
@@ -10,6 +10,11 @@ class BulkraxIngestTask < Thor
   # Provide the ID (email address) of a user; otherwise, it will be extracted from the CSV's depositor field
   option :user, required: false, type: :string, aliases: :u
   def bulk_import(file)
+      # Only run if Sidekiq ingest queue is empty
+      #queue = Sidekiq::Queue.new("ingest")
+      #if queue.map { |job| job.jid }.length > 0
+      # return
+      #end
       user_email = options.fetch(:user, get_depositor_from_csv(file))
       user = get_user(user_email)
       # Use the default Admin Set if none provided
@@ -56,7 +61,7 @@ class BulkraxIngestTask < Thor
         # Extract the import ID from the file name
         importer = get_importer(file)
         # Skip any still pending
-        next if (!importer) || (importer.last_run.statuses.select { |s| s.status_message.include?("Complete") || s.status.message.include?("Failed") }.empty?)
+        next if (!importer) || (importer.status == "Pending")
         # If complete with failures inspect the failed entries
         failure_rows = []
         importer.failed_statuses.each do |status|
