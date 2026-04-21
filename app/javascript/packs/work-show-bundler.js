@@ -39,16 +39,25 @@ ReactOnRails.register({
 
 forceBackgroundDownloadLinks();
 
+let lastBootPath = null;
+
 function bootReactOnRails() {
   ensureDownloadIframe();
+  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (lastBootPath === currentPath) return;
+  lastBootPath = currentPath;
   ReactOnRails.reactOnRailsPageLoaded();
 }
 
 document.addEventListener("turbolinks:load", bootReactOnRails);
 document.addEventListener("turbo:load", bootReactOnRails);
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootReactOnRails, { once: true });
-} else {
-  bootReactOnRails();
-}
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    if (!window.Turbo && !window.Turbolinks) {
+      bootReactOnRails();
+    }
+  },
+  { once: true },
+);
