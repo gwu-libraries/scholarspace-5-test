@@ -37,6 +37,8 @@ services:
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
+    cpus: 2.0
+    mem_limit: 4g
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -81,6 +83,8 @@ services:
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
+    cpus: 1.5
+    mem_limit: 3g
 
   worker_whisper:
     image: scholarspace-worker-prod:${RAILS_TAG:-latest}
@@ -99,7 +103,7 @@ services:
     environment:
       - RAILS_ENV=production
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
-      - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-2}
+      - SIDEKIQ_WORKERS=1
       - MALLOC_ARENA_MAX=2
     depends_on:
       rails:
@@ -113,6 +117,8 @@ services:
       - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
       - derivatives-cache:/.cache/derivatives
       - whispercpp-cache:/.cache/whispercpp
+    cpus: 2.0
+    mem_limit: 4g
 
   nginx:
     image: nginx:latest

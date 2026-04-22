@@ -12,7 +12,6 @@ only_audio_transcript = ENV['SIDEKIQ_ONLY_AUDIO_TRANSCRIPT'] == 'true'
   - [batch, 2]
   - [derivatives_pdf_to_images, 1]
   - [derivatives_images_to_pdf, 1]
-  - [derivatives_audio_transcript, 1]
   - [derivatives_thumbnail, 1]
   - [derivatives_pdf_text_extraction, 1]
   - [default, 1]

@@ -473,6 +473,7 @@ resource "aws_lb" "scholarspace" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = [aws_subnet.app_subnet.id, aws_subnet.app_subnet_secondary.id]
+  idle_timeout       = 300
 
   enable_deletion_protection = false
 
