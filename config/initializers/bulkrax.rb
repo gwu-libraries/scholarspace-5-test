@@ -39,15 +39,9 @@ Rails.application.config.to_prepare do
        # so it MUST be present in the CSV row for EVERY item (regardless of type, so this includes FileSets as well)
        #
        # from Hyrax::BasicMetadata
-<<<<<<< HEAD
-    #   'label' => { from: ['label'], split: true },
-    #   'relative_path' => { from: ['relative_path'], split: true },
-    #  'import_url' => { from: ['import_url'], split: '\|' },
-=======
-       #'label' => { from: ['label'], split: true },
-       #'relative_path' => { from: ['relative_path'], split: true },
-       #'import_url' => { from: ['import_url'], split: '\|' },
->>>>>>> origin/t74-acl-bottleneck
+       #   'label' => { from: ['label'], split: true },
+       #   'relative_path' => { from: ['relative_path'], split: true },
+       #  'import_url' => { from: ['import_url'], split: '\|' },
        'resource_type' => {from: ['resource_type'], split: true },
        'creator' => { from: ['creator'], split: true },
        'contributor' => { from: ['contributor'], split: true },

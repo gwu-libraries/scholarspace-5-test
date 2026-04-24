@@ -69,7 +69,7 @@ class BulkraxIngestTask < Thor
           entry_id = status.statusable_type == "Bulkrax::Entry" ? status.statusable_id : nil
           if entry_id
             # retrieve the entry associated with this status
-            entry = importer.entries.find { |entry| entry.id = entry_id }
+            entry = importer.entries.find { |entry| entry.id == entry_id }
             row = entry.raw_metadata
             # Update original metadata with errors
             [:error_class, :error_message, :error_backtrace].each do |key|
