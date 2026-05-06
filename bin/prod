@@ -14,8 +14,15 @@ docker compose \
   -f "$RAILS_ROOT/docker-compose-init.yml" \
   run --rm --no-deps -T app-volumes-init
 
+WEB_SERVICES=(
+  fedora
+  solr
+  redis
+  memcached
+)
+
 exec docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-init.yml" \
   -f "$RAILS_ROOT/docker-compose-prod.yml" \
-  up -d --build "$@"
+  up -d --build "${WEB_SERVICES[@]}" "$@"

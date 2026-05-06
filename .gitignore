@@ -77,3 +77,7 @@ derivatives/*
 !derivatives/.keep
 
 .yarnrc
+
+terraform/.terraform/*
+terraform.tfstate*
+terraform/*.plan

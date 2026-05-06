@@ -11,3 +11,6 @@ coverage
 .git
 .gitignore
 .vscode
+
+vendor/bundle
+.bundle
