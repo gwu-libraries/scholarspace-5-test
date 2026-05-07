@@ -4,10 +4,19 @@
 Hyrax::RequiredDataSeeder.new.generate_seed_data
 
 admin_role = Role.find_or_create_by(name: Hyrax.config.admin_user_group_name)
-admin_user =
-  User.create(email: ENV["ADMIN_USER"], password: ENV["ADMIN_PASSWORD"])
+admin_email = ENV.fetch("ADMIN_USER")
+admin_password = ENV.fetch("ADMIN_PASSWORD")
 
-admin_user.roles << admin_role
+if admin_email.strip.empty? || admin_password.strip.empty?
+  raise "ADMIN_USER and ADMIN_PASSWORD must be set and non-empty"
+end
+
+admin_user = User.find_or_initialize_by(email: admin_email)
+admin_user.password = admin_password
+admin_user.password_confirmation = admin_password
+admin_user.save!
+
+admin_user.roles << admin_role unless admin_user.roles.exists?(id: admin_role.id)
 
 
 # puts "\n== Creating default collection types"
