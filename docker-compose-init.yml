@@ -13,46 +13,45 @@ services:
     command:
       - sh
       - "-lc"
-      - >-
-        mkdir -p /app/scholarspace/tmp/cache/assets/sprockets
-        /app/scholarspace/tmp/test_storage
-        /app/scholarspace/node_modules
-        /app/scholarspace/storage
-        /app/scholarspace/uploads
-        /.cache/yarn
-        /.cache/solr-ocr-index-cache
-        /.cache/derivatives
-        /.cache/whispercpp
-        && chown -R ${APP_UID:-1001}:${APP_GID:-101}
-        /app/scholarspace/node_modules
-        /app/scholarspace/tmp/test_storage
-        /app/scholarspace/tmp
-        /app/scholarspace/storage
-        /app/scholarspace/uploads
-        /.cache/yarn
-        /.cache/solr-ocr-index-cache
-        /.cache/derivatives
-        /.cache/whispercpp
-        && chmod -R ug+rwX 
-        /app/scholarspace/node_modules
-        /app/scholarspace/tmp/test_storage
-        /app/scholarspace/tmp
-        /app/scholarspace/storage
-        /app/scholarspace/uploads
-        /.cache/yarn
-        /.cache/solr-ocr-index-cache
-        /.cache/derivatives
-        /.cache/whispercpp
+      - |
+        mkdir -p /app/scholarspace/tmp/cache/assets/sprockets \
+                  /app/scholarspace/tmp/test_storage \
+                  /app/scholarspace/node_modules \
+                  /app/scholarspace/storage \
+                  /app/scholarspace/uploads \
+                  /app/scholarspace/tmp/cache/yarn \
+                  /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+                  /app/scholarspace/tmp/cache/derivatives \
+                  /app/scholarspace/tmp/cache/whispercpp
+        chown -R ${APP_UID:-1001}:${APP_GID:-101} \
+               /app/scholarspace/node_modules \
+               /app/scholarspace/tmp/test_storage \
+               /app/scholarspace/tmp \
+               /app/scholarspace/storage \
+               /app/scholarspace/uploads \
+               /app/scholarspace/tmp/cache/yarn \
+               /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+               /app/scholarspace/tmp/cache/derivatives \
+               /app/scholarspace/tmp/cache/whispercpp
+        chmod -R ug+rwX /app/scholarspace/node_modules \
+                        /app/scholarspace/tmp/test_storage \
+                        /app/scholarspace/tmp \
+                        /app/scholarspace/storage \
+                        /app/scholarspace/uploads \
+                        /app/scholarspace/tmp/cache/yarn \
+                        /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+                        /app/scholarspace/tmp/cache/derivatives \
+                        /app/scholarspace/tmp/cache/whispercpp
     restart: "no"
     volumes:
       - node_modules:/app/scholarspace/node_modules
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - yarn-cache:/.cache/yarn
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - derivatives-cache:/.cache/derivatives
-      - whispercpp-cache:/.cache/whispercpp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   whisper-model-preload:
     image: scholarspace-worker-prod:${RAILS_TAG:-latest}
@@ -61,12 +60,10 @@ services:
     environment:
       - RAILS_ENV=production
     command: >-
-      sh -lc 'bundle exec rails runner "ENV[\"XDG_CACHE_HOME\"] = \"/.cache/whispercpp\"; Whisper::Context.new(ENV.fetch(\"WHISPER_PRELOAD_MODEL\", \"base\"))"'
+      sh -lc 'bundle exec rails runner "ENV[\"XDG_CACHE_HOME\"] = \"/app/scholarspace/tmp/cache/whispercpp\"; Whisper::Context.new(ENV.fetch(\"WHISPER_PRELOAD_MODEL\", \"base\"))"'
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     restart: "no"
@@ -75,8 +72,8 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - whispercpp-cache:/.cache/whispercpp
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 volumes:
   node_modules:
   storage:

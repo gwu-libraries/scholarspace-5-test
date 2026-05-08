@@ -28,7 +28,7 @@ services:
       - .env
     environment:
       - HOME=/app
-      - YARN_CACHE_FOLDER=/.cache/yarn
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
       - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
@@ -41,10 +41,10 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - yarn-cache:/.cache/yarn
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - derivatives-cache:/.cache/derivatives
-      - whispercpp-cache:/.cache/whispercpp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -78,7 +78,7 @@ services:
       - .env
     environment:
       - HOME=/app
-      - YARN_CACHE_FOLDER=/.cache/yarn
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
@@ -92,9 +92,9 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - yarn-cache:/.cache/yarn
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - whispercpp-cache:/.cache/whispercpp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   worker_whisper:
     stdin_open: true
@@ -107,7 +107,7 @@ services:
       - .env
     environment:
       - HOME=/app
-      - YARN_CACHE_FOLDER=/.cache/yarn
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
@@ -122,9 +122,9 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - yarn-cache:/.cache/yarn
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - whispercpp-cache:/.cache/whispercpp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   nginx:
     image: nginx:latest

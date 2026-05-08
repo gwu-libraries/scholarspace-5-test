@@ -45,9 +45,9 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - derivatives-cache:/.cache/derivatives
-      - whispercpp-cache:/.cache/whispercpp
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   worker:
     image: scholarspace-worker-test:${RAILS_TAG:-latest}
@@ -87,9 +87,9 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/.cache/solr-ocr-index-cache
-      - derivatives-cache:/.cache/derivatives
-      - whispercpp-cache:/.cache/whispercpp
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   solr:
     ports:
