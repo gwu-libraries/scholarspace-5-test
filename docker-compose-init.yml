@@ -16,6 +16,7 @@ services:
       - |
         mkdir -p /app/scholarspace/tmp/cache/assets/sprockets \
                   /app/scholarspace/tmp/test_storage \
+                  /app/scholarspace/tmp/derivatives-work-locks \
                   /app/scholarspace/node_modules \
                   /app/scholarspace/storage \
                   /app/scholarspace/uploads \
@@ -32,7 +33,8 @@ services:
                /app/scholarspace/tmp/cache/yarn \
                /app/scholarspace/tmp/cache/solr-ocr-index-cache \
                /app/scholarspace/tmp/cache/derivatives \
-               /app/scholarspace/tmp/cache/whispercpp
+               /app/scholarspace/tmp/cache/whispercpp \
+               /app/scholarspace/tmp/derivatives-work-locks
         chmod -R ug+rwX /app/scholarspace/node_modules \
                         /app/scholarspace/tmp/test_storage \
                         /app/scholarspace/tmp \
@@ -41,7 +43,8 @@ services:
                         /app/scholarspace/tmp/cache/yarn \
                         /app/scholarspace/tmp/cache/solr-ocr-index-cache \
                         /app/scholarspace/tmp/cache/derivatives \
-                        /app/scholarspace/tmp/cache/whispercpp
+                        /app/scholarspace/tmp/cache/whispercpp \
+                        /app/scholarspace/tmp/derivatives-work-locks
     restart: "no"
     volumes:
       - node_modules:/app/scholarspace/node_modules

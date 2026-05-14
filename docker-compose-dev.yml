@@ -27,10 +27,17 @@ services:
     env_file:
       - .env
     environment:
-      - HOME=/app
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
       - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
       - CHOKIDAR_USEPOLLING=true # webpacker autorefresh
     ports:
@@ -77,10 +84,17 @@ services:
     env_file:
       - .env
     environment:
-      - HOME=/app
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
       - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
     depends_on:
       app-volumes-init:
@@ -94,6 +108,7 @@ services:
       - tmp:/app/scholarspace/tmp
       - yarn-cache:/app/scholarspace/tmp/cache/yarn
       - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   worker_whisper:
@@ -106,10 +121,17 @@ services:
     env_file:
       - .env
     environment:
-      - HOME=/app
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
       - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
       - RAILS_ROOT=/app/scholarspace
       - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
       - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-1}
     depends_on:
@@ -124,6 +146,7 @@ services:
       - tmp:/app/scholarspace/tmp
       - yarn-cache:/app/scholarspace/tmp/cache/yarn
       - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   nginx:

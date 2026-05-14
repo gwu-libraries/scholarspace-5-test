@@ -34,7 +34,7 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - ${EFS_OCR_CACHE_MOUNT:-solr-ocr-index-cache}:/app/scholarspace/tmp/cache/solr-ocr-index-cache
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
     cpus: 2.0
@@ -76,7 +76,7 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - ${EFS_OCR_CACHE_MOUNT:-solr-ocr-index-cache}:/app/scholarspace/tmp/cache/solr-ocr-index-cache
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
     cpus: 1.5
@@ -110,7 +110,7 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - ${EFS_OCR_CACHE_MOUNT:-solr-ocr-index-cache}:/app/scholarspace/tmp/cache/solr-ocr-index-cache
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
     cpus: 2.0
@@ -144,6 +144,8 @@ services:
   solr:
     ports:
       - "62821:8983"
+    volumes:
+      - ${EFS_OCR_CACHE_MOUNT:-solr-ocr-index-cache}:/app/scholarspace/tmp/cache/solr-ocr-index-cache
     command:
       - sh
       - "-c"

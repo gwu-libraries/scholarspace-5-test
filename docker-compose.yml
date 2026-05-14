@@ -79,7 +79,7 @@ services:
       - ./solr/plugins:/opt/solr/contrib/plugins
       - type: volume
         source: solr-ocr-index-cache
-        target: /.cache/solr-ocr-index-cache
+        target: /app/scholarspace/tmp/cache/solr-ocr-index-cache
       - type: volume
         source: derivatives-cache
         target: /.cache/derivatives
