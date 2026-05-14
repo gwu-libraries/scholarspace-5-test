@@ -71,12 +71,18 @@ RUN if [ "$BUILD_ENV" = "prod" ]; then \
 RUN bundle config set deployment true
 RUN bundle install
 
+COPY --chown=app:app package.json yarn.lock ./
+
+RUN if [ "$BUILD_ENV" = "prod" ] || [ "$BUILD_ENV" = "dev" ] || [ "$BUILD_ENV" = "test" ]; then \
+      yarn install --frozen-lockfile --network-timeout 600000; \
+    fi
+
 COPY --chown=app:app . ./
 
 RUN if [ "$BUILD_ENV" = "prod" ]; then \
-      yarn install && yarn build:prod; \
+      yarn build:prod; \
     elif [ "$BUILD_ENV" = "dev" || "$BUILD_ENV" = "test" ]; then \
-      yarn install && yarn build:dev || true; \
+      yarn build:dev || true; \
     fi
 
 RUN if [ "$BUILD_ENV" = "prod" ]; then \
