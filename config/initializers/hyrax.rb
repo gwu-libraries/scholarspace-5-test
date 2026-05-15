@@ -268,7 +268,7 @@ Hyrax.config do |config|
   config.collection_model = 'CollectionResource'
   # config.admin_set_model = "AdminSetResource"
   config.admin_set_model = 'Hyrax::AdministrativeSet'
-  config.file_set_model = 'Hyrax::FileSet'
+  config.file_set_model = 'FileSet'
   # Identify the model class name that will be used for Admin Sets in your app
   # (i.e. AdminSet for ActiveFedora, Hyrax::AdministrativeSet for Valkyrie)
   # config.admin_set_model = "AdminSet"
