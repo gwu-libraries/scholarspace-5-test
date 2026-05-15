@@ -6,6 +6,9 @@ public/packs
 log
 tmp
 coverage
+uploads
+storage
+derivatives
 
 # Keep git metadata and editor settings out of build context.
 .git
@@ -14,3 +17,13 @@ coverage
 
 vendor/bundle
 .bundle
+
+# Build/deploy metadata not needed inside the app image.
+terraform
+*.tfstate
+*.tfstate.backup
+*.plan
+
+# Test/docs content not needed for runtime image.
+spec
+README.md

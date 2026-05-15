@@ -81,3 +81,4 @@ derivatives/*
 terraform/.terraform/*
 terraform.tfstate*
 terraform/*.plan
+terraform/*.log
