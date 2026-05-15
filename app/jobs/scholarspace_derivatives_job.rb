@@ -3,6 +3,7 @@
 require 'fileutils'
 
 class ScholarspaceDerivativesJob < ApplicationJob
+  include FileOperations
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
@@ -21,25 +22,21 @@ class ScholarspaceDerivativesJob < ApplicationJob
     end
   end
 
-  def member_file_sets
-    Array(@work.member_ids).filter_map { |id| find_member_file_set(id) }
-  end
-  
-  def original_member_file_sets
-    member_file_sets.reject(&:service_file)
-  end
-
   def file_types
-    original_member_file_sets.filter_map { |file_set| file_set.original_file&.mime_type }.uniq
+    @work.original_member_file_sets.filter_map { |file_set| file_set.original_file&.mime_type }.uniq
   end
 
   def has_pdf_source_files?
-    original_member_file_sets.any? { |file_set| pdf_file_set?(file_set) }
+    @work.original_member_file_sets.any?(&:pdf?)
+  end
+
+  def has_image_source_files?
+    @work.original_member_file_sets.any?(&:image?)
   end
 
   # check if every file in the work has been characterized
   def files_ready_for_derivatives?
-    original_member_file_sets.all? { |file_set| file_set.original_file&.mime_type.present? }
+    @work.original_member_file_sets.all? { |file_set| file_set.original_file&.mime_type.present? }
   end
 
   def schedule_derivatives_jobs
@@ -56,14 +53,19 @@ class ScholarspaceDerivativesJob < ApplicationJob
     # PdfToImagesDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.include?('application/pdf')
 
     # if a collection of images, generate a pdf
-    ImagesToPdfDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/') }
+    if has_image_source_files?
+      ImagesToPdfDerivativesJob.perform_later(work_id: @work.id.to_s)
+    end
 
     # if a/v, generate a transcript
     AudioTranscriptDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('audio/', 'video/') }
 
     # if a pdf, extract text for full text search and OCR highlighting
+    # This is ALWAYS done regardless of preferences
     PdfTextExtractionJob.perform_later(work_id: @work.id.to_s) if has_pdf_source_files?
   end
+
+
 
   def reschedule_job
     return if @retries > RETRY_MAX
@@ -75,23 +77,13 @@ class ScholarspaceDerivativesJob < ApplicationJob
     )
   end
 
-  def find_member_file_set(id)
-    Hyrax.query_service.find_by(id: id)
-  end
-
-  def pdf_file_set?(file_set)
-    mime_type = file_set.original_file&.mime_type.to_s.downcase
-    filename = file_set.original_file&.original_filename.to_s.downcase
-
-    mime_type.start_with?('application/pdf') || filename.end_with?('.pdf')
-  end
-
   def with_work_lock(work_id)
     lock_root = Rails.root.join('tmp', 'derivatives-work-locks').to_s
-    FileUtils.mkdir_p(lock_root)
+    ensure_directory_exists(lock_root)
+    FileUtils.chmod(0o755, lock_root) unless File.stat(lock_root).mode & 0o755 == 0o755
     lock_path = File.join(lock_root, "#{work_id}.lock")
 
-    File.open(lock_path, File::RDWR | File::CREAT, 0o644) do |lock_file|
+    File.open(lock_path, File::RDWR | File::CREAT, 0o666) do |lock_file|
       lock_file.flock(File::LOCK_EX)
       yield
     ensure
