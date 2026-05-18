@@ -40,6 +40,18 @@ locals {
     containerPath = "/app/scholarspace/uploads"
     readOnly      = false
   }
+
+  # ECS service log group configurations for consolidated CloudWatch setup
+  ecs_log_groups = {
+    web = {
+      name              = "/ecs/${var.site_prefix}/web"
+      retention_in_days = var.web_log_retention_days
+    }
+    fits = {
+      name              = "/ecs/${var.site_prefix}/fits"
+      retention_in_days = var.fits_log_retention_days
+    }
+  }
 }
 
 resource "aws_ssm_parameter" "app_env" {

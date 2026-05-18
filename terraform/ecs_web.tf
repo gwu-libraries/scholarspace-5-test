@@ -16,8 +16,8 @@ resource "aws_ecr_repository" "web" {
 }
 
 resource "aws_cloudwatch_log_group" "web" {
-  name              = "/ecs/${var.site_prefix}/web"
-  retention_in_days = var.web_log_retention_days
+  name              = local.ecs_log_groups.web.name
+  retention_in_days = local.ecs_log_groups.web.retention_in_days
 
   tags = {
     Name = "${var.site_prefix}-web"
