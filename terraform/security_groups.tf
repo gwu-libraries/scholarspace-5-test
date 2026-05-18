@@ -80,84 +80,42 @@ resource "aws_security_group" "sidekiq_tasks" {
   }
 }
 
-# Allow Sidekiq ECS tasks to reach the backing services running on the EC2 host
-resource "aws_security_group_rule" "web_server_redis_from_sidekiq" {
-  type                     = "ingress"
-  from_port                = 6379
-  to_port                  = 6379
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.sidekiq_tasks.id
-  description              = "Allow Sidekiq ECS tasks to access Redis"
+# Mapping of backing services accessible from both web and sidekiq ECS tasks
+locals {
+  ecs_backing_services = {
+    redis     = { port = 6379, description = "Redis" }
+    fedora    = { port = 8080, description = "Fedora" }
+    solr      = { port = 62821, description = "Solr" }
+    memcached = { port = 11211, description = "Memcached" }
+  }
+
+  # Generate rules for both source task SGs
+  ecs_task_sources = {
+    web     = aws_security_group.web_tasks.id
+    sidekiq = aws_security_group.sidekiq_tasks.id
+  }
 }
 
-resource "aws_security_group_rule" "web_server_fedora_from_sidekiq" {
-  type                     = "ingress"
-  from_port                = 8080
-  to_port                  = 8080
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.sidekiq_tasks.id
-  description              = "Allow Sidekiq ECS tasks to access Fedora"
-}
+# Allow web and sidekiq ECS tasks to reach backing services running on the EC2 host
+resource "aws_security_group_rule" "web_server_service_access" {
+  for_each = merge([
+    for source_name, source_sg_id in local.ecs_task_sources : {
+      for service_name, service_config in local.ecs_backing_services :
+      "${source_name}_${service_name}" => {
+        source_name  = source_name
+        service_name = service_name
+        source_sg_id = source_sg_id
+        port         = service_config.port
+        service_desc = service_config.description
+      }
+    }
+  ]...)
 
-resource "aws_security_group_rule" "web_server_solr_from_sidekiq" {
   type                     = "ingress"
-  from_port                = 62821
-  to_port                  = 62821
+  from_port                = each.value.port
+  to_port                  = each.value.port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.sidekiq_tasks.id
-  description              = "Allow Sidekiq ECS tasks to access Solr"
-}
-
-resource "aws_security_group_rule" "web_server_memcached_from_sidekiq" {
-  type                     = "ingress"
-  from_port                = 11211
-  to_port                  = 11211
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.sidekiq_tasks.id
-  description              = "Allow Sidekiq ECS tasks to access Memcached"
-}
-
-# Allow Rails web ECS tasks to reach the backing services running on the EC2 host
-resource "aws_security_group_rule" "web_server_redis_from_web" {
-  type                     = "ingress"
-  from_port                = 6379
-  to_port                  = 6379
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.web_tasks.id
-  description              = "Allow Rails web ECS tasks to access Redis"
-}
-
-resource "aws_security_group_rule" "web_server_fedora_from_web" {
-  type                     = "ingress"
-  from_port                = 8080
-  to_port                  = 8080
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.web_tasks.id
-  description              = "Allow Rails web ECS tasks to access Fedora"
-}
-
-resource "aws_security_group_rule" "web_server_solr_from_web" {
-  type                     = "ingress"
-  from_port                = 62821
-  to_port                  = 62821
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.web_tasks.id
-  description              = "Allow Rails web ECS tasks to access Solr"
-}
-
-resource "aws_security_group_rule" "web_server_memcached_from_web" {
-  type                     = "ingress"
-  from_port                = 11211
-  to_port                  = 11211
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.allow_web_traffic.id
-  source_security_group_id = aws_security_group.web_tasks.id
-  description              = "Allow Rails web ECS tasks to access Memcached"
+  source_security_group_id = each.value.source_sg_id
+  description              = "Allow ${each.value.source_name} ECS tasks to access ${each.value.service_desc}"
 }

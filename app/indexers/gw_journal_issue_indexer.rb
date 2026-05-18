@@ -6,9 +6,7 @@ class GwJournalIssueIndexer < Hyrax::Indexers.PcdmObjectIndexer(
   include Hyrax.Indexer(:basic_metadata)
   include Hyrax.Indexer(:academic_document)
   include Hyrax.Indexer(:gw_journal_issue)
-  include OcrTextIndexable
-  include VttIndexable
-  include FullTextIndexable
+  include SearchableWorkIndexable
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr
