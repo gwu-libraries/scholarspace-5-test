@@ -17,12 +17,22 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 // the whole process of generating another pdf with embedded hocr and reindexing it. 
 // This solution just lets us update the hocr file and have the viewer pick up the changes immediately, without needing to reprocess the pdf or reindex anything.
 
-const PdfViewer = ({ fileUrl, hocrUrl, enableTextLayer, enableAnnotationLayer }) => {
+const PdfViewer = ({
+  fileUrl,
+  hocrUrl,
+  initialPageIndex,
+  focusRegion,
+  focusToken,
+  enableTextLayer,
+  enableAnnotationLayer,
+}) => {
   const [numPages, setNumPages] = useState(0);
   const [renderedPages, setRenderedPages] = useState(1);
   const [pageWidth, setPageWidth] = useState(0);
   const [hocrPages, setHocrPages] = useState([]);
+  const [activeFocus, setActiveFocus] = useState(null);
   const pagesRef = useRef(null);
+  const pageNodeRefs = useRef({});
 
   const parseBbox = (titleValue) => {
     if (!titleValue) return null;
@@ -164,6 +174,37 @@ const PdfViewer = ({ fileUrl, hocrUrl, enableTextLayer, enableAnnotationLayer })
     };
   }, [hocrUrl]);
 
+  useEffect(() => {
+    if (!Number.isInteger(initialPageIndex) || initialPageIndex < 0) return;
+    if (renderedPages <= initialPageIndex) return;
+
+    const pageNode = pageNodeRefs.current[initialPageIndex + 1];
+    if (pageNode && typeof pageNode.scrollIntoView === 'function') {
+      pageNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [initialPageIndex, renderedPages, focusToken]);
+
+  useEffect(() => {
+    if (!Number.isInteger(initialPageIndex) || !focusRegion) {
+      setActiveFocus(null);
+      return;
+    }
+
+    const match = focusRegion.match(/^(\d+),(\d+),(\d+),(\d+)$/);
+    if (!match) {
+      setActiveFocus(null);
+      return;
+    }
+
+    setActiveFocus({
+      pageIndex: initialPageIndex,
+      x: Number.parseInt(match[1], 10),
+      y: Number.parseInt(match[2], 10),
+      width: Number.parseInt(match[3], 10),
+      height: Number.parseInt(match[4], 10),
+    });
+  }, [initialPageIndex, focusRegion, focusToken]);
+
   if (!fileUrl) {
     return <div className={styles.status}>No PDF available.</div>;
   }
@@ -175,7 +216,13 @@ const PdfViewer = ({ fileUrl, hocrUrl, enableTextLayer, enableAnnotationLayer })
           <div ref={pagesRef} className={styles.pages}>
             <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess} loading="Loading PDF...">
               {Array.from(new Array(Math.min(numPages, renderedPages)), (_el, index) => (
-                <div key={`page_${index + 1}`} className={styles.pageFrame}>
+                  <div
+                    key={`page_${index + 1}`}
+                    className={styles.pageFrame}
+                    ref={(node) => {
+                      pageNodeRefs.current[index + 1] = node;
+                    }}
+                  >
                   <Page
                     pageNumber={index + 1}
                     renderTextLayer={enableTextLayer}
@@ -185,6 +232,22 @@ const PdfViewer = ({ fileUrl, hocrUrl, enableTextLayer, enableAnnotationLayer })
                   />
                   {hocrPages[index]?.words?.length > 0 && (
                     <div className={styles.hocrOverlay}>
+                        {activeFocus && activeFocus.pageIndex === index && hocrPages[index]?.sourceWidthPx > 0 && hocrPages[index]?.sourceHeightPx > 0 && (
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: `${(activeFocus.x / hocrPages[index].sourceWidthPx) * 100}%`,
+                              top: `${(activeFocus.y / hocrPages[index].sourceHeightPx) * 100}%`,
+                              width: `${(activeFocus.width / hocrPages[index].sourceWidthPx) * 100}%`,
+                              height: `${(activeFocus.height / hocrPages[index].sourceHeightPx) * 100}%`,
+                              border: '2px solid #f39c12',
+                              backgroundColor: 'rgba(243, 156, 18, 0.18)',
+                              boxSizing: 'border-box',
+                              pointerEvents: 'none',
+                              zIndex: 2,
+                            }}
+                          />
+                        )}
                       {hocrPages[index].words.map((word, wordIndex) => (
                         (() => {
                           const sourceWidthPx = hocrPages[index]?.sourceWidthPx;
@@ -225,12 +288,18 @@ const PdfViewer = ({ fileUrl, hocrUrl, enableTextLayer, enableAnnotationLayer })
 PdfViewer.propTypes = {
   fileUrl: PropTypes.string.isRequired,
   hocrUrl: PropTypes.string,
+  initialPageIndex: PropTypes.number,
+  focusRegion: PropTypes.string,
+  focusToken: PropTypes.number,
   enableTextLayer: PropTypes.bool,
   enableAnnotationLayer: PropTypes.bool,
 };
 
 PdfViewer.defaultProps = {
   hocrUrl: null,
+  initialPageIndex: null,
+  focusRegion: null,
+  focusToken: 0,
   enableTextLayer: false,
   enableAnnotationLayer: false,
 };

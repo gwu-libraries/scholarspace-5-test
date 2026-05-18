@@ -5,6 +5,8 @@ module ScholarspaceDerivativesServices
     include Concerns::FileSetAttachable
     include Concerns::VttGeneratable
     include Concerns::WavConvertible
+    include FileOperations
+    include PersistenceAdapter
 
     def initialize(work)
       @work = work
@@ -12,34 +14,41 @@ module ScholarspaceDerivativesServices
 
     def call
       Dir.mktmpdir("audio_transcript_#{@work.id}_") do |dir|
-        @working_dir = dir
-        Dir.mkdir("#{dir}/av_files")
-        Dir.mkdir("#{dir}/transcripts")
-        copied_av_files = copy_av_files_to_working_dir
-        copied_av_files.each do |av_file|
-          file_path = av_file[:path]
-          title = File.basename(file_path, File.extname(file_path))
-          transcription_source = transcription_source_path(file_path)
-          vtt_path = generate_vtt(transcription_source, output_dir: "#{dir}/transcripts", title: title)
-          attach_vtt_to_work(vtt_path, source_file_set: av_file[:file_set])
+        prepare_working_directory(dir)
+        copy_av_files_to_working_dir.each do |av_file|
+          generate_and_attach_transcript(av_file, dir)
         end
       end
     end
 
+    def prepare_working_directory(dir)
+      @working_dir = dir
+      ensure_directory_exists("#{dir}/av_files")
+      ensure_directory_exists("#{dir}/transcripts")
+    end
+
+    def generate_and_attach_transcript(av_file, dir)
+      file_path = av_file[:path]
+      title = transcript_title_for(file_path)
+      transcription_source = transcription_source_path(file_path)
+      vtt_path = generate_vtt(transcription_source, output_dir: "#{dir}/transcripts", title: title)
+      attach_vtt_to_work(vtt_path, source_file_set: av_file[:file_set])
+    end
+
+    def transcript_title_for(file_path)
+      File.basename(file_path, File.extname(file_path))
+    end
+
     def av_file_sets
-      member_file_sets.select do |file_set|
+      @work.member_file_sets.select do |file_set|
         !file_set.service_file && file_set.original_file&.mime_type.to_s.start_with?('audio/', 'video/')
       end
     end
 
     def copy_av_files_to_working_dir
-      av_file_sets.each_with_index.map do |fs, _i|
-        io = Hyrax.storage_adapter.find_by(id: fs.original_file.file_identifier)
+      av_file_sets.map do |fs|
         destination_path = "#{@working_dir}/av_files/#{fs.original_file.original_filename}"
-        destination_io = File.open(destination_path, 'wb')
-
-        IO.copy_stream(io.stream, destination_io)
-        destination_io.close
+        copy_file_to_disk(fs.original_file.file_identifier, destination_path)
 
         { file_set: fs, path: destination_path }
       end
@@ -77,8 +86,7 @@ module ScholarspaceDerivativesServices
         return if merged_rendering_ids == existing_rendering_ids
 
         work.rendering_ids = merged_rendering_ids
-        @work = Hyrax.persister.save(resource: work)
-        Hyrax.index_adapter.save(resource: @work)
+        @work = save_and_index(work)
       end
     end
   end

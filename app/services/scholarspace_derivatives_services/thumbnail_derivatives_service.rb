@@ -6,6 +6,10 @@ module ScholarspaceDerivativesServices
   class ThumbnailDerivativesService
     include Concerns::FileSetAttachable
     include Concerns::ThumbnailGeneratable
+    include FileOperations
+    include FileSetDerivativeMetadata
+    include PersistenceAdapter
+    include StringNormalization
 
     REPRESENTATIVE_THUMBNAIL_FILENAME = 'REPRESENTATIVE_THUMBNAIL.jpg'
 
@@ -19,39 +23,9 @@ module ScholarspaceDerivativesServices
 
       Dir.mktmpdir("thumbnail_derivatives_#{@work.id}_") do |dir|
         @working_dir = dir
-        first_derivative_thumbnail = nil
 
-        source_file_sets.each do |source_file_set|
-          next unless thumbnail_supported?(source_file_set)
-
-          thumbnail_filename = thumbnail_filename_for(source_file_set)
-          attached_file_set = find_service_file_set_by_filename(thumbnail_filename)
-
-          if attached_file_set.nil?
-            source_path = copy_source_to_working_dir(source_file_set)
-            next unless source_path
-
-            output_thumbnail_path = File.join(@working_dir, thumbnail_filename)
-            generate_thumbnail_file(
-              source_path: source_path,
-              output_thumbnail_path: output_thumbnail_path,
-              mime_type: source_file_set.original_file&.mime_type.to_s,
-              error_message: "Unable to generate thumbnail for file set #{source_file_set.id}"
-            )
-
-            attached_file_set = attach_single_file_to_work(
-              file_path: output_thumbnail_path,
-              user: depositor,
-              service_file: true,
-              source_file_set: source_file_set
-            )
-          end
-
-          first_derivative_thumbnail ||= attached_file_set
-        end
-
-        representative_thumbnail = ensure_representative_thumbnail(first_derivative_thumbnail: first_derivative_thumbnail)
-        set_work_thumbnail(representative_thumbnail_id: representative_thumbnail&.id) if representative_thumbnail
+        generate_supported_thumbnails
+        ensure_best_thumbnail_is_representative
       end
     rescue StandardError => e
       Rails.logger.error("ThumbnailDerivativesService failed for work #{@work.id}: #{e.class} #{e.message}")
@@ -60,15 +34,102 @@ module ScholarspaceDerivativesServices
 
     private
 
-    # prevent generating derivatives for derivatives recursively
     def source_file_sets
-      member_file_sets.reject(&:service_file)
+      @work.original_member_file_sets
+    end
+
+    def generate_supported_thumbnails
+      source_file_sets.each do |source_file_set|
+        next unless thumbnail_supported?(source_file_set)
+
+        generate_thumbnail_for(source_file_set)
+      end
+    end
+
+    def ensure_best_thumbnail_is_representative
+      best_source = best_source_file_for_thumbnail
+      return unless best_source
+
+      thumbnail_file_set = find_or_create_thumbnail_for(best_source)
+      return unless thumbnail_file_set
+
+      current_thumbnail_id = @work.thumbnail_id.to_s
+      return if current_thumbnail_id == thumbnail_file_set.id.to_s
+
+      set_work_thumbnail(representative_thumbnail_id: thumbnail_file_set.id)
+    end
+
+    def generate_thumbnail_for(source_file_set)
+      thumbnail_filename = thumbnail_filename_for(source_file_set)
+      output_path = generate_thumbnail_asset(source_file_set, thumbnail_filename)
+      return unless output_path
+
+      existing = find_service_file_set_by_filename(thumbnail_filename)
+      if existing
+        update_file_set_file(existing, output_path)
+      else
+        attach_single_file_to_work(
+          file_path: output_path,
+          user: depositor,
+          service_file: true,
+          source_file_set: source_file_set
+        )
+      end
+    end
+
+    def find_or_create_thumbnail_for(source_file_set)
+      thumbnail_filename = thumbnail_filename_for(source_file_set)
+      existing = find_service_file_set_by_filename(thumbnail_filename)
+      return existing if existing
+
+      output_path = generate_thumbnail_asset(source_file_set, thumbnail_filename)
+      return nil unless output_path
+
+      attach_single_file_to_work(
+        file_path: output_path,
+        user: depositor,
+        service_file: true,
+        source_file_set: source_file_set
+      )
+    end
+
+    def best_source_file_for_thumbnail
+      source_file_sets.min_by { |fs| priority_for(fs) }
+    end
+
+    def priority_for(file_set)
+      return 0 if file_set.respond_to?(:image?) && file_set.image?
+      return 1 if file_set.respond_to?(:pdf?) && file_set.pdf?
+      return 2 if (file_set.respond_to?(:audio?) && file_set.audio?) || (file_set.respond_to?(:video?) && file_set.video?)
+      99
+    end
+
+    def update_file_set_file(file_set, new_file_path)
+      file_set
+    end
+
+    def generate_thumbnail_asset(source_file_set, thumbnail_filename)
+      source_path = copy_source_to_working_dir(source_file_set)
+      return nil unless source_path
+
+      output_path = File.join(@working_dir, thumbnail_filename)
+      generate_thumbnail_file(
+        source_path: source_path,
+        output_thumbnail_path: output_path,
+        mime_type: source_file_set.original_file&.mime_type.to_s,
+        error_message: "Unable to generate thumbnail for file set #{source_file_set.id}"
+      )
+      output_path
     end
 
     # is the fileset an image, video, or pdf?
     def thumbnail_supported?(file_set)
-      mime_type = file_set.original_file&.mime_type.to_s
-      mime_type.start_with?('image/', 'video/') || mime_type == 'application/pdf'
+      if file_set.respond_to?(:image?) && file_set.respond_to?(:video?) && file_set.respond_to?(:pdf?)
+        file_set.image? || file_set.video? || file_set.pdf?
+      else
+        mime_type = file_set.original_file&.mime_type.to_s
+        mime_type.start_with?('image/', 'video/') || mime_type == 'application/pdf'
+      end
     end
 
     def copy_source_to_working_dir(file_set)
@@ -78,13 +139,8 @@ module ScholarspaceDerivativesServices
       extension = File.extname(original_file.original_filename.to_s)
       extension = '.bin' if extension.blank?
       source_path = File.join(@working_dir, "#{file_set.id}#{extension}")
-      io = Hyrax.storage_adapter.find_by(id: original_file.file_identifier)
 
-      File.open(source_path, 'wb') do |destination_io|
-        IO.copy_stream(io.stream, destination_io)
-      end
-
-      source_path
+      copy_file_to_disk(original_file.file_identifier, source_path)
     end
 
     def thumbnail_filename_for(file_set)
@@ -98,7 +154,7 @@ module ScholarspaceDerivativesServices
     def find_service_file_set_by_filename(filename)
       return nil if filename.blank?
 
-      member_file_sets.find do |file_set|
+      @work.member_file_sets.find do |file_set|
         next false unless file_set.respond_to?(:service_file) && file_set.service_file
 
         attached_name = file_set.original_file&.original_filename.to_s
@@ -107,24 +163,109 @@ module ScholarspaceDerivativesServices
       end
     end
 
-    def ensure_representative_thumbnail(first_derivative_thumbnail:)
-      return nil unless first_derivative_thumbnail
+    def build_representative_thumbnail(derivative_candidates:)
+      candidate = best_representative_candidate(derivative_candidates)
+      return nil unless candidate
 
-      existing_representative = find_service_file_set_by_filename(REPRESENTATIVE_THUMBNAIL_FILENAME)
+      source_file_set = candidate.fetch(:source_file_set)
+      source_id = source_file_set.id.to_s
+      existing_representative = find_representative_thumbnail_for_source(source_id)
       return existing_representative if existing_representative
 
-      source_path = copy_source_to_working_dir(first_derivative_thumbnail)
+      derivative_thumbnail = candidate.fetch(:derivative_thumbnail)
+      source_path = copy_source_to_working_dir(derivative_thumbnail)
       return nil unless source_path
 
-      output_path = File.join(@working_dir, REPRESENTATIVE_THUMBNAIL_FILENAME)
+      output_path = File.join(@working_dir, representative_thumbnail_filename_for(source_file_set))
       FileUtils.cp(source_path, output_path)
 
-      attach_single_file_to_work(
+      representative_thumbnail = attach_single_file_to_work(
         file_path: output_path,
         user: depositor,
         service_file: true,
-        source_file_set: first_derivative_thumbnail
+        source_file_set: source_file_set
       )
+
+      tag_as_representative_thumbnail(representative_thumbnail)
+    end
+
+    def representative_thumbnail_file_set_by_metadata
+      @work.member_file_sets.find do |file_set|
+        thumbnail_service_file_set?(file_set) && representative_thumbnail_tagged_for_work?(file_set)
+      end
+    end
+
+    def find_representative_thumbnail_for_source(source_file_set_id)
+      @work.member_file_sets.find do |file_set|
+        next false unless thumbnail_service_file_set?(file_set)
+        next false unless representative_thumbnail_tagged_for_work?(file_set)
+
+        source_file_set_id_tag_for(file_set) == source_file_set_id.to_s
+      end
+    end
+
+    def best_representative_candidate(derivative_candidates)
+      derivative_candidates.min_by do |candidate|
+        source_file_set = candidate.fetch(:source_file_set)
+        [representative_priority_for(source_file_set), candidate.fetch(:source_order)]
+      end
+    end
+
+    def representative_priority_for(file_set)
+      mime_type = normalize_mime_type(file_set.original_file&.mime_type)
+      return 0 if mime_type.start_with?('image/')
+      return 1 if mime_type == 'application/pdf'
+      return 2 if mime_type.start_with?('audio/', 'video/')
+
+      99
+    end
+
+    def work_thumbnail_file_set
+      return nil unless @work.respond_to?(:thumbnail_id) && @work.thumbnail_id.present?
+
+      @work.member_file_sets.find { |file_set| file_set.id.to_s == @work.thumbnail_id.to_s }
+    end
+
+    def thumbnail_service_file_set?(file_set)
+      return false unless file_set&.respond_to?(:service_file) && file_set.service_file
+
+      return true if tags_for_file_set(file_set).include?('derivative_type:thumbnail')
+
+      mime_type = normalize_mime_type(file_set.original_file&.mime_type)
+      original_filename = normalize_filename(file_set.original_file&.original_filename)
+      title = file_set.respond_to?(:title) ? normalize_string(file_set.title.to_a.join(' ')) : ''
+
+      return false unless mime_type.start_with?('image/')
+
+      original_filename.include?('_thumbnail.') || title.include?('_thumbnail.')
+    end
+
+    def representative_thumbnail_filename_for(source_file_set)
+      source_stem = File.basename(source_file_set.original_file&.original_filename.to_s, File.extname(source_file_set.original_file&.original_filename.to_s))
+      sanitized_stem = source_stem.gsub(/[^0-9A-Za-z.-]+/, '_').gsub(/\A_+|_+\z/, '')
+      sanitized_stem = 'source' if sanitized_stem.blank?
+      "#{sanitized_stem}_#{REPRESENTATIVE_THUMBNAIL_FILENAME}"
+    end
+
+    def representative_thumbnail_tag
+      "representative_thumbnail_for_work:#{@work.id}"
+    end
+
+    def representative_thumbnail_tagged_for_work?(file_set)
+      tags_for_file_set(file_set).include?(representative_thumbnail_tag)
+    end
+
+    def tag_as_representative_thumbnail(file_set)
+      return nil unless file_set
+
+      @work.member_file_sets.each do |fs|
+        next if fs.id.to_s == file_set.id.to_s
+        next unless representative_thumbnail_tagged_for_work?(fs)
+
+        remove_tag_from_file_set(fs, representative_thumbnail_tag)
+      end
+
+      add_tag_to_file_set(file_set, representative_thumbnail_tag)
     end
 
     def depositor
@@ -137,8 +278,7 @@ module ScholarspaceDerivativesServices
         return unless work&.respond_to?(:thumbnail_id=)
 
         work.thumbnail_id = representative_thumbnail_id
-        @work = Hyrax.persister.save(resource: work)
-        Hyrax.index_adapter.save(resource: @work)
+        @work = save_and_index(work)
       end
     end
   end

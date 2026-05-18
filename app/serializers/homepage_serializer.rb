@@ -86,19 +86,10 @@ class HomepageSerializer
   end
 
   def thumbnail_for_document(document)
-    html = view_context
-      .document_presenter(document)
-      &.thumbnail
-      &.thumbnail_tag({ width: 90, alt: '' }, { suppress_link: true })
-
-    image_src_from_html(html.to_s)
+    resource = Hyrax.query_service.find_by(id: document.id.to_s)
+    resource&.thumbnail_url
   rescue StandardError
     nil
-  end
-
-  def image_src_from_html(html)
-    match = html.match(/src=(['\"])(.*?)\1/)
-    match && match[2].presence
   end
 
   def record_url(record, namespace:)

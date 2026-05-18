@@ -6,6 +6,8 @@ module ScholarspaceDerivativesServices
   class PdfToImagesDerivativesService
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
+    include FileOperations
+    include PersistenceAdapter
 
     def initialize(work)
       @work = work
@@ -16,9 +18,9 @@ module ScholarspaceDerivativesServices
 
       Dir.mktmpdir("pdf_to_images_#{@work.id}_") do |dir|
         @working_dir = dir
-        Dir.mkdir("#{dir}/pdfs")
-        Dir.mkdir("#{dir}/images")
-        Dir.mkdir("#{dir}/hocr")
+        ensure_directory_exists("#{dir}/pdfs")
+        ensure_directory_exists("#{dir}/images")
+        ensure_directory_exists("#{dir}/hocr")
         source_pdf_file_sets.each do |pdf_file_set|
           if pdf_already_split?(pdf_file_set)
             image_paths = copy_existing_split_images_to_working_dir(pdf_file_set)
@@ -38,7 +40,7 @@ module ScholarspaceDerivativesServices
     end
 
     def source_pdf_file_sets
-      member_file_sets.select do |file_set|
+      @work.member_file_sets.select do |file_set|
         next false unless pdf_file_set?(file_set)
 
         !file_set.service_file
@@ -48,13 +50,8 @@ module ScholarspaceDerivativesServices
     def copy_pdf_to_working_dir(pdf_file_set)
       source_name = File.basename(pdf_file_set.original_file.original_filename.to_s)
       source_pdf_path = "#{@working_dir}/pdfs/#{source_name}"
-      io = Hyrax.storage_adapter.find_by(id: pdf_file_set.original_file.file_identifier)
 
-      File.open(source_pdf_path, 'wb') do |destination_io|
-        IO.copy_stream(io.stream, destination_io)
-      end
-
-      source_pdf_path
+      copy_file_to_disk(pdf_file_set.original_file.file_identifier, source_pdf_path)
     end
 
     def split_pdf_to_images(pdf_path, pdf_file_set)
@@ -85,9 +82,8 @@ module ScholarspaceDerivativesServices
         source_file_set: source_file_set
       )
 
-      Hyrax.persister.save(resource: @work)
-      Hyrax.index_adapter.save(resource: @work)
-      attached_file_sets.each { |file_set| Hyrax.index_adapter.save(resource: file_set) }
+      @work = save_and_index(@work)
+      index_resources(attached_file_sets)
 
       attached_file_sets
     end
@@ -127,14 +123,13 @@ module ScholarspaceDerivativesServices
 
     def attach_files_to_work(file_paths, source_file_set:)
       attached_file_sets = attach_multiple_files_to_work(file_paths: file_paths, user: depositor, service_file: true, source_file_set: source_file_set)
-      Hyrax.persister.save(resource: @work)
-      Hyrax.index_adapter.save(resource: @work)
-      attached_file_sets.each { |file_set| Hyrax.index_adapter.save(resource: file_set) }
+      @work = save_and_index(@work)
+      index_resources(attached_file_sets)
     end
 
     def split_image_file_sets(pdf_file_set)
       stem = split_stem_for(pdf_file_set)
-      member_file_sets.select do |file_set|
+      @work.member_file_sets.select do |file_set|
         filename = file_set.original_file&.original_filename.to_s
         file_set.original_file&.mime_type.to_s.start_with?('image/') && filename.start_with?("#{stem}_page_")
       end
@@ -144,13 +139,8 @@ module ScholarspaceDerivativesServices
       split_image_file_sets(pdf_file_set).map do |image_file_set|
         filename = image_file_set.original_file.original_filename.to_s
         destination_path = "#{@working_dir}/images/#{filename}"
-        io = Hyrax.storage_adapter.find_by(id: image_file_set.original_file.file_identifier)
 
-        File.open(destination_path, 'wb') do |destination_io|
-          IO.copy_stream(io.stream, destination_io)
-        end
-
-        destination_path
+        copy_file_to_disk(image_file_set.original_file.file_identifier, destination_path)
       end
     end
 
@@ -162,7 +152,7 @@ module ScholarspaceDerivativesServices
 
     def pdf_already_split?(pdf_file_set)
       stem = split_stem_for(pdf_file_set)
-      member_file_sets.any? do |file_set|
+      @work.member_file_sets.any? do |file_set|
         file_set.original_file&.original_filename.to_s.start_with?("#{stem}_page_")
       end
     end

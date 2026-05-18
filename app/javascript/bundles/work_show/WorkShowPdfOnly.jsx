@@ -1,12 +1,12 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import WorkItemsTabs from './WorkItemsTabs';
 
 const loadPdfViewer = () => import(
   /* webpackChunkName: "viewer-pdf" */
   '../viewers/pdf_viewer/PdfViewer'
 );
 const PdfViewer = lazy(loadPdfViewer);
-const WorkItemsTabs = lazy(() => import('./WorkItemsTabs'));
 
 const viewerShellStyle = {
   width: '100vw',
@@ -14,6 +14,13 @@ const viewerShellStyle = {
   marginLeft: 'calc(50% - 50vw)',
   paddingLeft: '12px',
   paddingRight: '12px',
+};
+
+const pdfPickerStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '8px',
+  marginBottom: '12px',
 };
 
 const WorkShowPdfOnly = ({
@@ -25,7 +32,9 @@ const WorkShowPdfOnly = ({
   canViewServiceFiles,
 }) => {
   const safeDescriptions = descriptions || [];
+  const pdfMembers = originalMembers.filter((member) => member.isPdf && member.pdfUrl);
   const [showWorkItemsTabs, setShowWorkItemsTabs] = useState(false);
+  const [activePdf, setActivePdf] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,16 +52,64 @@ const WorkShowPdfOnly = ({
     };
   }, []);
 
+  const onSelectPdf = (member) => {
+    const fileUrl = member?.pdfUrl || member?.downloadUrl;
+
+    if (fileUrl) {
+      setActivePdf({
+        fileUrl,
+        hocrUrl: member.hocrUrl || null,
+        jumpToPageIndex: null,
+        focusRegion: null,
+        focusToken: 0,
+      });
+    }
+  };
+
+  const onViewReadingMode = () => {
+    if (!viewer.pdfUrl) return;
+
+    setActivePdf({
+      fileUrl: viewer.pdfUrl,
+      hocrUrl: viewer.hocrUrl || null,
+      jumpToPageIndex: null,
+      focusRegion: null,
+      focusToken: 0,
+    });
+  };
+
   return (
     <div>
       <h1>Title: {title}</h1>
+
+      {pdfMembers.length > 1 && (
+        <div style={pdfPickerStyle} role="group" aria-label="PDF selector">
+          {pdfMembers.map((member, index) => {
+            const isActive = activePdf?.fileUrl ? activePdf.fileUrl === member.pdfUrl : viewer.pdfUrl === member.pdfUrl;
+
+            return (
+              <button
+                key={member.id}
+                type="button"
+                className={`btn btn-default ${isActive ? 'active' : ''}`}
+                onClick={() => onSelectPdf(member)}
+              >
+                PDF {index + 1}: {member.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div style={viewerShellStyle}>
         <Suspense fallback={<p>Loading viewer...</p>}>
           <div className="work-show-pdf-viewer">
             <PdfViewer
-              fileUrl={viewer.pdfUrl}
-              hocrUrl={viewer.hocrUrl}
+              fileUrl={activePdf?.fileUrl || viewer.pdfUrl}
+              hocrUrl={activePdf?.hocrUrl || viewer.hocrUrl}
+                initialPageIndex={activePdf?.jumpToPageIndex ?? null}
+                focusRegion={activePdf?.focusRegion || null}
+                focusToken={activePdf?.focusToken || 0}
               enableTextLayer
               enableAnnotationLayer={false}
             />
@@ -68,13 +125,13 @@ const WorkShowPdfOnly = ({
       ))}
 
       {showWorkItemsTabs && (
-        <Suspense fallback={<p>Loading files...</p>}>
-          <WorkItemsTabs
-            originalMembers={originalMembers}
-            serviceMembers={serviceMembers}
-            canViewServiceFiles={canViewServiceFiles}
-          />
-        </Suspense>
+        <WorkItemsTabs
+          originalMembers={originalMembers}
+          serviceMembers={serviceMembers}
+          canViewServiceFiles={canViewServiceFiles}
+          onSelectPdf={onSelectPdf}
+          onViewReadingMode={viewer.pdfUrl ? onViewReadingMode : undefined}
+        />
       )}
     </div>
   );
@@ -87,6 +144,7 @@ WorkShowPdfOnly.propTypes = {
     type: PropTypes.oneOf(['pdf_or_images']).isRequired,
     pdfUrl: PropTypes.string,
     hocrUrl: PropTypes.string,
+    hasImages: PropTypes.bool,
   }).isRequired,
   originalMembers: PropTypes.arrayOf(PropTypes.object).isRequired,
   serviceMembers: PropTypes.arrayOf(PropTypes.object).isRequired,

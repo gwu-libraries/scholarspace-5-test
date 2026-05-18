@@ -5,6 +5,8 @@ require 'fileutils'
 
 module OcrTextIndexable
   extend ActiveSupport::Concern
+  include MemberQueries
+  include FileOperations
 
   # We are using https://dbmdz.github.io/solr-ocrhighlighting/latest/
   # for ocr text indexing that includes bounding boxes. 
@@ -90,31 +92,26 @@ module OcrTextIndexable
   end
 
   def persist_ocr_file(file_identifier:, pointer_path:)
-    io = find_storage_file_by_id(file_identifier)
-    return unless io
-
-    FileUtils.mkdir_p(File.dirname(pointer_path))
-
-    File.open(pointer_path, 'wb') do |destination_io|
-      IO.copy_stream(io.stream, destination_io)
-    end
-
+    ensure_directory_exists(File.dirname(pointer_path))
+    copy_file_to_disk(file_identifier, pointer_path)
     true
   end
 
-  def find_member_by_id(member_id)
-    Hyrax.query_service.find_by(id: member_id)
-  rescue Valkyrie::Persistence::ObjectNotFoundError
-    nil
-  end
 
-  def find_storage_file_by_id(file_identifier)
-    Hyrax.storage_adapter.find_by(id: file_identifier)
-  rescue Valkyrie::Persistence::ObjectNotFoundError
-    nil
-  end
 
   def ocr_pointer_root
-    '/.cache/solr-ocr-index-cache'
+    configured_root = '/app/scholarspace/tmp/cache/solr-ocr-index-cache'
+    return configured_root if cache_root_writable?(configured_root)
+
+    fallback_root = '/app/scholarspace/tmp/cache/solr-ocr-index-cache'
+    ensure_directory_exists(fallback_root)
+    fallback_root
+  end
+
+  def cache_root_writable?(path)
+    ensure_directory_exists(path)
+    File.writable?(path)
+  rescue SystemCallError
+    false
   end
 end

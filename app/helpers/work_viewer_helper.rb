@@ -1,4 +1,6 @@
 module WorkViewerHelper
+  include ::FileSetDerivativeMetadata
+
   # determines the default viewer tab for a work based on its file set members.
   def default_viewer_for_work(presenter)
     has_source_image_files?(presenter) ? 'images' : 'pdf'
@@ -9,8 +11,7 @@ module WorkViewerHelper
   end
 
   def pdf_viewer_file_id_for_work(presenter)
-    pdf_presenter_for_work(presenter)&.id ||
-      pdf_file_set_id_for_work(presenter)
+    pdf_file_set_id_for_work(presenter)
   end
 
   def manifest_url_for_work(presenter)
@@ -40,10 +41,10 @@ module WorkViewerHelper
   end
 
   def pdf_file_set_id_for_work(presenter)
-    member_file_sets_for(presenter).each do |file_set|
-      return file_set.id.to_s if file_set && pdf_file_set?(file_set)
-    end
-    nil
+    all_pdf_file_sets = member_file_sets_for(presenter).select { |file_set| file_set && pdf_file_set?(file_set) }
+    joined = all_pdf_file_sets.find { |file_set| file_set_filename(file_set) == ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME }
+    joined ||= all_pdf_file_sets.first
+    joined&.id&.to_s
   end
 
   def hocr_file_set_id_for_pdf(presenter, pdf_file_id)
@@ -52,29 +53,32 @@ module WorkViewerHelper
     pdf_file_set = find_member_file_set(pdf_file_id)
     return nil unless pdf_file_set
 
-    expected_name = expected_hocr_filename_for_pdf_file_set(pdf_file_set)
-    member_file_sets = member_file_sets_for(presenter)
+    joined_hocr_id = joined_pdf_hocr_file_set_id(presenter, pdf_file_set)
+    return joined_hocr_id if joined_hocr_id.present?
 
-    if expected_name.present?
-      exact_match = member_file_sets.find do |file_set|
-        filename = file_set.original_file&.original_filename.to_s
-        filename.casecmp(expected_name).zero?
-      end
-      return exact_match.id.to_s if exact_match
-    end
-
-    fallback = member_file_sets.find do |file_set|
-      filename = file_set.original_file&.original_filename.to_s
-      filename.downcase.end_with?('.hocr')
-    end
-    fallback&.id&.to_s
+    metadata_linked_hocr_file_set_id(presenter, pdf_file_set)
   end
 
-  def expected_hocr_filename_for_pdf_file_set(pdf_file_set)
-    filename = pdf_file_set.original_file&.original_filename.to_s
-    return nil if filename.blank?
+  def joined_pdf_hocr_file_set_id(presenter, pdf_file_set)
+    return nil unless joined_pdf_file_set?(pdf_file_set)
 
-    "#{File.basename(filename, File.extname(filename))}_HOCR.hocr"
+    joined_hocr_filename = ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME
+                             .sub('.pdf', '_HOCR.hocr')
+    match = member_file_sets_for(presenter).find do |file_set|
+      hocr_file_set?(file_set) && file_set_filename(file_set) == joined_hocr_filename
+    end
+    match&.id&.to_s
+  end
+
+  def metadata_linked_hocr_file_set_id(presenter, pdf_file_set)
+    metadata_match = member_file_sets_for(presenter).find do |file_set|
+      source_file_set_id_tag_for(file_set) == pdf_file_set.id.to_s && hocr_file_set?(file_set)
+    end
+    metadata_match&.id&.to_s
+  end
+
+  def joined_pdf_file_set?(file_set)
+    file_set_filename(file_set) == ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME
   end
 
   def has_source_image_files?(presenter)
@@ -99,8 +103,14 @@ module WorkViewerHelper
   end
 
   def pdf_file_set?(file_set)
-    mime_type = file_set.original_file&.mime_type.to_s
-    filename = file_set.original_file&.original_filename.to_s
-    mime_type == 'application/pdf' || filename.downcase.end_with?('.pdf')
+    file_set.pdf?
+  end
+
+  def hocr_file_set?(file_set)
+    file_set.hocr?
+  end
+
+  def file_set_filename(file_set)
+    file_set.file_display_name
   end
 end

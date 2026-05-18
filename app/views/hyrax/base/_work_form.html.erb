@@ -1,0 +1,15 @@
+<%
+  add_page_js_pack("work-form-bundler")
+%>
+
+<div id="work-form-wrapper" class="work-form-container">
+  <!-- Standard Hyrax form fields -->
+  <div id="generic_work_edit_metadata">
+    <% if @form.is_a?(ActiveModel::Form) %>
+      <% ActiveModel::FormBuilder.new(:generic_work, @form, nil, {}).form_fields %>
+    <% end %>
+  </div>
+
+
+
+</div>

@@ -4,7 +4,12 @@ require 'nokogiri'
 
 module FullTextIndexable
   extend ActiveSupport::Concern
+  include MemberQueries
+  include StringNormalization
+
   MAX_INDEX_VALUE_CHARS = 3000
+  MAX_INDEX_SEGMENTS = 24
+  MAX_TOTAL_INDEX_CHARS = 24_000
 
   def to_solr
     super.tap do |index_document|
@@ -45,7 +50,7 @@ module FullTextIndexable
   end
 
   def extract_file_text(file:, content:)
-    filename = file.original_filename.to_s.downcase
+    filename = normalize_filename(file.original_filename)
 
     if filename.end_with?('.hocr')
       extract_hocr_plain_text(content)
@@ -73,8 +78,46 @@ module FullTextIndexable
   end
 
   def append_plain_text_to_index(index_document, plain_text)
-    existing_values = Array(index_document[:all_text_tsimv]).filter_map(&:presence)
-    index_document[:all_text_tsimv] = existing_values + split_plain_text_for_index(plain_text)
+    existing_values = split_index_values(index_document)
+    combined_values = existing_values + split_plain_text_for_index(plain_text)
+    index_document[:all_text_tsimv] = bounded_index_segments(combined_values)
+  end
+
+  def split_index_values(index_document)
+    Array(index_document[:all_text_tsimv]).flat_map do |value|
+      split_plain_text_for_index(value)
+    end
+  end
+
+  def bounded_index_segments(combined_values)
+    # Guardrail: keep full-text payload bounded so Solr analysis does not reject
+    # the entire document update for very large OCR extracts.
+    bounded_values = []
+    total_chars = 0
+
+    combined_values.each do |segment|
+      break if bounded_values.length >= MAX_INDEX_SEGMENTS
+
+      normalized_segment = normalize_plain_text(segment)
+      next if normalized_segment.blank?
+
+      remaining_chars = MAX_TOTAL_INDEX_CHARS - total_chars
+      break if remaining_chars <= 0
+
+      truncated_segment = truncate_segment(normalized_segment, remaining_chars)
+      next if truncated_segment.blank?
+
+      bounded_values << truncated_segment
+      total_chars += truncated_segment.length
+    end
+
+    bounded_values
+  end
+
+  def truncate_segment(segment, max_chars)
+    return segment if segment.length <= max_chars
+
+    normalize_plain_text(segment[0, max_chars])
   end
 
   def split_plain_text_for_index(text, max_chars: MAX_INDEX_VALUE_CHARS)
@@ -119,18 +162,16 @@ module FullTextIndexable
   end
 
   def normalize_plain_text(text)
-    text.to_s
+    sanitized = text.to_s.encode('UTF-8', invalid: :replace, undef: :replace, replace: ' ')
+    sanitized
+      .gsub(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/, ' ')
       .unicode_normalize(:nfkc)
       .gsub(/\s+/, ' ')
       .strip
       .presence
   end
 
-  def find_member_by_id(member_id)
-    Hyrax.query_service.find_by(id: member_id)
-  rescue Valkyrie::Persistence::ObjectNotFoundError
-    nil
-  end
+
 
   def find_storage_file_by_id(file_identifier)
     Hyrax.storage_adapter.find_by(id: file_identifier)

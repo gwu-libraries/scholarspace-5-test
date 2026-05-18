@@ -14,17 +14,79 @@ To deploy via Terraform on AWS, there are a few steps necessary:
 - Configure the AWS CLI (https://docs.aws.amazon.com/cli/). Be sure to use an IAM identity that has permissions to manage resources in the given AWS region.
 - Make a copy of `example.env` at `.env` and complete environment variables. 
 - Ensure Fedora credentials are configured for Valkyrie ingest in `FEDORA_USER` and `FEDORA_PASSWORD`.
-- Store the values of your `.env` in AWS Secrets Manager. This can be done via CLI with:
-  - `aws ssm put-parameter --region YOUR-AWS-REGION --name /YOUR/KEY/NAME --type SecureString --value "$(cat .env)" --overwrite`
-  - Adjust the `YOUR-AWS-REGION` and `/YOUR/KEY/NAME` with your AWS region and a name for the secure string, e.g. `/scholarspace/prod/env`. This value is pulled and decrypted as part of `user_data` script in `main.tf` on deployment.
+- Terraform now manages the SSM SecureString value directly from your local `.env` on each `terraform apply`.
+  - Set `ssm_env_parameter_name` in `terraform.tfvars` (e.g. `/scholarspace/prod/env`).
+  - Optional: set `ssm_env_file_path` (default is `../.env` when running from `terraform/`).
+  - No separate `aws ssm put-parameter` step is required for normal deploys.
 - Make a copy of `terraform.tfvars.example` named `terraform.tfvars`. This is also where you can configure the EC2 instance type and root volume size. Other necessary variables to configure:
   - `public_key_path` - point to a `.pub` file you have stored locally. `key_name` is the name of the corresponding private key, but can just be name and not a file path. 
   - `ssh_allowed_cidrs` - Array of cidrs (like `10.0.0.0/16`) that will be able to access the EC2 instance via ssh.
   - `ssm_env_parameter_name` MUST be the same as the secure string stored in AWS (e.g. `/scholarspace/prod/env`)
   - `s3_bucket_name` - bucket name that will be used for Fedora repository in S3. 
 - Install the Terraform CLI (https://developer.hashicorp.com/terraform/install).
+- All Terraform files live in the `terraform/` subdirectory. Run commands from there: `cd terraform`.
 - Run `terraform init` to create the terraform backend file. 
 - Run `terraform plan` to see what changes will be applied, and if satisfied, run `terraform apply` to provision the AWS resources. The output should be the public IP for the EC2 instance, though it may take 10-20 minutes for full provisioning, building of docker images, etc. 
+
+#### Security Group Rule Migration (Import Existing Rules)
+
+If you convert inline `aws_security_group` ingress blocks to standalone `aws_security_group_rule` resources, AWS rules that already exist can cause duplicate-rule errors on apply. Use this import workflow to migrate without downtime:
+
+1. Add the target `aws_security_group_rule` resources in Terraform code.
+2. Run `terraform plan` and confirm Terraform wants to create rules that already exist in AWS.
+3. Import each existing rule into state before apply.
+4. Re-run `terraform plan` and verify there is no duplicate create for those rules.
+5. Run `terraform apply`.
+
+Example imports (replace IDs with your environment values):
+
+```bash
+cd terraform
+
+# HTTP from ALB SG to app host SG
+terraform import \
+  aws_security_group_rule.web_server_http_from_alb \
+  "sg-APPHOST_ingress_tcp_80_80_sg-ALB"
+
+# SSH from a single CIDR to app host SG
+terraform import \
+  'aws_security_group_rule.web_server_ssh_from_cidrs[0]' \
+  "sg-APPHOST_ingress_tcp_22_22_203.0.113.10/32"
+```
+
+Notes:
+- Import ID format for security group rules is: `<sg-id>_<type>_<protocol>_<from-port>_<to-port>_<source>`
+- If SSH uses multiple CIDRs, model/import each rule individually (for example, `for_each` by CIDR) instead of one resource with many CIDRs.
+- If state and AWS diverge during migration, avoid `terraform destroy`; use targeted `terraform import`, `terraform state rm`, and re-plan until convergence.
+
+### Sidekiq On ECS (Production)
+
+Production Terraform now runs web and workers on ECS/Fargate and keeps only backing services on EC2:
+- EC2 bootstraps backing services (`postgres`, `redis`, `fedora`, `solr`, `memcached`, `fits`) via `bin/prod`.
+- Terraform provisions ECS/Fargate services for Rails web and Sidekiq (`default` and `whisper`) with autoscaling policies.
+- Terraform also provisions ECR repositories for both web and worker images.
+
+To enable ECS workloads:
+1. Apply Terraform once to create infrastructure and retrieve `web_ecr_repository_url` and `sidekiq_ecr_repository_url`.
+2. Build and push images to those repositories (or set `web_image` / `sidekiq_image` to other registry URIs).
+3. Set desired counts and autoscaling limits in `terraform.tfvars`:
+  - `web_desired_count`, `web_min_capacity`, `web_max_capacity`
+  - `sidekiq_default_desired_count`, `sidekiq_default_min_capacity`, `sidekiq_default_max_capacity`
+  - `sidekiq_whisper_desired_count`, `sidekiq_whisper_min_capacity`, `sidekiq_whisper_max_capacity`
+  - Optional log-based scaling knobs:
+    - `sidekiq_enable_log_based_autoscaling`
+    - `sidekiq_log_autoscaling_pattern`
+    - `sidekiq_log_autoscaling_threshold`
+    - `sidekiq_log_scale_out_adjustment`
+4. Re-apply Terraform.
+
+Important notes:
+- The ECS task command reads the existing secure-string `.env` content from SSM using `ssm_env_parameter_name` and exports it before running Sidekiq.
+- Because database/redis/fedora/solr/fits/memcached still run on EC2 in this setup, ECS tasks are configured to connect to the EC2 private IP.
+- Sidekiq desired counts in Terraform default to `0` to avoid failed ECS deployments before an image is published.
+- Rails web traffic is served by ALB -> ECS tasks directly (no Nginx container required on EC2).
+- Sidekiq logs are written to CloudWatch per service (`/ecs/<site_prefix>/sidekiq/default` and `/ecs/<site_prefix>/sidekiq/whisper`).
+- If log-based autoscaling is enabled, Terraform creates log metric filters and CloudWatch alarms that trigger step scale-out policies. The filter pattern must match real Sidekiq queue pressure log lines in your environment.
 
 If you would like to monitor the docker build process on deployment, you can `tail -f /var/log/cloud-init-output.log`. 
 

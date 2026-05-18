@@ -1,4 +1,6 @@
 Rails.application.config.to_prepare do
+  Hyrax::FileSet.include(FileSetFileTypeDetection)
+
   Hyrax::FileSetPresenter.class_eval do
     def alt_text_for_view
       solr_document.alt_text_for_view

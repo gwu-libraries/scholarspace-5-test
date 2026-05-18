@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
 module Hyrax
-  
-  # this class provides a custom IIIF manifest builder that wraps the work presenter to add support for including transcript and HOCR annotations on AV files in the manifest. It is intended to be used with the ScholarspaceWorkShowPresenter which provides the necessary member_presenters and file_set_presenters methods.
-
   class ScholarspaceIiifManifestBuilder
+    include StringNormalization
+
     class WorkPresenterWrapper < SimpleDelegator
       def search_service
         return nil if id.blank?
@@ -16,17 +15,66 @@ module Hyrax
       end
 
       def member_presenters
-        @member_presenters_cache ||= __getobj__.member_presenters.map do |presenter|
-          FileSetPresenterWrapper.new(presenter, self)
+        @member_presenters_cache ||= begin
+          source_presenters = Array(__getobj__.member_presenters)
+          representative_id = __getobj__.respond_to?(:representative_id) ? __getobj__.representative_id.to_s : ''
+
+          if representative_id.present?
+            source_presenters = source_presenters.sort_by do |presenter|
+              presenter.id.to_s == representative_id ? 0 : 1
+            end
+          end
+
+          source_presenters.map do |presenter|
+            FileSetPresenterWrapper.new(presenter, self)
+          end
         end
       end
 
       def file_set_presenters
-        member_presenters.select { |p| p.file_set? && (p.display_image || p.display_content) }
+        member_presenters.select do |p|
+          next false unless p.file_set? && (p.display_image || p.display_content)
+          next false if representative_thumbnail?(p)
+
+          true
+        end
       end
+
+      private
+
+      def representative_thumbnail?(presenter)
+        return false unless __getobj__.respond_to?(:thumbnail_id) && __getobj__.thumbnail_id.present?
+        return false unless presenter.id.to_s == __getobj__.thumbnail_id.to_s
+
+        thumbnail_service_file_set?(presenter)
+      end
+
+      def thumbnail_service_file_set?(presenter)
+        source = presenter.respond_to?(:model) ? presenter.model : presenter
+
+        service_file = if source.respond_to?(:service_file)
+                         source.service_file
+                       elsif presenter.respond_to?(:solr_document)
+                         presenter.solr_document['service_file_bsi']
+                       end
+        return false unless ActiveModel::Type::Boolean.new.cast(service_file)
+
+        tags = if source.respond_to?(:related_url)
+                 Array(source.related_url).map(&:to_s)
+               elsif presenter.respond_to?(:solr_document)
+                 Array(presenter.solr_document['related_url_tesim']).map(&:to_s)
+               else
+                 []
+               end
+
+        tags.include?('derivative_type:thumbnail')
+      end
+
     end
 
     class FileSetPresenterWrapper < SimpleDelegator
+      include StringNormalization
+
       def initialize(presenter, work_presenter)
         super(presenter)
         @work_presenter = work_presenter
@@ -56,16 +104,26 @@ module Hyrax
         return true if respond_to?(:audio?) && audio?
         return true if respond_to?(:video?) && video?
 
-        mime = respond_to?(:mime_type) ? mime_type.to_s.downcase : ''
+        mime = normalize_mime_type(respond_to?(:mime_type) ? mime_type : '')
         mime.start_with?('audio/') || mime.start_with?('video/')
       end
 
       def transcript_sibling_presenters
-        @work_presenter.member_presenters.select do |sibling|
-          next false unless sibling.respond_to?(:file_set?) && sibling.file_set?
-          next false if sibling.equal?(self)
+        source_id = id.to_s
+        transcript_file_set_siblings.select do |sibling|
+          transcript_source_file_set_id(sibling) == source_id
+        end
+      end
 
-          presenter_filename(sibling).downcase.end_with?('_vtt.vtt')
+      def transcript_file_set_siblings
+        sibling_file_sets.select do |sibling|
+          normalize_filename(presenter_filename(sibling)).end_with?('.vtt')
+        end
+      end
+
+      def sibling_file_sets
+        @work_presenter.member_presenters.select do |sibling|
+          sibling.respond_to?(:file_set?) && sibling.file_set? && !sibling.equal?(self)
         end
       end
 
@@ -85,32 +143,48 @@ module Hyrax
       end
 
       def matching_hocr_sibling_presenter
-        expected = expected_hocr_filename
-        return nil if expected.blank?
-
+        source_id = id.to_s
         @work_presenter.member_presenters.find do |sibling|
           next false unless sibling.respond_to?(:file_set?) && sibling.file_set?
           next false if sibling.equal?(self)
 
-          presenter_filename(sibling).casecmp(expected).zero?
+          source_file_set_id_for(sibling) == source_id
         end
       end
 
-      def expected_hocr_filename
-        source = respond_to?(:model) ? model : nil
-        return nil unless source.respond_to?(:original_file)
-
-        original_filename = source.original_file&.original_filename.to_s
-        return nil if original_filename.blank?
-
-        "#{File.basename(original_filename, File.extname(original_filename))}_HOCR.hocr"
-      end
-
       def presenter_filename(presenter)
+        source = presenter.respond_to?(:model) ? presenter.model : presenter
+        if source.respond_to?(:original_file)
+          original_filename = source.original_file&.original_filename.to_s
+          return original_filename if original_filename.present?
+        end
+
         return presenter.label.to_s if presenter.respond_to?(:label) && presenter.label.present?
         return presenter.title.to_a.first.to_s if presenter.respond_to?(:title) && presenter.title.present?
 
         ''
+      end
+
+      def source_file_set_id_for(presenter)
+        entry = related_url_candidates_for(presenter)
+                .find { |value| value.start_with?('source_file_set_id:') }
+        entry.to_s.sub('source_file_set_id:', '')
+      end
+
+      def transcript_source_file_set_id(transcript_presenter)
+        source_file_set_id_for(transcript_presenter)
+      end
+
+      def related_url_candidates_for(presenter)
+        source = presenter.respond_to?(:model) ? presenter.model : presenter
+        candidates = []
+        candidates.concat(Array(source.related_url)) if source.respond_to?(:related_url)
+
+        if presenter.respond_to?(:solr_document)
+          candidates.concat(Array(presenter.solr_document['related_url_tesim']))
+        end
+
+        candidates.map(&:to_s)
       end
     end
 

@@ -1,0 +1,109 @@
+aws_region            = "us-west-2"
+aws_availability_zone = "us-west-2a"
+site_prefix           = "scholarspace-tf-test"
+
+instance_type = "c7i.xlarge"
+root_volume_size_gb = 120
+root_volume_type    = "gp3"
+
+key_name        = "scholarspace-prod-key"
+public_key_path = "/path/to/local/private/key.pem"
+
+ssh_allowed_cidrs = [""]
+
+repo_clone_url = "https://github.com/gwu-libraries/scholarspace-5-test.git"
+
+# this sets the branch that gets cloned on deployment. Once merged, this should point to main. 
+deploy_git_ref = "react-av-viewers"
+
+ssm_env_parameter_name = "/scholarspace/prod/env"
+# Optional path to local .env file used by Terraform to populate/update the
+# SSM SecureString above on every apply.
+ssm_env_file_path = "../.env"
+
+s3_bucket_name = "scholarspace-tf-test"
+s3_prefix = ""
+
+vpc_cidr    = "10.0.0.0/16"
+subnet_cidr = "10.0.1.0/24"
+subnet_private_cidr = "10.0.11.0/24"
+subnet_private_cidr_secondary = "10.0.12.0/24"
+ssl_certificate_arn = ""
+
+# Sidekiq ECS settings
+# If sidekiq_image is left empty, Terraform creates an ECR repo and ECS expects :latest
+# Push an image to the output repo URL and then set desired counts > 0.
+sidekiq_image = ""
+
+sidekiq_default_desired_count = 1
+sidekiq_default_min_capacity  = 1
+sidekiq_default_max_capacity  = 6
+
+sidekiq_whisper_desired_count = 1
+sidekiq_whisper_min_capacity  = 1
+sidekiq_whisper_max_capacity  = 4
+
+sidekiq_pdf_text_desired_count = 1
+sidekiq_pdf_text_min_capacity  = 1
+sidekiq_pdf_text_max_capacity  = 4
+
+sidekiq_target_cpu_utilization    = 70
+sidekiq_target_memory_utilization = 80
+
+# Optional: log-pattern based scale-out for Sidekiq ECS services.
+# Set sidekiq_log_autoscaling_pattern to match lines that indicate queue pressure.
+sidekiq_enable_log_based_autoscaling       = false
+sidekiq_log_retention_days                 = 30
+sidekiq_log_autoscaling_pattern            = "\"queue_latency_high\""
+sidekiq_log_autoscaling_period_seconds     = 60
+sidekiq_log_autoscaling_evaluation_periods = 2
+sidekiq_log_autoscaling_threshold          = 5
+sidekiq_log_scale_out_adjustment           = 1
+sidekiq_log_scale_out_cooldown_seconds     = 120
+
+# Rails web on ECS settings
+# If web_image is left empty, Terraform creates an ECR repo and ECS expects :latest.
+web_image = ""
+
+web_desired_count = 2
+web_min_capacity  = 2
+web_max_capacity  = 6
+
+web_task_cpu    = 2048
+web_task_memory = 4096
+
+web_target_cpu_utilization    = 60
+web_target_memory_utilization = 75
+
+web_assign_public_ip   = false
+web_log_retention_days = 30
+
+# FITS ECS settings
+# If fits_image is left empty, Terraform creates an ECR repo and ECS expects :latest.
+fits_image = ""
+
+fits_desired_count = 2
+fits_min_capacity  = 2
+fits_max_capacity  = 8
+
+fits_task_cpu    = 1024
+fits_task_memory = 2048
+
+fits_target_cpu_utilization    = 70
+fits_target_memory_utilization = 80
+
+fits_assign_public_ip           = false
+fits_log_retention_days         = 30
+fits_service_discovery_namespace = "internal"
+
+# Aurora PostgreSQL settings
+# aurora_master_password must be set and must match DB_PASSWORD in your SSM .env blob.
+aurora_engine_version        = "16.6"
+aurora_database_name         = "scholarspace_production"
+aurora_master_username       = "scholarspace"
+aurora_master_password       = "changeme-set-in-tfvars"   # sensitive — do not commit
+aurora_instance_class        = "db.t4g.medium"
+aurora_instance_count        = 1
+aurora_backup_retention_days = 7
+aurora_skip_final_snapshot   = false
+aurora_deletion_protection   = true

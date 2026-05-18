@@ -101,16 +101,21 @@ class CatalogController < ApplicationController
 
     # solr fields that will be treated as facets by the blacklight application
     #   The ordering of the field names is the order of the display
-    config.add_facet_field 'human_readable_type_sim', label: 'Type', limit: 5
-    config.add_facet_field 'resource_type_sim', label: 'Resource Type', limit: 5
-    config.add_facet_field 'creator_sim', limit: 5
-    config.add_facet_field 'contributor_sim', label: 'Contributor', limit: 5
-    config.add_facet_field 'keyword_sim', limit: 5
-    config.add_facet_field 'subject_sim', limit: 5
-    config.add_facet_field 'language_sim', limit: 5
-    config.add_facet_field 'based_near_label_sim', limit: 5
-    config.add_facet_field 'publisher_sim', limit: 5
-    config.add_facet_field 'file_format_sim', limit: 5
+    [
+      ['human_readable_type_sim', { label: 'Type', limit: 5 }],
+      ['resource_type_sim', { label: 'Resource Type', limit: 5 }],
+      ['creator_sim', { limit: 5 }],
+      ['contributor_sim', { label: 'Contributor', limit: 5 }],
+      ['keyword_sim', { limit: 5 }],
+      ['subject_sim', { limit: 5 }],
+      ['language_sim', { limit: 5 }],
+      ['based_near_label_sim', { limit: 5 }],
+      ['publisher_sim', { limit: 5 }],
+      ['file_format_sim', { limit: 5 }]
+    ].each do |field_name, options|
+      config.add_facet_field(field_name, **options)
+    end
+
     config.add_facet_field 'member_of_collection_ids_ssim',
                            limit: 5,
                            label: 'Collections',
@@ -188,23 +193,27 @@ class CatalogController < ApplicationController
 
     # solr fields to be displayed in the show (single result) view
     #   The ordering of the field names is the order of the display
-    config.add_show_field 'title_tesim'
-    config.add_show_field 'description_tesim'
-    config.add_show_field 'keyword_tesim'
-    config.add_show_field 'subject_tesim'
-    config.add_show_field 'creator_tesim'
-    config.add_show_field 'contributor_tesim'
-    config.add_show_field 'publisher_tesim'
-    config.add_show_field 'based_near_label_tesim'
-    config.add_show_field 'language_tesim'
-    config.add_show_field 'date_uploaded_tesim'
-    config.add_show_field 'date_modified_tesim'
-    config.add_show_field 'date_created_tesim'
-    config.add_show_field 'rights_statement_tesim'
-    config.add_show_field 'license_tesim'
+    %w[
+      title_tesim
+      description_tesim
+      keyword_tesim
+      subject_tesim
+      creator_tesim
+      contributor_tesim
+      publisher_tesim
+      based_near_label_tesim
+      language_tesim
+      date_uploaded_tesim
+      date_modified_tesim
+      date_created_tesim
+      rights_statement_tesim
+      license_tesim
+    ].each do |field_name|
+      config.add_show_field(field_name)
+    end
+
     config.add_show_field 'resource_type_tesim', label: 'Resource Type'
-    config.add_show_field 'format_tesim'
-    config.add_show_field 'identifier_tesim'
+    %w[format_tesim identifier_tesim].each { |field_name| config.add_show_field(field_name) }
 
     # "fielded" search configuration. Used by pulldown among other places.
     # For supported keys in hash, see rdoc for Blacklight::SearchFields
@@ -242,25 +251,28 @@ class CatalogController < ApplicationController
     # of Solr search fields.
     # creator, title, description, publisher, date_created,
     # subject, language, resource_type, format, identifier, based_near,
-    config.add_search_field('contributor') do |field|
-      # solr_parameters hash are sent to Solr as ordinary url query params.
-
-      # :solr_local_parameters will be sent using Solr LocalParams
-      # syntax, as eg {! qf=$title_qf }. This is neccesary to use
-      # Solr parameter de-referencing like $title_qf.
-      # See: http://wiki.apache.org/solr/LocalParams
-      solr_name = 'contributor_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('creator') do |field|
-      solr_name = 'creator_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('title') do |field|
-      solr_name = 'title_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
+    # solr_parameters hash are sent to Solr as ordinary url query params.
+    # :solr_local_parameters will be sent using Solr LocalParams syntax,
+    # as eg {! qf=$title_qf }.
+    {
+      'contributor' => 'contributor_tesim',
+      'creator' => 'creator_tesim',
+      'title' => 'title_tesim',
+      'publisher' => 'publisher_tesim',
+      'date_created' => 'created_tesim',
+      'subject' => 'subject_tesim',
+      'language' => 'language_tesim',
+      'resource_type' => 'resource_type_tesim',
+      'format' => 'format_tesim',
+      'identifier' => 'id_tesim',
+      'keyword' => 'keyword_tesim',
+      'depositor' => 'depositor_ssim',
+      'rights_statement' => 'rights_statement_tesim',
+      'license' => 'license_tesim'
+    }.each do |search_field_name, solr_name|
+      config.add_search_field(search_field_name) do |field|
+        field.solr_local_parameters = { qf: solr_name, pf: solr_name }
+      end
     end
 
     config.add_search_field('description') do |field|
@@ -269,64 +281,9 @@ class CatalogController < ApplicationController
       field.solr_local_parameters = { qf: solr_name, pf: solr_name }
     end
 
-    config.add_search_field('publisher') do |field|
-      solr_name = 'publisher_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('date_created') do |field|
-      solr_name = 'created_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('subject') do |field|
-      solr_name = 'subject_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('language') do |field|
-      solr_name = 'language_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('resource_type') do |field|
-      solr_name = 'resource_type_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('format') do |field|
-      solr_name = 'format_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('identifier') do |field|
-      solr_name = 'id_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
     config.add_search_field('based_near') do |field|
       field.label = 'Location'
       solr_name = 'based_near_label_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('keyword') do |field|
-      solr_name = 'keyword_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('depositor') do |field|
-      solr_name = 'depositor_ssim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('rights_statement') do |field|
-      solr_name = 'rights_statement_tesim'
-      field.solr_local_parameters = { qf: solr_name, pf: solr_name }
-    end
-
-    config.add_search_field('license') do |field|
-      solr_name = 'license_tesim'
       field.solr_local_parameters = { qf: solr_name, pf: solr_name }
     end
 

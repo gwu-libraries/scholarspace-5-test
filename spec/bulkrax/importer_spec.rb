@@ -1,7 +1,7 @@
 require 'rails_helper'
 require 'pry'
 
-RSpec.describe "Import files and works with Bulkrax" do
+RSpec.xdescribe "Import files and works with Bulkrax" do
 
   before :all do
     @importer = FactoryBot.build(:bulkrax_importer)

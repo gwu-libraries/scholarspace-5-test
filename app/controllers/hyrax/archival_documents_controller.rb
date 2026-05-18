@@ -5,15 +5,7 @@
 module Hyrax
   # Generated controller for ArchivalDocument
   class ArchivalDocumentsController < ApplicationController
-    # Adds Hyrax behaviors to the controller.
-    include Hyrax::WorksControllerBehavior
-    include Hyrax::BreadcrumbsForWorks
+    include Hyrax::ScholarspaceWorksControllerBehavior
     self.curation_concern_type = ::ArchivalDocument
-    self.iiif_manifest_builder = Hyrax::ScholarspaceIiifManifestBuilder
-    self.show_presenter = Hyrax::ScholarspaceWorkShowPresenter
-
-    # Use a Valkyrie aware form service to generate Valkyrie::ChangeSet style
-    # forms.
-    self.work_form_service = Hyrax::FormFactory.new
   end
 end

@@ -8,6 +8,10 @@
   flex-direction: column;
 }
 
+.fileNavRow {
+  margin-bottom: 10px;
+}
+
 .transcriptCol {
   max-height: 72vh;
 }

@@ -6,6 +6,7 @@ require 'whisper'
 module ScholarspaceDerivativesServices
   module Concerns
     module VttGeneratable
+      include FileOperations
 
       private
 
@@ -20,9 +21,19 @@ module ScholarspaceDerivativesServices
       end
 
       def configure_whisper_cache_dir
-        cache_root = '/.cache/whispercpp'
-        FileUtils.mkdir_p(cache_root)
-        ENV['XDG_CACHE_HOME'] = cache_root
+        cache_root = '/app/scholarspace/tmp/cache/whispercpp'
+        ensure_directory_exists(cache_root)
+        ENV['XDG_CACHE_HOME'] = if File.writable?(cache_root)
+                                  cache_root
+                                else
+                                  fallback = '/app/scholarspace/tmp/cache/whispercpp'
+                                  ensure_directory_exists(fallback)
+                                  fallback
+                                end
+      rescue SystemCallError
+        fallback = '/app/scholarspace/tmp/cache/whispercpp'
+        ensure_directory_exists(fallback)
+        ENV['XDG_CACHE_HOME'] = fallback
       end
     end
   end

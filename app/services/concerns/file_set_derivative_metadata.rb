@@ -11,8 +11,12 @@ module FileSetDerivativeMetadata
 
   # Extract source_file_set_id tag value from file set tags
   def source_file_set_id_tag_for(file_set)
-    candidates = tags_for_file_set(file_set)
-    entry = candidates.find { |value| value.start_with?('source_file_set_id:') }
+    extract_source_file_set_id(tags_for_file_set(file_set))
+  end
+
+  # Extract source_file_set_id value from arbitrary related_url-style values
+  def extract_source_file_set_id(values)
+    entry = Array(values).map(&:to_s).find { |value| value.start_with?('source_file_set_id:') }
     entry.to_s.sub('source_file_set_id:', '')
   end
 

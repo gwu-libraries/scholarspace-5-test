@@ -2,6 +2,8 @@
 
 module VttIndexable
   extend ActiveSupport::Concern
+  include MemberQueries
+  include FileOperations
 
   def to_solr
     super.tap do |index_document|
@@ -47,12 +49,6 @@ module VttIndexable
     return nil unless io
 
     io.stream.read
-  end
-
-  def find_member_by_id(member_id)
-    Hyrax.query_service.find_by(id: member_id)
-  rescue Valkyrie::Persistence::ObjectNotFoundError
-    nil
   end
 
   def find_storage_file_by_id(file_identifier)

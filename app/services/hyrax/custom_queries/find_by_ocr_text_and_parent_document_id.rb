@@ -27,20 +27,39 @@ module Hyrax
 
       def find_by_ocr_text_and_parent_document_id(
         ocr_text:,
-        parent_document_id:
+        parent_document_id:,
+        rows: 50
       )
         @ocr_text = ocr_text
         @parent_document_id = parent_document_id
 
-        # ALEX - Does this need to take rows/pages params
-        @connection.get('select', params: { q: query, fl: '*', rows: 50 })
+        @connection.get('select', params: solr_params(rows: rows))
       end
 
       # Solr query for for a Publication with a deduplication_key_tesi that matches the provided key
       # @return [Hash]
       def query
-        # TODO: Fix for derivedpage no longer being a model
-        "ocr_text:#{@ocr_text} AND has_model_ssim:DerivedPage AND (is_page_of_ssim:#{@parent_document_id} OR id:#{@parent_document_id})"
+        escaped_parent = RSolr.solr_escape(@parent_document_id.to_s)
+        "(#{escaped_query}) AND (is_page_of_ssim:\"#{escaped_parent}\" OR id:\"#{escaped_parent}\")"
+      end
+
+      def escaped_query
+        escaped_text = RSolr.solr_escape(@ocr_text.to_s)
+        "ocr_text:#{escaped_text} OR all_text_tsimv:#{escaped_text}"
+      end
+
+      def solr_params(rows:)
+        {
+          q: query,
+          fl: 'id,is_page_of_ssim,file_format_tesim',
+          rows: rows,
+          facet: false,
+          hl: true,
+          'hl.method': 'unified',
+          'hl.ocr.fl': 'ocr_text',
+          'hl.snippets': 10,
+          'hl.fragsize': 0
+        }
       end
     end
   end

@@ -1,5 +1,6 @@
 module Hyrax
     module DownloadsControllerDecorator
+        include StringNormalization
         def show
             return show_valkyrie if Hyrax.config.use_valkyrie?
 
@@ -110,7 +111,7 @@ module Hyrax
         def is_pdf_or_hocr?(file_metadata)
             return false if file_metadata.original_filename.blank?
 
-            filename = file_metadata.original_filename.to_s.downcase
+            filename = normalize_filename(file_metadata.original_filename)
             filename.end_with?('.pdf', '.hocr')
         end
     end

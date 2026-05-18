@@ -12,23 +12,28 @@ import {
 const mapTranscriptFilesToRampTranscripts = (transcriptFiles = []) => {
   if (!transcriptFiles.length) return [];
 
-  return [
-    {
-      // Ramp expects transcripts grouped by manifest canvas index.
-      // Most single AV works use the first canvas.
-      canvasId: 0,
-      items: transcriptFiles
-        .filter((file) => file?.url)
-        .map((file) => ({ title: file.label || 'Transcript', url: file.url })),
-    },
-  ];
+  const groupedByCanvas = transcriptFiles
+    .filter((file) => file?.url)
+    .reduce((acc, file) => {
+      const canvasId = Number.isInteger(file?.canvasId) ? file.canvasId : 0;
+      if (!acc[canvasId]) acc[canvasId] = [];
+      acc[canvasId].push({ title: file.label || 'Transcript', url: file.url });
+      return acc;
+    }, {});
+
+  return Object.entries(groupedByCanvas)
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([canvasId, items]) => ({ canvasId: Number(canvasId), items }));
 };
 
-const Ramp = ({ manifestUrl, transcriptFiles }) => {
+const Ramp = ({ manifestUrl, startCanvasId, startCanvasTime, transcriptFiles }) => {
   const playerID = 'scholarspace-ramp-player';
   const [transcriptCollapsed, setTranscriptCollapsed] = useState(false);
   const [mounted, setMounted] = useState(true);
   const transcripts = mapTranscriptFilesToRampTranscripts(transcriptFiles);
+  const playerProps = startCanvasId
+    ? { manifestUrl, startCanvasId, startCanvasTime: Number.isFinite(startCanvasTime) ? startCanvasTime : 0 }
+    : { manifestUrl };
 
   useEffect(() => {
     const handleBeforeVisit = () => setMounted(false);
@@ -41,7 +46,7 @@ const Ramp = ({ manifestUrl, transcriptFiles }) => {
   if (!mounted) return null;
 
   return (
-    <IIIFPlayer manifestUrl={manifestUrl}>
+    <IIIFPlayer {...playerProps}>
       <div className="panel panel-default">
         <div className="panel-body">
           <button
@@ -73,15 +78,20 @@ const Ramp = ({ manifestUrl, transcriptFiles }) => {
 
 Ramp.propTypes = {
   manifestUrl: PropTypes.string.isRequired,
+  startCanvasId: PropTypes.string,
+  startCanvasTime: PropTypes.number,
   transcriptFiles: PropTypes.arrayOf(
     PropTypes.shape({
       label: PropTypes.string,
       url: PropTypes.string,
+      canvasId: PropTypes.number,
     }),
   ),
 };
 
 Ramp.defaultProps = {
+  startCanvasId: undefined,
+  startCanvasTime: 0,
   transcriptFiles: [],
 };
 

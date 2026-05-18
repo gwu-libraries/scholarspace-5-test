@@ -4,14 +4,15 @@ require 'digest'
 require 'fileutils'
 
 class DerivativeCacheService
-  CACHE_ROOT = '/.cache/derivatives'
+  include FileOperations
+  CACHE_ROOT = '/app/scholarspace/tmp/cache/derivatives'
 
   def self.instance
     @instance ||= new
   end
 
   def initialize(cache_root: CACHE_ROOT)
-    @cache_root = cache_root
+    @cache_root = ensure_writable_cache_root(cache_root)
   end
 
   def fetch_stream(file_identifier:, original_filename: nil)
@@ -27,14 +28,14 @@ class DerivativeCacheService
 
   def store_from_path(file_identifier:, original_filename:, source_path:)
     cache_path = path_for(file_identifier, original_filename)
-    FileUtils.mkdir_p(File.dirname(cache_path))
+    ensure_directory_exists(File.dirname(cache_path))
     FileUtils.copy_file(source_path, cache_path)
     cache_path
   end
 
   def store_from_storage(file_identifier:, original_filename:)
     cache_path = path_for(file_identifier, original_filename)
-    FileUtils.mkdir_p(File.dirname(cache_path))
+    ensure_directory_exists(File.dirname(cache_path))
 
     storage_file = Valkyrie::StorageAdapter.find_by(id: file_identifier)
     File.open(cache_path, 'wb') do |destination_io|
@@ -51,5 +52,18 @@ class DerivativeCacheService
     extension = '.bin' if extension.empty?
     digest = Digest::SHA256.hexdigest(file_identifier.to_s)
     File.join(@cache_root, digest[0, 2], "#{digest}#{extension}")
+  end
+
+  def ensure_writable_cache_root(path)
+    ensure_directory_exists(path)
+    return path if File.writable?(path)
+
+    fallback = '/app/scholarspace/tmp/cache/derivatives'
+    ensure_directory_exists(fallback)
+    fallback
+  rescue SystemCallError
+    fallback = '/app/scholarspace/tmp/cache/derivatives'
+    ensure_directory_exists(fallback)
+    fallback
   end
 end

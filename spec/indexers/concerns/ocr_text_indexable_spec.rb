@@ -6,6 +6,20 @@ require 'tmpdir'
 RSpec.describe OcrTextIndexable do
   subject(:indexer) { indexer_class.new(resource: resource) }
 
+  let(:hocr_content) do
+    <<~HOCR
+      <html>
+        <body>
+          <div class="ocr_page">
+            <span class="ocrx_word">alpha</span>
+            <span class="ocrx_word">ocr</span>
+            <span class="ocrx_word">text</span>
+          </div>
+        </body>
+      </html>
+    HOCR
+  end
+
   let(:resource) { instance_double('Resource', member_ids: member_ids) }
   let(:member_ids) { ['member-1'] }
 
@@ -50,15 +64,17 @@ RSpec.describe OcrTextIndexable do
   it 'adds ocr_text source pointer for attached hOCR files' do
     file = double('file', original_filename: 'page_0001_HOCR.hocr', file_identifier: 'fid-1')
     member = instance_double('Member', original_file: file)
-    io = instance_double('StoredFile', stream: StringIO.new('alpha ocr text'))
+    io = instance_double('StoredFile', stream: StringIO.new(hocr_content))
 
     allow(query_service).to receive(:find_by).with(id: 'member-1').and_return(member)
     allow(storage_adapter).to receive(:find_by).with(id: 'fid-1').and_return(io)
 
-    pointer = indexer.to_solr[:ocr_text]
+    solr_document = indexer.to_solr
+    pointer = solr_document[:ocr_text]
+
     expect(pointer).to start_with(tmp_dir)
     expect(pointer).to end_with('.hocr')
-    expect(File.read(pointer)).to eq('alpha ocr text')
+    expect(File.read(pointer)).to eq(hocr_content)
   end
 
   it 'does not add ocr_text when no hOCR files are present' do

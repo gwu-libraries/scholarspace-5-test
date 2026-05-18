@@ -1,7 +1,6 @@
 Rails.application.config.to_prepare do
   module Hyrax
     module WorkUploadsHandlerDecorator
-
       private
 
       def make_file_set_and_ingest(file, file_set_params = {})

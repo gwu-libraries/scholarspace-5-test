@@ -29,4 +29,5 @@ class CollectionResource < Hyrax::PcdmCollection
   #
   include Hyrax.Schema(:basic_metadata)
   include Hyrax.Schema(:collection_resource)
+  include HasRepresentativeThumbnail
 end

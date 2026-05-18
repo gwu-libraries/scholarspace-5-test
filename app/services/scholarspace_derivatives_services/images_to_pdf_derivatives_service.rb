@@ -9,6 +9,9 @@ module ScholarspaceDerivativesServices
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
     include Concerns::HocrMergeable
+    include FileOperations
+    include PersistenceAdapter
+    include StringNormalization
 
     def initialize(work)
       @work = work
@@ -34,26 +37,22 @@ module ScholarspaceDerivativesServices
     end
 
     def source_image_file_sets
-      member_file_sets.select do |file_set|
+      @work.member_file_sets.select do |file_set|
         next false unless file_set.original_file&.mime_type.to_s.start_with?('image/')
 
         !file_set.service_file
       end.sort_by do |file_set|
-        file_set.original_file&.original_filename.to_s.downcase
+        normalize_filename(file_set.original_file&.original_filename)
       end
     end
 
     def copy_images_to_working_dir
-      Dir.mkdir("#{@working_dir}/images")
+      ensure_directory_exists("#{@working_dir}/images")
       source_image_file_sets.each_with_index.map do |fs, i|
-        io = Hyrax.storage_adapter.find_by(id: fs.original_file.file_identifier)
         original_name = fs.original_file.original_filename.to_s
         extension = File.extname(original_name).presence || '.jpg'
         image_path = "#{@working_dir}/images/#{format('%04d', i + 1)}#{extension}"
-        destination_io = File.open(image_path, 'wb')
-
-        IO.copy_stream(io.stream, destination_io)
-        destination_io.close
+        copy_file_to_disk(fs.original_file.file_identifier, image_path)
 
         {
           file_set: fs,
@@ -64,7 +63,7 @@ module ScholarspaceDerivativesServices
     end
 
     def generate_hocr_files(image_derivatives)
-      Dir.mkdir("#{@working_dir}/hocr")
+      ensure_directory_exists("#{@working_dir}/hocr")
       image_derivatives.each do |image_derivative|
         generate_hocr_file(
           image_path: image_derivative[:image_path],
@@ -75,7 +74,7 @@ module ScholarspaceDerivativesServices
     end
 
     def join_images_to_pdf(image_paths)
-      Dir.mkdir("#{@working_dir}/pdfs")
+      ensure_directory_exists("#{@working_dir}/pdfs")
       @joined_pdf_path = "#{@working_dir}/pdfs/#{joined_pdf_filename}"
       return if image_paths.empty?
 
@@ -136,9 +135,8 @@ module ScholarspaceDerivativesServices
     def attach_file_to_work(file_path, source_file_set: nil)
       file_set = attach_single_file_to_work(file_path: file_path, user: depositor, service_file: true, source_file_set: source_file_set)
 
-      Hyrax.persister.save(resource: @work)
-      Hyrax.index_adapter.save(resource: @work)
-      Hyrax.index_adapter.save(resource: file_set) if file_set
+      @work = save_and_index(@work)
+      index_resources([file_set]) if file_set
       file_set
     end
 
@@ -167,7 +165,7 @@ module ScholarspaceDerivativesServices
     end
 
     def joined_pdf_file_set
-      member_file_sets.find do |file_set|
+      @work.member_file_sets.find do |file_set|
         attached_name = file_set.original_file&.original_filename.to_s
         attached_title = file_set.title.to_a.join(' ')
         attached_name == joined_pdf_filename || attached_title == joined_pdf_filename
