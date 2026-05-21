@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-module Hyrax
-  class ScholarspaceIiifManifestBuilder
+class IiifManifestBuilder
     include StringNormalization
 
     class WorkPresenterWrapper < SimpleDelegator
@@ -258,6 +257,5 @@ module Hyrax
       av = Flipflop.iiif_av? && file_sets.any? { |p| p.video? || p.audio? }
       pdf = Flipflop.iiif_pdf? && file_sets.any?(&:pdf?)
       (av || pdf) ? IIIFManifest::V3::ManifestFactory : Hyrax.config.iiif_manifest_factory
-    end
   end
 end

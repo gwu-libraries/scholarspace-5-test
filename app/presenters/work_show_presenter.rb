@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-module Hyrax
-  class ScholarspaceWorkShowPresenter < WorkShowPresenter
+class WorkShowPresenter < Hyrax::WorkShowPresenter
     include StringNormalization
     def work_show_props(view_context)
       WorkShowSerializer.new(presenter: self, view_context: view_context).as_json
@@ -150,6 +149,5 @@ module Hyrax
 
     def all_member_presenters
       @all_member_presenters ||= Array(member_presenters)
-    end
   end
 end

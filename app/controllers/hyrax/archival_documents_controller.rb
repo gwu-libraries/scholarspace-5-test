@@ -5,7 +5,7 @@
 module Hyrax
   # Generated controller for ArchivalDocument
   class ArchivalDocumentsController < ApplicationController
-    include Hyrax::ScholarspaceWorksControllerBehavior
+    include WorksControllerBehavior
     self.curation_concern_type = ::ArchivalDocument
   end
 end

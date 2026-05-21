@@ -2,7 +2,7 @@
 
 module Hyrax
   class GwJournalIssuesController < ApplicationController
-    include Hyrax::ScholarspaceWorksControllerBehavior
+    include WorksControllerBehavior
     self.curation_concern_type = ::GwJournalIssue
   end
 end

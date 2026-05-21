@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
-  describe Hyrax::ScholarspaceIiifManifestBuilder::FileSetPresenterWrapper do
+RSpec.describe IiifManifestBuilder do
+  describe IiifManifestBuilder::FileSetPresenterWrapper do
     let(:pdf_model) do
       instance_double(
         'PdfModel',
@@ -175,7 +175,7 @@ RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
     end
 
     context 'when transcript linkage exists but the service flag is missing' do
-      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:presenter) { WorkShowPresenter.allocate }
       let(:audio_presenter) do
         instance_double(
           'AudioPresenter',
@@ -230,7 +230,7 @@ RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
     end
 
     context 'when non-AV members are mixed with multiple AV members' do
-      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:presenter) { WorkShowPresenter.allocate }
       let(:audio_presenter) do
         instance_double(
           'AudioPresenter',
@@ -340,7 +340,7 @@ RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
     end
 
     context 'when representative AV is not first in item order' do
-      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:presenter) { WorkShowPresenter.allocate }
       let(:first_av_presenter) do
         instance_double(
           'FirstAvPresenter',
@@ -435,7 +435,7 @@ RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
     end
   end
 
-  describe Hyrax::ScholarspaceIiifManifestBuilder::WorkPresenterWrapper do
+  describe IiifManifestBuilder::WorkPresenterWrapper do
     let(:presenter_a) { instance_double('PresenterA', id: 'file-a') }
     let(:presenter_b) { instance_double('PresenterB', id: 'file-b') }
     let(:source_presenter) do
