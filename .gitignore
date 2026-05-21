@@ -76,6 +76,13 @@ coverage/*
 derivatives/*
 !derivatives/.keep
 
+# Large local-only spec fixtures (untracked to speed up pushes)
+/spec/fixtures/testing_mp4.mp4
+/spec/fixtures/testing_pdf_no_pre_ocr.pdf
+/spec/fixtures/tiffs/test_tiff_01.tiff
+/spec/fixtures/tiffs/test_tiff_02.tiff
+/spec/fixtures/tiffs/test_tiff_03.tiff
+
 .yarnrc
 
 terraform/.terraform/*
