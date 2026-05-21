@@ -1,13 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { isImageMember } from './file_grouping';
+import { memberViewerType } from './file_grouping';
 
-const MemberRow = ({ member, onPlayCanvas, onSelectPdf, onSelectImage }) => {
-  const memberIsImage = isImageMember(member);
-  const hasInlineAction = (member.isAv && onPlayCanvas) || (member.isPdf && onSelectPdf) || (memberIsImage && onSelectImage);
-  const actionLabel = member.isPdf || memberIsImage ? 'View' : 'Play';
-  const iconClass = member.isPdf ? 'glyphicon-file' : (memberIsImage ? 'glyphicon-picture' : 'glyphicon-play');
+const ICON_CLASS_BY_VIEWER = {
+  ramp: 'glyphicon-play',
+  pdf: 'glyphicon-file',
+  images: 'glyphicon-picture',
+};
+
+const MemberRow = ({ member, onViewMember }) => {
+  const viewerType = memberViewerType(member);
+  const hasInlineAction = Boolean(viewerType && onViewMember);
+  const iconClass = ICON_CLASS_BY_VIEWER[viewerType] || 'glyphicon-eye-open';
 
   return (
     <tr>
@@ -18,13 +23,14 @@ const MemberRow = ({ member, onPlayCanvas, onSelectPdf, onSelectImage }) => {
               type="button"
               className="btn btn-xs btn-default"
               style={{ marginRight: '8px' }}
-              onClick={() => {
-                if (member.isAv && onPlayCanvas) onPlayCanvas(member.id);
-                if (member.isPdf && onSelectPdf) onSelectPdf(member);
-                if (memberIsImage && onSelectImage) onSelectImage(member);
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                onViewMember(member);
               }}
-              title={`${actionLabel} ${member.label}`}
-              aria-label={`${actionLabel} ${member.label}`}
+              title={`View ${member.label}`}
+              aria-label={`View ${member.label}`}
             >
               <span className={`glyphicon ${iconClass}`} aria-hidden="true" />
             </button>
@@ -36,11 +42,6 @@ const MemberRow = ({ member, onPlayCanvas, onSelectPdf, onSelectImage }) => {
       </td>
       <td>{member.dateUploaded}</td>
       <td>
-        {hasInlineAction && (
-          <>
-            <a href={member.showUrl} style={{ marginRight: '8px' }}>View file set</a>
-          </>
-        )}
         <a href={member.downloadUrl} data-turbo="false" data-turbolinks="false" target="work-show-download" download={member.label}>Download</a>
         {member.editUrl && <>{' '}<a href={member.editUrl}>Edit</a></>}
       </td>
@@ -56,6 +57,7 @@ MemberRow.propTypes = {
     isAv: PropTypes.bool,
     isPdf: PropTypes.bool,
     isImage: PropTypes.bool,
+    canvasId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     pdfUrl: PropTypes.string,
     hocrUrl: PropTypes.string,
     isRepresentativeThumbnail: PropTypes.bool,
@@ -63,15 +65,11 @@ MemberRow.propTypes = {
     downloadUrl: PropTypes.string.isRequired,
     editUrl: PropTypes.string,
   }).isRequired,
-  onPlayCanvas: PropTypes.func,
-  onSelectPdf: PropTypes.func,
-  onSelectImage: PropTypes.func,
+  onViewMember: PropTypes.func,
 };
 
 MemberRow.defaultProps = {
-  onPlayCanvas: undefined,
-  onSelectPdf: undefined,
-  onSelectImage: undefined,
+  onViewMember: undefined,
 };
 
 export default MemberRow;

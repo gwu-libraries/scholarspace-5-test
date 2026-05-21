@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import MemberRow from './MemberRow';
 
-const MemberTable = ({ members, onPlayCanvas, onSelectPdf, onSelectImage }) => (
+const MemberTable = ({ members, onViewMember }) => (
   <table className="table table-sm">
     <thead>
       <tr>
@@ -17,9 +17,7 @@ const MemberTable = ({ members, onPlayCanvas, onSelectPdf, onSelectImage }) => (
         <MemberRow
           key={member.id}
           member={member}
-          onPlayCanvas={onPlayCanvas}
-          onSelectPdf={onSelectPdf}
-          onSelectImage={onSelectImage}
+          onViewMember={onViewMember}
         />
       ))}
     </tbody>
@@ -28,15 +26,11 @@ const MemberTable = ({ members, onPlayCanvas, onSelectPdf, onSelectImage }) => (
 
 MemberTable.propTypes = {
   members: PropTypes.arrayOf(PropTypes.object).isRequired,
-  onPlayCanvas: PropTypes.func,
-  onSelectPdf: PropTypes.func,
-  onSelectImage: PropTypes.func,
+  onViewMember: PropTypes.func,
 };
 
 MemberTable.defaultProps = {
-  onPlayCanvas: undefined,
-  onSelectPdf: undefined,
-  onSelectImage: undefined,
+  onViewMember: undefined,
 };
 
 export default MemberTable;

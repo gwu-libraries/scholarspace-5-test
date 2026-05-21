@@ -49,23 +49,13 @@
 	min-height: 0;
 }
 
-.viewer :global([data-testid='clover-viewer-content'] > div) {
-	display: flex;
-	flex-direction: column;
-	flex: 1 1 auto;
-	min-height: 0;
-}
-
 .viewer :global(.clover-viewer-painting) {
 	flex: 1 1 auto !important;
 	min-height: 0;
 }
 
 .viewer :global(.clover-viewer-media-wrapper) {
-	flex: 0 0 auto !important;
-	height: auto !important;
-	max-height: 190px;
-	overflow: hidden;
+	display: none !important;
 }
 
 .viewer :global(.clover-viewer-media-wrapper [data-testid='media']) {

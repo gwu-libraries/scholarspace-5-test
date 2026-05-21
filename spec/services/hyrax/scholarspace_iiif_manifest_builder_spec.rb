@@ -173,6 +173,266 @@ RSpec.describe Hyrax::ScholarspaceIiifManifestBuilder do
         expect(matches).to eq([])
       end
     end
+
+    context 'when transcript linkage exists but the service flag is missing' do
+      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:audio_presenter) do
+        instance_double(
+          'AudioPresenter',
+          id: 'audio-1',
+          label: 'session.wav',
+          title: ['session.wav'],
+          file_set?: true,
+          audio?: true,
+          video?: false,
+          mime_type: 'audio/wav',
+          solr_document: {}
+        )
+      end
+      let(:transcript_presenter) do
+        instance_double(
+          'TranscriptPresenter',
+          id: 'vtt-1',
+          label: 'session_VTT.vtt',
+          title: ['session_VTT.vtt'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'text/vtt',
+          model: instance_double(
+            'TranscriptModel',
+            original_file: instance_double('OriginalFile', original_filename: nil),
+            label: 'session_VTT.vtt',
+            title: ['session_VTT.vtt'],
+            related_url: ['source_file_set_id:audio-1']
+          ),
+          solr_document: {}
+        )
+      end
+
+      before do
+        allow(presenter).to receive(:member_presenters).and_return([audio_presenter, transcript_presenter])
+        allow(presenter).to receive(:list_of_item_ids_to_display).and_return([audio_presenter.id, transcript_presenter.id])
+        presenter.define_singleton_method(:representative_id) { nil }
+      end
+
+      it 'includes the transcript for the source AV file' do
+        expect(presenter.transcript_files).to contain_exactly(
+          hash_including(
+            id: 'vtt-1',
+            label: 'session_VTT.vtt',
+            url: '/downloads/vtt-1.vtt',
+            format: 'text/vtt',
+            canvasId: 0
+          )
+        )
+      end
+    end
+
+    context 'when non-AV members are mixed with multiple AV members' do
+      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:audio_presenter) do
+        instance_double(
+          'AudioPresenter',
+          id: 'audio-1',
+          label: 'session.wav',
+          title: ['session.wav'],
+          file_set?: true,
+          audio?: true,
+          video?: false,
+          mime_type: 'audio/wav',
+          solr_document: {}
+        )
+      end
+      let(:video_presenter) do
+        instance_double(
+          'VideoPresenter',
+          id: 'video-2',
+          label: 'interview.mp4',
+          title: ['interview.mp4'],
+          file_set?: true,
+          audio?: false,
+          video?: true,
+          mime_type: 'video/mp4',
+          solr_document: {}
+        )
+      end
+      let(:pdf_presenter) do
+        instance_double(
+          'PdfPresenter',
+          id: 'pdf-1',
+          label: 'document.pdf',
+          title: ['document.pdf'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'application/pdf',
+          solr_document: {}
+        )
+      end
+      let(:audio_transcript_presenter) do
+        instance_double(
+          'AudioTranscriptPresenter',
+          id: 'vtt-1',
+          label: 'session_VTT.vtt',
+          title: ['session_VTT.vtt'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'text/vtt',
+          model: instance_double(
+            'AudioTranscriptModel',
+            original_file: instance_double('OriginalFile', original_filename: nil),
+            label: 'session_VTT.vtt',
+            title: ['session_VTT.vtt'],
+            related_url: ['source_file_set_id:audio-1']
+          ),
+          solr_document: {}
+        )
+      end
+      let(:video_transcript_presenter) do
+        instance_double(
+          'VideoTranscriptPresenter',
+          id: 'vtt-2',
+          label: 'interview_VTT.vtt',
+          title: ['interview_VTT.vtt'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'text/vtt',
+          model: instance_double(
+            'VideoTranscriptModel',
+            original_file: instance_double('OriginalFile', original_filename: nil),
+            label: 'interview_VTT.vtt',
+            title: ['interview_VTT.vtt'],
+            related_url: ['source_file_set_id:video-2']
+          ),
+          solr_document: {}
+        )
+      end
+
+      before do
+        # Include a non-AV member between AV members to ensure transcript canvas
+        # ids are based on AV order, not raw member position.
+        allow(presenter).to receive(:member_presenters).and_return([
+          audio_presenter,
+          pdf_presenter,
+          video_presenter,
+          audio_transcript_presenter,
+          video_transcript_presenter
+        ])
+        allow(presenter).to receive(:list_of_item_ids_to_display).and_return([
+          audio_presenter.id,
+          pdf_presenter.id,
+          video_presenter.id,
+          audio_transcript_presenter.id,
+          video_transcript_presenter.id
+        ])
+        presenter.define_singleton_method(:representative_id) { nil }
+      end
+
+      it 'assigns transcript canvas ids based on item order' do
+        expect(presenter.transcript_files).to contain_exactly(
+          hash_including(id: 'vtt-1', canvasId: 0),
+          hash_including(id: 'vtt-2', canvasId: 1)
+        )
+      end
+    end
+
+    context 'when representative AV is not first in item order' do
+      let(:presenter) { Hyrax::ScholarspaceWorkShowPresenter.allocate }
+      let(:first_av_presenter) do
+        instance_double(
+          'FirstAvPresenter',
+          id: 'av-1',
+          label: 'first.mp4',
+          title: ['first.mp4'],
+          file_set?: true,
+          audio?: false,
+          video?: true,
+          mime_type: 'video/mp4',
+          solr_document: {}
+        )
+      end
+      let(:second_av_presenter) do
+        instance_double(
+          'SecondAvPresenter',
+          id: 'av-2',
+          label: 'second.mp4',
+          title: ['second.mp4'],
+          file_set?: true,
+          audio?: false,
+          video?: true,
+          mime_type: 'video/mp4',
+          solr_document: {}
+        )
+      end
+      let(:first_vtt_presenter) do
+        instance_double(
+          'FirstVttPresenter',
+          id: 'vtt-1',
+          label: 'first_VTT.vtt',
+          title: ['first_VTT.vtt'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'text/vtt',
+          model: instance_double(
+            'FirstVttModel',
+            original_file: instance_double('OriginalFile', original_filename: nil),
+            label: 'first_VTT.vtt',
+            title: ['first_VTT.vtt'],
+            related_url: ['source_file_set_id:av-1']
+          ),
+          solr_document: {}
+        )
+      end
+      let(:second_vtt_presenter) do
+        instance_double(
+          'SecondVttPresenter',
+          id: 'vtt-2',
+          label: 'second_VTT.vtt',
+          title: ['second_VTT.vtt'],
+          file_set?: true,
+          audio?: false,
+          video?: false,
+          mime_type: 'text/vtt',
+          model: instance_double(
+            'SecondVttModel',
+            original_file: instance_double('OriginalFile', original_filename: nil),
+            label: 'second_VTT.vtt',
+            title: ['second_VTT.vtt'],
+            related_url: ['source_file_set_id:av-2']
+          ),
+          solr_document: {}
+        )
+      end
+
+      before do
+        allow(presenter).to receive(:member_presenters).and_return([
+          first_av_presenter,
+          second_av_presenter,
+          first_vtt_presenter,
+          second_vtt_presenter
+        ])
+        allow(presenter).to receive(:list_of_item_ids_to_display).and_return([
+          first_av_presenter.id,
+          second_av_presenter.id,
+          first_vtt_presenter.id,
+          second_vtt_presenter.id
+        ])
+
+        # Representative should not affect transcript canvas assignment.
+        presenter.define_singleton_method(:representative_id) { 'av-2' }
+      end
+
+      it 'keeps transcript canvas ids aligned with item order' do
+        expect(presenter.transcript_files).to contain_exactly(
+          hash_including(id: 'vtt-1', canvasId: 0),
+          hash_including(id: 'vtt-2', canvasId: 1)
+        )
+      end
+    end
   end
 
   describe Hyrax::ScholarspaceIiifManifestBuilder::WorkPresenterWrapper do

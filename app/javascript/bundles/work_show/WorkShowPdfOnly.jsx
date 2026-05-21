@@ -129,7 +129,7 @@ const WorkShowPdfOnly = ({
           originalMembers={originalMembers}
           serviceMembers={serviceMembers}
           canViewServiceFiles={canViewServiceFiles}
-          onSelectPdf={onSelectPdf}
+          onViewMember={onSelectPdf}
           onViewReadingMode={viewer.pdfUrl ? onViewReadingMode : undefined}
         />
       )}

@@ -7,18 +7,32 @@ const FILE_GROUPS = [
 ];
 
 const ORIGINAL_FILE_GROUPS = [
-  { label: 'Audio / Video', test: (member) => member.isAv },
+  { label: 'Audio / Video', test: (member) => isAvMember(member) },
   { label: 'PDFs',          test: (member) => member.isPdf },
   { label: 'Images',        test: (member) => isImageMember(member) },
   { label: 'Other',         test: () => true },
 ];
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.webp', '.jp2'];
+const AV_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.oga', '.mp4', '.m4v', '.mov', '.avi', '.mkv', '.webm', '.mpeg', '.mpg'];
+
+function isAvMember(member) {
+  if (member.isAv) return true;
+  const label = (member.label || '').toLowerCase();
+  return AV_EXTENSIONS.some((ext) => label.endsWith(ext));
+}
 
 function isImageMember(member) {
   if (member.isImage) return true;
   const label = (member.label || '').toLowerCase();
   return IMAGE_EXTENSIONS.some((ext) => label.endsWith(ext));
+}
+
+function memberViewerType(member) {
+  if (isAvMember(member)) return 'ramp';
+  if (member.isPdf) return 'pdf';
+  if (isImageMember(member)) return 'images';
+  return null;
 }
 
 function groupByRules(members, rules, getValue) {
@@ -46,10 +60,13 @@ function isRepresentativeThumbnail(member) {
 
 export {
   FILE_GROUPS,
+  AV_EXTENSIONS,
   IMAGE_EXTENSIONS,
   ORIGINAL_FILE_GROUPS,
   groupOriginalMembers,
   groupServiceMembers,
+  isAvMember,
   isImageMember,
+  memberViewerType,
   isRepresentativeThumbnail,
 };

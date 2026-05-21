@@ -1,46 +1,61 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Viewer from '@samvera/clover-iiif/viewer';
+import CloverViewer from '@samvera/clover-iiif/viewer';
 import * as styles from './Clover.module.css';
 
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+const Clover = ({ manifestUrl, focusCanvasId, focusToken }) => {
+  const iiifContent = focusCanvasId
+    ? {
+      '@context': 'http://iiif.io/api/presentation/3/context.json',
+      id: `${manifestUrl}/state/${encodeURIComponent(focusCanvasId)}`,
+      type: 'Annotation',
+      motivation: ['contentState'],
+      target: {
+        type: 'SpecificResource',
+        source: {
+          id: focusCanvasId,
+          type: 'Canvas',
+          partOf: [{ id: manifestUrl, type: 'Manifest' }],
+        },
+      },
+      body: [],
+    }
+    : manifestUrl;
 
-const customTheme = {
-  colors: {
-    primary: '#033C5A',
-    primaryMuted: '#0190DB',
-    primaryAlt: '#AA9868',
-    accent: '#FFC72C',
-    accentMuted: '#A75523',
-    accentAlt: '#B71C1C',
-    secondary: '#FFFFFF',
-    secondaryMuted: '#ECEFF1',
-    secondaryAlt: '#CFD8DC',
-  },
-  fonts: {
-    sans: "'Helvetica Neue', sans-serif",
-    display: 'Optima, Georgia, Arial, sans-serif',
-  },
-};
+  const viewerKey = `${manifestUrl}__${focusCanvasId || 'default'}__${focusToken}`;
 
-const viewerOptions = {
-  canvasHeight: '100%',
-};
-
-const Clover = ({ manifestUrl }) => {
   return (
-    <div className={styles.wrapper}>
-      <article className={styles.viewer}>
-        <Viewer iiifContent={manifestUrl} customTheme={customTheme} options={viewerOptions} />
-      </article>
+    <div className={styles.viewer}>
+      <CloverViewer
+        key={viewerKey}
+        iiifContent={iiifContent}
+        options={{
+          showTitle: false,
+          showIIIFBadge: false,
+          informationPanel: {
+            open: true,
+            renderToggle: true,
+            renderAbout: true,
+            renderSupplementing: false,
+            renderAnnotation: false,
+            renderContentSearch: true,
+            defaultTab: 'manifest-content-search',
+          },
+        }}
+      />
     </div>
   );
 };
 
 Clover.propTypes = {
   manifestUrl: PropTypes.string.isRequired,
+  focusCanvasId: PropTypes.string,
+  focusToken: PropTypes.number,
+};
+
+Clover.defaultProps = {
+  focusCanvasId: '',
+  focusToken: 0,
 };
 
 export default Clover;

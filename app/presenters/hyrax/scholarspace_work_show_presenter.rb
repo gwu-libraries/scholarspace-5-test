@@ -8,7 +8,7 @@ module Hyrax
     end
 
     def transcript_files
-      av_presenters = ordered_av_member_presenters
+      av_presenters = av_member_presenters_in_item_order
       transcripts_by_source_id = transcript_presenters_by_source_id
       canvas_indexes = canvas_index_by_member_id
 
@@ -20,6 +20,10 @@ module Hyrax
           transcript_payload(transcript_presenter, canvas_index)
         end
       end
+    end
+
+    def canvas_index_for_member(member_id)
+      canvas_index_by_member_id[member_id.to_s]
     end
 
     def original_item_members
@@ -68,23 +72,12 @@ module Hyrax
 
     def transcript_member_presenters
       all_member_presenters.select do |member_presenter|
-        derivative_member_presenter?(member_presenter) && transcript_filename(member_presenter).downcase.end_with?('.vtt')
+        transcript_filename(member_presenter).downcase.end_with?('.vtt') && transcript_source_file_set_id(member_presenter).present?
       end
     end
 
-    def ordered_av_member_presenters
-      av_presenters = all_member_presenters.select { |member_presenter| av_member_presenter?(member_presenter) }
-      representative_id = representative_file_set_id
-      return av_presenters if representative_id.blank?
-
-      representative, others = av_presenters.partition { |presenter| presenter.id.to_s == representative_id }
-      representative + others
-    end
-
-    def representative_file_set_id
-      return representative_id.to_s if respond_to?(:representative_id) && representative_id.present?
-
-      ''
+    def av_member_presenters_in_item_order
+      Array(item_members).select { |member_presenter| av_member_presenter?(member_presenter) }
     end
 
     def transcript_presenters_by_source_id
@@ -98,9 +91,33 @@ module Hyrax
     end
 
     def canvas_index_by_member_id
-      Array(item_members)
+      manifest_canvas_member_presenters
         .each_with_index
         .to_h { |member_presenter, index| [member_presenter.id.to_s, index] }
+    end
+
+    def manifest_canvas_member_presenters
+      original_item_members.select do |member_presenter|
+        av_member_presenter?(member_presenter) || image_member_presenter?(member_presenter)
+      end
+    end
+
+    def image_member_presenter?(member_presenter)
+      return false if derivative_member_presenter?(member_presenter)
+
+      mime_type = normalize_mime_type(member_presenter.respond_to?(:mime_type) ? member_presenter.mime_type : '')
+      return true if mime_type.start_with?('image/')
+
+      filename = if member_presenter.respond_to?(:label) && member_presenter.label.present?
+                   member_presenter.label.to_s
+                 elsif member_presenter.respond_to?(:title) && member_presenter.title.present?
+                   member_presenter.title.to_a.first.to_s
+                 else
+                   ''
+                 end
+
+      extension = File.extname(filename).downcase
+      %w[.jpg .jpeg .png .gif .tif .tiff .webp .jp2].include?(extension)
     end
 
     def transcript_source_file_set_id(transcript_presenter)

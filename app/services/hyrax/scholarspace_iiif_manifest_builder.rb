@@ -5,6 +5,20 @@ module Hyrax
     include StringNormalization
 
     class WorkPresenterWrapper < SimpleDelegator
+      include StringNormalization
+
+      def sequence_rendering
+        source_rendering = Array(work_presenter.respond_to?(:sequence_rendering) ? work_presenter.sequence_rendering : [])
+        return source_rendering if source_rendering.empty?
+
+        disallowed_ids = text_annotation_body_ids
+        return source_rendering if disallowed_ids.empty?
+
+        source_rendering.reject do |entry|
+          rendering_entry_id(entry).in?(disallowed_ids)
+        end
+      end
+
       def search_service
         return nil if id.blank?
 
@@ -16,8 +30,8 @@ module Hyrax
 
       def member_presenters
         @member_presenters_cache ||= begin
-          source_presenters = Array(__getobj__.member_presenters)
-          representative_id = __getobj__.respond_to?(:representative_id) ? __getobj__.representative_id.to_s : ''
+          source_presenters = Array(work_presenter.member_presenters)
+          representative_id = work_presenter.respond_to?(:representative_id) ? work_presenter.representative_id.to_s : ''
 
           if representative_id.present?
             source_presenters = source_presenters.sort_by do |presenter|
@@ -33,7 +47,7 @@ module Hyrax
 
       def file_set_presenters
         member_presenters.select do |p|
-          next false unless p.file_set? && (p.display_image || p.display_content)
+          next false unless displayable_file_set?(p)
           next false if representative_thumbnail?(p)
 
           true
@@ -42,11 +56,49 @@ module Hyrax
 
       private
 
+      def text_annotation_body_ids
+        @text_annotation_body_ids ||= member_presenters.flat_map do |member|
+          next [] unless member.respond_to?(:annotation_content)
+
+          Array(member.annotation_content).filter_map do |content|
+            if content.respond_to?(:body_id)
+              content.body_id.to_s
+            elsif content.respond_to?(:id)
+              content.id.to_s
+            elsif content.respond_to?(:to_h)
+              payload = content.to_h
+              payload[:body_id] || payload['body_id'] || payload[:id] || payload['id']
+            end
+          end
+        end.map(&:to_s).reject(&:blank?).uniq
+      end
+
+      def rendering_entry_id(entry)
+        if entry.respond_to?(:id)
+          entry.id.to_s
+        elsif entry.respond_to?(:to_h)
+          payload = entry.to_h
+          (payload[:id] || payload['id'] || payload[:'@id'] || payload['@id']).to_s
+        elsif entry.is_a?(Hash)
+          (entry[:id] || entry['id'] || entry[:'@id'] || entry['@id']).to_s
+        else
+          ''
+        end
+      end
+
       def representative_thumbnail?(presenter)
-        return false unless __getobj__.respond_to?(:thumbnail_id) && __getobj__.thumbnail_id.present?
-        return false unless presenter.id.to_s == __getobj__.thumbnail_id.to_s
+        return false unless work_presenter.respond_to?(:thumbnail_id) && work_presenter.thumbnail_id.present?
+        return false unless presenter.id.to_s == work_presenter.thumbnail_id.to_s
 
         thumbnail_service_file_set?(presenter)
+      end
+
+      def work_presenter
+        __getobj__
+      end
+
+      def displayable_file_set?(presenter)
+        presenter.file_set? && (presenter.display_image || presenter.display_content)
       end
 
       def thumbnail_service_file_set?(presenter)

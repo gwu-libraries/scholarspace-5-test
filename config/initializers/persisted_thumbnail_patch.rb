@@ -167,6 +167,15 @@ Rails.application.config.to_prepare do
     module PersistedIiifThumbnail
       include PersistedThumbnailHelpers
 
+      def hostname
+        return @hostname if instance_variable_defined?(:@hostname) && @hostname.present?
+        return request.base_url if respond_to?(:request) && request
+        return host_name if respond_to?(:host_name)
+        return send(:base_url_for_iiif) if respond_to?(:base_url_for_iiif, true)
+
+        'localhost'
+      end
+
       def display_image
         image = super
         return image unless image
@@ -188,8 +197,8 @@ Rails.application.config.to_prepare do
 
         host = if respond_to?(:base_url_for_iiif, true)
                  send(:base_url_for_iiif)
-               elsif respond_to?(:hostname)
-                 hostname
+               elsif respond_to?(:host_name)
+                 host_name
                end
 
         return nil if host.blank?

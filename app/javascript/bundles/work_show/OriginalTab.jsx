@@ -5,7 +5,7 @@ import CollapsibleGroup from './CollapsibleGroup';
 import MemberTable from './MemberTable';
 import { groupOriginalMembers } from './file_grouping';
 
-const OriginalTab = ({ members, onPlayCanvas, onSelectPdf, onSelectImage, onViewReadingMode }) => {
+const OriginalTab = ({ members, onViewMember, onViewReadingMode }) => {
   if (members.length === 0) return <p>No original files are attached to this work.</p>;
 
   const groups = groupOriginalMembers(members);
@@ -29,9 +29,7 @@ const OriginalTab = ({ members, onPlayCanvas, onSelectPdf, onSelectImage, onView
         >
           <MemberTable
             members={group.members}
-            onPlayCanvas={onPlayCanvas}
-            onSelectPdf={onSelectPdf}
-            onSelectImage={onSelectImage}
+            onViewMember={onViewMember}
           />
         </CollapsibleGroup>
       ))}
@@ -41,16 +39,12 @@ const OriginalTab = ({ members, onPlayCanvas, onSelectPdf, onSelectImage, onView
 
 OriginalTab.propTypes = {
   members: PropTypes.arrayOf(PropTypes.object).isRequired,
-  onPlayCanvas: PropTypes.func,
-  onSelectPdf: PropTypes.func,
-  onSelectImage: PropTypes.func,
+  onViewMember: PropTypes.func,
   onViewReadingMode: PropTypes.func,
 };
 
 OriginalTab.defaultProps = {
-  onPlayCanvas: undefined,
-  onSelectPdf: undefined,
-  onSelectImage: undefined,
+  onViewMember: undefined,
   onViewReadingMode: undefined,
 };
 
