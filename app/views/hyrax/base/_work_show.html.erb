@@ -1,16 +1,10 @@
 <%
   work_show_props = @presenter.work_show_props(self)
-  viewer = work_show_props[:viewer] || {}
-  pdf_only_work = viewer[:type] == "pdf_or_images" && !viewer[:hasImages]
-
-  js_pack_name = pdf_only_work ? "work-show-pdf-bundler" : "work-show-bundler"
-  component_name = pdf_only_work ? "WorkShowPdfOnly" : "WorkShow"
-
-  add_page_js_pack(js_pack_name)
+  add_page_js_pack("work-show-bundler")
 %>
 
 <%= react_component(
-  component_name,
+  "WorkShow",
   props: work_show_props,
   prerender: false,
   html_options: { data: { turbo_cache: false } }
