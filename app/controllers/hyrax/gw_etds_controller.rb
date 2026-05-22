@@ -2,7 +2,8 @@
 
 module Hyrax
   class GwEtdsController < ApplicationController
-    include WorksControllerBehavior
+    include ::WorksControllerBehavior
     self.curation_concern_type = ::GwEtd
+    self.show_presenter = ::WorkShowPresenter
   end
 end

@@ -5,7 +5,8 @@
 module Hyrax
   # Generated controller for AcademicDocument
   class AcademicDocumentsController < ApplicationController
-    include WorksControllerBehavior
+    include ::WorksControllerBehavior
     self.curation_concern_type = ::AcademicDocument
+    self.show_presenter = ::WorkShowPresenter
   end
 end

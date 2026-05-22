@@ -5,7 +5,8 @@
 module Hyrax
   # Generated controller for ArchivalDocument
   class ArchivalDocumentsController < ApplicationController
-    include WorksControllerBehavior
+    include ::WorksControllerBehavior
     self.curation_concern_type = ::ArchivalDocument
+    self.show_presenter = ::WorkShowPresenter
   end
 end
