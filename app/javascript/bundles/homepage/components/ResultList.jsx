@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { workItemShape } from './propTypes';
+import { workItemShape } from './prop-types';
 
 const ResultList = ({ items, emptyText }) => {
   if (items.length === 0) return <p>{emptyText}</p>;

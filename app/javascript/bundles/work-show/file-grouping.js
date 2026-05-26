@@ -46,8 +46,37 @@ function groupByRules(members, rules, getValue) {
   }, []);
 }
 
-function groupServiceMembers(members) {
-  return groupByRules(members, FILE_GROUPS, (member) => member.label.toLowerCase());
+function normalizeLabel(value) {
+  const label = (value || '').trim();
+  return label.length > 0 ? label : 'Untitled File';
+}
+
+function sortedMembers(members) {
+  return [...members].sort((a, b) => normalizeLabel(a.label).localeCompare(normalizeLabel(b.label)));
+}
+
+function groupServiceMembers(members, originalMembers = []) {
+  const originalLabelById = new Map(
+    originalMembers.map((member) => [String(member.id), normalizeLabel(member.label)]),
+  );
+
+  const groupedBySourceId = new Map();
+
+  members.forEach((member) => {
+    const sourceId = (member.sourceFileSetId || '').toString().trim();
+
+    if (!sourceId) return;
+
+    if (!groupedBySourceId.has(sourceId)) groupedBySourceId.set(sourceId, []);
+    groupedBySourceId.get(sourceId).push(member);
+  });
+
+  return Array.from(groupedBySourceId.entries())
+    .map(([sourceId, sourceMembers]) => ({
+      label: originalLabelById.get(sourceId) || `Source File ${sourceId}`,
+      members: sortedMembers(sourceMembers),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function groupOriginalMembers(members) {

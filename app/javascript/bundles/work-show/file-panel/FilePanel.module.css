@@ -1,0 +1,33 @@
+.groupRoot {
+  margin-bottom: 8px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupToggle {
+  font-weight: 600;
+}
+
+.groupHeaderActions {
+  margin-left: auto;
+}
+
+.groupChildren {
+  padding-left: 16px;
+}
+
+.groupInlineAction {
+  margin-bottom: 8px;
+}
+
+.tabsList {
+  margin-bottom: 12px;
+}
+
+.viewButton {
+  margin-right: 8px;
+}

@@ -1,0 +1,12 @@
+.viewerShell {
+  width: 100vw;
+  max-width: 2200px;
+  margin-left: calc(50% - 50vw);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.imageViewer {
+  width: 100%;
+  min-height: 600px;
+}

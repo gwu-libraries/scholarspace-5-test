@@ -1,5 +1,5 @@
 import ReactOnRails from 'react-on-rails';
-import Homepage from '../bundles/homepage/Homepage';
+import { Homepage } from '../bundles/homepage';
 
 ReactOnRails.register({
   Homepage,

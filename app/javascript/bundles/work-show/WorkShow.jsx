@@ -1,60 +1,40 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { memberViewerType } from './file_grouping';
+import { memberViewerType } from './utils';
+import * as styles from './WorkShow.module.css';
+import {
+  createViewerRenderers,
+  EMPTY_IMAGE_FOCUS,
+  getMemberPdfUrl,
+  isPdfMember,
+  toRampSelection,
+} from './utils/viewer-rendering';
 
 const loadRamp = () => import(
   /* webpackChunkName: "viewer-ramp" */
-  '../viewers/ramp/Ramp'
+  './viewers/ramp/Ramp'
 );
 const loadPdfViewer = () => import(
   /* webpackChunkName: "viewer-pdf" */
-  '../viewers/pdf_viewer/PdfViewer'
+  './viewers/pdf-viewer/PdfViewer'
 );
 const loadClover = () => import(
   /* webpackChunkName: "viewer-clover" */
-  '../viewers/clover/Clover'
+  './viewers/clover/Clover'
 );
 
 const Ramp = lazy(loadRamp);
 const PdfViewer = lazy(loadPdfViewer);
 const Clover = lazy(loadClover);
-const WorkItemsTabs = lazy(() => import('./WorkItemsTabs'));
+const FilePanelTabs = lazy(() => import('./file-panel/FilePanelTabs'));
 
-const viewerShellStyle = {
-  width: '100vw',
-  maxWidth: '2200px',
-  marginLeft: 'calc(50% - 50vw)',
-  paddingLeft: '12px',
-  paddingRight: '12px',
-};
-
-const cloverContainerStyle = {
-  width: '100%',
-  minHeight: '600px',
-};
-
-const EMPTY_IMAGE_FOCUS = { canvasId: '', token: 0 };
-
-const renderPdfViewer = (pdf) => (
-  <div className="work-show-pdf-viewer">
-    <PdfViewer
-      fileUrl={pdf.fileUrl}
-      hocrUrl={pdf.hocrUrl}
-      enableTextLayer
-      enableAnnotationLayer={false}
-    />
-  </div>
-);
-
-const renderImageViewer = (viewer, imageFocus) => (
-  <div className="work-show-image-viewer" style={cloverContainerStyle}>
-    <Clover
-      manifestUrl={viewer.manifestUrl}
-      focusCanvasId={imageFocus.canvasId}
-      focusToken={imageFocus.token}
-    />
-  </div>
-);
+const viewerRenderers = createViewerRenderers({
+  Ramp,
+  PdfViewer,
+  Clover,
+  viewerShellClassName: styles.viewerShell,
+  imageViewerClassName: styles.imageViewer,
+});
 
 const ViewerSection = ({
   viewer,
@@ -64,59 +44,21 @@ const ViewerSection = ({
   defaultPdf,
   imageFocus,
 }) => {
-  const effectivePdf = selectedPdf?.fileUrl ? selectedPdf : defaultPdf;
-  const renderInShell = (node) => (
-    <div style={viewerShellStyle}>
-      <Suspense fallback={<p>Loading viewer...</p>}>
-        {node}
-      </Suspense>
-    </div>
-  );
+  const activeViewerNode = viewerRenderers.renderActiveViewer({
+    viewer,
+    activeMode,
+    selectedPdf,
+    selectedRamp,
+    defaultPdf,
+    imageFocus,
+  });
 
-  if (activeMode === 'ramp') {
-    return renderInShell(
-      <div className="work-show-ramp-viewer">
-        <Ramp
-          key={selectedRamp?.startCanvasId}
-          manifestUrl={viewer.manifestUrl}
-          startCanvasId={selectedRamp?.startCanvasId}
-          startCanvasTime={selectedRamp?.startCanvasTime}
-          transcriptFiles={viewer.transcriptFiles || []}
-        />
-      </div>
-    );
-  }
-
-  if (activeMode === 'pdf' && effectivePdf?.fileUrl) {
-    return renderInShell(renderPdfViewer(effectivePdf));
-  }
-
-  if (activeMode === 'images' && (viewer.type === 'pdf_or_images' || viewer.type === 'clover')) {
-    return renderInShell(renderImageViewer(viewer, imageFocus));
-  }
-
-  let defaultViewerNode = null;
-
-  if (viewer.type === 'ramp') {
-    defaultViewerNode = (
-      <div className="work-show-ramp-viewer">
-        <Ramp manifestUrl={viewer.manifestUrl} transcriptFiles={viewer.transcriptFiles || []} />
-      </div>
-    );
-  } else if (viewer.type === 'pdf_or_images') {
-    defaultViewerNode = renderImageViewer(viewer, EMPTY_IMAGE_FOCUS);
-  } else if (defaultPdf?.fileUrl) {
-    defaultViewerNode = renderPdfViewer(defaultPdf);
-  } else {
-    defaultViewerNode = renderImageViewer(viewer, EMPTY_IMAGE_FOCUS);
-  }
-
-  return renderInShell(defaultViewerNode);
+  return viewerRenderers.renderInViewerShell(activeViewerNode);
 };
 
 ViewerSection.propTypes = {
   viewer: PropTypes.shape({
-    type: PropTypes.oneOf(['ramp', 'pdf_or_images', 'clover']).isRequired,
+    type: PropTypes.string.isRequired,
     manifestUrl: PropTypes.string,
     transcriptFiles: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
@@ -149,7 +91,7 @@ const WorkShow = ({
   canViewServiceFiles,
 }) => {
   const safeDescriptions = descriptions || [];
-  const firstPdfMember = originalMembers.find((member) => member.isPdf && (member.pdfUrl || member.downloadUrl));
+  const firstPdfMember = originalMembers.find(isPdfMember);
   const hasViewerActionMembers = originalMembers.some((member) => Boolean(memberViewerType(member)));
   const defaultPdf = {
     fileUrl: firstPdfMember?.pdfUrl || firstPdfMember?.downloadUrl || viewer.pdfUrl || null,
@@ -180,19 +122,16 @@ const WorkShow = ({
   const onViewMember = (member) => {
     const type = memberViewerType(member);
 
-    if (type === 'pdf') {
-      activatePdfMode(member?.pdfUrl || member?.downloadUrl, member?.hocrUrl || null);
+    switch (type) {
+    case 'pdf':
+      activatePdfMode(getMemberPdfUrl(member), member?.hocrUrl || null);
       return;
-    }
-
-    if (type === 'ramp') {
+    case 'ramp':
       setActiveMode('ramp');
-      setSelectedRamp(member?.canvasId != null ? { startCanvasId: String(member.canvasId), startCanvasTime: 0 } : null);
+      setSelectedRamp(toRampSelection(member));
       return;
-    }
-
-    if (type === 'images') {
-      const supportsInlineImageViewer = viewer.type === 'pdf_or_images' || viewer.type === 'clover';
+    case 'images': {
+      const supportsInlineImageViewer = Boolean(viewer.manifestUrl);
 
       if (!supportsInlineImageViewer) {
         if (member?.showUrl) window.location.assign(member.showUrl);
@@ -201,9 +140,13 @@ const WorkShow = ({
 
       setActiveMode('images');
       setImageFocus((previous) => ({
-        canvasId: member?.canvasId || '',
+        canvasId: member?.canvasId ? String(member.canvasId) : '',
         token: previous.token + 1,
       }));
+      return;
+    }
+    default:
+      return;
     }
   };
 
@@ -232,7 +175,7 @@ const WorkShow = ({
       ))}
 
       <Suspense fallback={<p>Loading files...</p>}>
-        <WorkItemsTabs
+        <FilePanelTabs
           originalMembers={originalMembers}
           serviceMembers={serviceMembers}
           canViewServiceFiles={canViewServiceFiles}

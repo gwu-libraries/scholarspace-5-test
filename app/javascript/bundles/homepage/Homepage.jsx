@@ -1,8 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import ResultList from './components/ResultList';
-import CollectionsList from './components/CollectionsList';
-import { workItemShape, collectionShape } from './components/propTypes';
+import {
+  ResultList,
+  CollectionsList,
+  workItemShape,
+  collectionShape,
+} from './components';
 
 const Homepage = ({
   recentWorksTitle,

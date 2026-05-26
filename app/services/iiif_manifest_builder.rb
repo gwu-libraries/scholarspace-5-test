@@ -144,7 +144,7 @@ class IiifManifestBuilder
           IIIFManifest::V3::AnnotationContent.new(
             type: 'Text',
             motivation: 'supplementing',
-            body_id: Hyrax::Engine.routes.url_helpers.download_url(transcript.id, host: hostname),
+            body_id: Hyrax::Engine.routes.url_helpers.download_url(transcript.id, host: hostname, format: :vtt),
             format: 'text/vtt',
             label: presenter_filename(transcript).presence || 'Transcript'
           )
@@ -168,8 +168,17 @@ class IiifManifestBuilder
 
       def transcript_file_set_siblings
         sibling_file_sets.select do |sibling|
-          normalize_filename(presenter_filename(sibling)).end_with?('.vtt')
+          transcript_file_set?(sibling)
         end
+      end
+
+      def transcript_file_set?(presenter)
+        return true if presenter.respond_to?(:vtt?) && presenter.vtt?
+
+        mime = normalize_mime_type(presenter.respond_to?(:mime_type) ? presenter.mime_type : '')
+        return true if mime == 'text/vtt' || mime == 'application/vtt'
+
+        normalize_filename(presenter_filename(presenter)).end_with?('.vtt')
       end
 
       def sibling_file_sets

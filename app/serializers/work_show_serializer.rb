@@ -80,6 +80,7 @@ class WorkShowSerializer
     {
       id: member.id.to_s,
       label: label,
+      sourceFileSetId: source_file_set_id(member),
       dateUploaded: (member.respond_to?(:date_uploaded) ? Array(member.date_uploaded).first.to_s : ''),
       visibility: (member.respond_to?(:visibility) ? member.visibility.to_s : ''),
       showUrl: Rails.application.routes.url_helpers.hyrax_file_set_path(member.id),
@@ -88,6 +89,7 @@ class WorkShowSerializer
       isAv: is_av,
       isPdf: is_pdf,
       isImage: is_image,
+      isReadingModePdf: reading_mode_pdf_member?(member),
       canvasId: member_canvas_id(member, is_av: is_av, is_image: is_image),
       pdfUrl: (download_url if is_pdf),
       hocrUrl: (view_context.hocr_download_url_for_work(presenter, pdf_file_id: member.id) if is_pdf),
@@ -222,5 +224,16 @@ class WorkShowSerializer
     end
 
     candidates.map(&:to_s)
+  end
+
+  def source_file_set_id(member)
+    entry = related_url_candidates(member).find { |value| value.start_with?('source_file_set_id:') }
+    entry.to_s.sub('source_file_set_id:', '')
+  end
+
+  def reading_mode_pdf_member?(member)
+    return false unless member.respond_to?(:id)
+
+    member.id.to_s == pdf_viewer_file_id.to_s
   end
 end

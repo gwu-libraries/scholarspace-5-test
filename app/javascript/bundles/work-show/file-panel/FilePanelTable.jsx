@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import MemberRow from './MemberRow';
+import FilePanelRow from './FilePanelRow';
 
-const MemberTable = ({ members, onViewMember }) => (
+const FilePanelTable = ({ members, onViewMember }) => (
   <table className="table table-sm">
     <thead>
       <tr>
@@ -14,7 +14,7 @@ const MemberTable = ({ members, onViewMember }) => (
     </thead>
     <tbody>
       {members.map((member) => (
-        <MemberRow
+        <FilePanelRow
           key={member.id}
           member={member}
           onViewMember={onViewMember}
@@ -24,13 +24,13 @@ const MemberTable = ({ members, onViewMember }) => (
   </table>
 );
 
-MemberTable.propTypes = {
+FilePanelTable.propTypes = {
   members: PropTypes.arrayOf(PropTypes.object).isRequired,
   onViewMember: PropTypes.func,
 };
 
-MemberTable.defaultProps = {
+FilePanelTable.defaultProps = {
   onViewMember: undefined,
 };
 
-export default MemberTable;
+export default FilePanelTable;

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { collectionShape } from './propTypes';
+import { collectionShape } from './prop-types';
 
 const CollectionsList = ({ collections, collectionsUrl, collectionsLinkLabel }) => (
   <>

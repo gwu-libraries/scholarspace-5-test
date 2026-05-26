@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { memberViewerType } from './file_grouping';
+import { memberViewerType } from '../utils';
+import * as styles from './FilePanel.module.css';
 
 const ICON_CLASS_BY_VIEWER = {
   ramp: 'glyphicon-play',
@@ -9,7 +10,7 @@ const ICON_CLASS_BY_VIEWER = {
   images: 'glyphicon-picture',
 };
 
-const MemberRow = ({ member, onViewMember }) => {
+const FilePanelRow = ({ member, onViewMember }) => {
   const viewerType = memberViewerType(member);
   const hasInlineAction = Boolean(viewerType && onViewMember);
   const iconClass = ICON_CLASS_BY_VIEWER[viewerType] || 'glyphicon-eye-open';
@@ -21,8 +22,7 @@ const MemberRow = ({ member, onViewMember }) => {
           <>
             <button
               type="button"
-              className="btn btn-xs btn-default"
-              style={{ marginRight: '8px' }}
+              className={`btn btn-xs btn-default ${styles.viewButton}`}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -33,6 +33,8 @@ const MemberRow = ({ member, onViewMember }) => {
               aria-label={`View ${member.label}`}
             >
               <span className={`glyphicon ${iconClass}`} aria-hidden="true" />
+              {' '}
+              View
             </button>
             {member.label}
           </>
@@ -42,14 +44,14 @@ const MemberRow = ({ member, onViewMember }) => {
       </td>
       <td>{member.dateUploaded}</td>
       <td>
-        <a href={member.downloadUrl} data-turbo="false" data-turbolinks="false" target="work-show-download" download={member.label}>Download</a>
+        <a href={member.downloadUrl} data-turbo="false" data-turbolinks="false" download={member.label}>Download</a>
         {member.editUrl && <>{' '}<a href={member.editUrl}>Edit</a></>}
       </td>
     </tr>
   );
 };
 
-MemberRow.propTypes = {
+FilePanelRow.propTypes = {
   member: PropTypes.shape({
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
@@ -68,8 +70,8 @@ MemberRow.propTypes = {
   onViewMember: PropTypes.func,
 };
 
-MemberRow.defaultProps = {
+FilePanelRow.defaultProps = {
   onViewMember: undefined,
 };
 
-export default MemberRow;
+export default FilePanelRow;

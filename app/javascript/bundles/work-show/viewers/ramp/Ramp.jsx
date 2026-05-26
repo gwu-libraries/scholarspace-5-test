@@ -15,9 +15,15 @@ const mapTranscriptFilesToRampTranscripts = (transcriptFiles = []) => {
   const groupedByCanvas = transcriptFiles
     .filter((file) => file?.url)
     .reduce((acc, file) => {
-      const canvasId = Number.isInteger(file?.canvasId) ? file.canvasId : 0;
+      const parsedCanvasId = Number.parseInt(file?.canvasId, 10);
+      const canvasId = Number.isInteger(parsedCanvasId) ? parsedCanvasId : 0;
       if (!acc[canvasId]) acc[canvasId] = [];
-      acc[canvasId].push({ title: file.label || 'Transcript', url: file.url });
+      acc[canvasId].push({
+        title: file.label || 'Transcript',
+        filename: file.label || 'Transcript',
+        url: file.url,
+        format: file.format || 'text/vtt',
+      });
       return acc;
     }, {});
 
@@ -26,7 +32,12 @@ const mapTranscriptFilesToRampTranscripts = (transcriptFiles = []) => {
     .map(([canvasId, items]) => ({ canvasId: Number(canvasId), items }));
 };
 
-const Ramp = ({ manifestUrl, startCanvasId, startCanvasTime, transcriptFiles }) => {
+const Ramp = ({
+  manifestUrl,
+  startCanvasId = undefined,
+  startCanvasTime = 0,
+  transcriptFiles = [],
+}) => {
   const playerID = 'scholarspace-ramp-player';
   const [transcriptCollapsed, setTranscriptCollapsed] = useState(false);
   const [mounted, setMounted] = useState(true);
@@ -65,7 +76,11 @@ const Ramp = ({ manifestUrl, startCanvasId, startCanvasTime, transcriptFiles }) 
             {!transcriptCollapsed && (
               <div className={`col-sm-3 ${styles.layoutCol} ${styles.transcriptCol}`}>
                 <div className={styles.transcriptShell}>
-                  <Transcript playerID={playerID} manifestUrl={manifestUrl} transcripts={transcripts} />
+                  <Transcript
+                    playerID={playerID}
+                    manifestUrl={manifestUrl}
+                    transcripts={transcripts}
+                  />
                 </div>
               </div>
             )}
@@ -84,15 +99,10 @@ Ramp.propTypes = {
     PropTypes.shape({
       label: PropTypes.string,
       url: PropTypes.string,
-      canvasId: PropTypes.number,
+      canvasId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      format: PropTypes.string,
     }),
   ),
-};
-
-Ramp.defaultProps = {
-  startCanvasId: undefined,
-  startCanvasTime: 0,
-  transcriptFiles: [],
 };
 
 export default Ramp;

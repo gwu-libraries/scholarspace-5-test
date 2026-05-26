@@ -1,5 +1,5 @@
 import ReactOnRails from "react-on-rails";
-import WorkShow from "../bundles/work_show/WorkShow";
+import { WorkShow } from "../bundles/work-show";
 
 const DOWNLOAD_IFRAME_NAME = "work-show-global-download";
 
