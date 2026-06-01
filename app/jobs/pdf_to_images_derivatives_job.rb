@@ -7,6 +7,6 @@ class PdfToImagesDerivativesJob < ApplicationJob
     work = Hyrax.query_service.find_by(id: work_id)
     return unless work
 
-    ScholarspaceDerivativesServices::PdfToImagesDerivativesService.new(work).call
+    DerivativesServices::PdfToImagesDerivativesService.new(work).call
   end
 end

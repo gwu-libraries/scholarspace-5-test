@@ -5,7 +5,7 @@ class ImagesToPdfDerivativesJob < ApplicationJob
 
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
-      ScholarspaceDerivativesServices::ImagesToPdfDerivativesService.new(work).call
+      DerivativesServices::ImagesToPdfDerivativesService.new(work).call
       PdfTextExtractionJob.perform_later(work_id: work.id.to_s)
     end
   end

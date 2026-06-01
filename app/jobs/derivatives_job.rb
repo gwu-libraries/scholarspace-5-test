@@ -2,7 +2,7 @@
 
 require 'fileutils'
 
-class ScholarspaceDerivativesJob < ApplicationJob
+class DerivativesJob < ApplicationJob
   include FileOperations
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
@@ -45,6 +45,8 @@ class ScholarspaceDerivativesJob < ApplicationJob
       return
     end
 
+    ensure_default_representative_selection
+
     # generate a thumbnail
     ThumbnailDerivativesJob.perform_later(work_id: @work.id.to_s) if file_types.any? { |ft| ft.start_with?('image/', 'video/') } || has_pdf_source_files?
 
@@ -71,10 +73,58 @@ class ScholarspaceDerivativesJob < ApplicationJob
     return if @retries > RETRY_MAX
 
     # incrementally increase the amount of time waiting before retrying
-    ScholarspaceDerivativesJob.set(wait: @retries.minutes).perform_later(
+    DerivativesJob.set(wait: @retries.minutes).perform_later(
       work_id: @work_id,
       retries: @retries
     )
+  end
+
+  def ensure_default_representative_selection
+    return unless @work.respond_to?(:representative_id=)
+
+    preferred_source = preferred_representative_source_file_set
+    return unless preferred_source
+
+    preferred_id = preferred_source.id.to_s
+    return if @work.representative_id.to_s == preferred_id
+
+    @work.representative_id = preferred_source.id
+    @work = Hyrax.persister.save(resource: @work)
+    Hyrax.index_adapter.save(resource: @work)
+  end
+
+  def preferred_representative_source_file_set
+    Array(@work.original_member_file_sets)
+      .select { |file_set| representative_priority_for(file_set) < 99 }
+      .min_by { |file_set| [representative_priority_for(file_set), representative_sort_name_for(file_set)] }
+  end
+
+  def representative_priority_for(file_set)
+    mime_type = file_set.original_file&.mime_type.to_s.downcase
+
+    return 0 if av_source_file_set?(file_set, mime_type)
+    return 1 if pdf_source_file_set?(file_set, mime_type)
+    return 2 if image_source_file_set?(file_set, mime_type)
+
+    99
+  end
+
+  def representative_sort_name_for(file_set)
+    file_set.original_file&.original_filename.to_s.downcase
+  end
+
+  def av_source_file_set?(file_set, mime_type)
+    (file_set.respond_to?(:audio?) && file_set.audio?) ||
+      (file_set.respond_to?(:video?) && file_set.video?) ||
+      mime_type.start_with?('audio/', 'video/')
+  end
+
+  def pdf_source_file_set?(file_set, mime_type)
+    (file_set.respond_to?(:pdf?) && file_set.pdf?) || mime_type == 'application/pdf'
+  end
+
+  def image_source_file_set?(file_set, mime_type)
+    (file_set.respond_to?(:image?) && file_set.image?) || mime_type.start_with?('image/')
   end
 
   def with_work_lock(work_id)

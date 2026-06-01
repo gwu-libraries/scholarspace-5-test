@@ -7,7 +7,7 @@ class PdfTextExtractionJob < ApplicationJob
     work = Hyrax.query_service.find_by(id: work_id)
     return unless work
 
-    service = ScholarspaceDerivativesServices::PdfTextExtractionService.new(work)
+    service = DerivativesServices::PdfTextExtractionService.new(work)
     target_pdf_file_set_id = pdf_file_set_id.presence || file_set_id
 
     if target_pdf_file_set_id.present?
