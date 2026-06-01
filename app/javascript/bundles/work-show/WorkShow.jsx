@@ -91,15 +91,16 @@ const WorkShow = ({
   canViewServiceFiles,
 }) => {
   const safeDescriptions = descriptions || [];
-  const firstPdfMember = originalMembers.find(isPdfMember);
+  const readingModePdfMember = serviceMembers.find((m) => m.isJoinedImagesPdf && isPdfMember(m));
+  const firstPdfMember = readingModePdfMember || originalMembers.find(isPdfMember);
   const hasViewerActionMembers = originalMembers.some((member) => Boolean(memberViewerType(member)));
   const defaultPdf = {
     fileUrl: firstPdfMember?.pdfUrl || firstPdfMember?.downloadUrl || viewer.pdfUrl || null,
     hocrUrl: firstPdfMember?.hocrUrl || viewer.hocrUrl || null,
   };
   const readingModePdf = {
-    fileUrl: viewer.pdfUrl || defaultPdf.fileUrl,
-    hocrUrl: viewer.hocrUrl || defaultPdf.hocrUrl,
+    fileUrl: (readingModePdfMember?.pdfUrl || readingModePdfMember?.downloadUrl) || null,
+    hocrUrl: readingModePdfMember?.hocrUrl || null,
   };
   const [activeMode, setActiveMode] = useState('default');
   const [selectedPdf, setSelectedPdf] = useState(null);

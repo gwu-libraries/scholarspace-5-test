@@ -10,16 +10,17 @@ const ICON_CLASS_BY_VIEWER = {
   images: 'glyphicon-picture',
 };
 
-const FilePanelRow = ({ member, onViewMember }) => {
+const FilePanelRow = ({ member, onViewMember, showViewColumn }) => {
   const viewerType = memberViewerType(member);
   const hasInlineAction = Boolean(viewerType && onViewMember);
   const iconClass = ICON_CLASS_BY_VIEWER[viewerType] || 'glyphicon-eye-open';
+  const rowThumbnailUrl = member.rowThumbnailUrl || member.thumbnailUrl || (member.isImage ? member.downloadUrl : null);
 
   return (
     <tr>
-      <td>
-        {hasInlineAction ? (
-          <>
+      {showViewColumn && (
+        <td className={styles.cellView}>
+          {hasInlineAction ? (
             <button
               type="button"
               className={`btn btn-xs btn-default ${styles.viewButton}`}
@@ -36,14 +37,30 @@ const FilePanelRow = ({ member, onViewMember }) => {
               {' '}
               View
             </button>
-            {member.label}
-          </>
-        ) : (
-          <a href={member.showUrl}>{member.label}</a>
-        )}
+          ) : (
+            <a href={member.showUrl} className={`btn btn-xs btn-default ${styles.viewButton}`}>View</a>
+          )}
+        </td>
+      )}
+      <td className={styles.cellThumbnail}>
+        {rowThumbnailUrl ? (
+          <img
+            src={rowThumbnailUrl}
+            alt=""
+            className={styles.rowThumbnail}
+            width="48"
+            height="48"
+            style={{ width: '48px', height: '48px' }}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : null}
       </td>
-      <td>{member.dateUploaded}</td>
-      <td>
+      <td className={styles.cellTitle}>
+        <a href={member.showUrl}>{member.label}</a>
+      </td>
+      <td className={styles.cellDate}>{member.dateUploaded}</td>
+      <td className={styles.cellDownload}>
         <a href={member.downloadUrl} data-turbo="false" data-turbolinks="false" download={member.label}>Download</a>
         {member.editUrl && <>{' '}<a href={member.editUrl}>Edit</a></>}
       </td>
@@ -59,19 +76,24 @@ FilePanelRow.propTypes = {
     isAv: PropTypes.bool,
     isPdf: PropTypes.bool,
     isImage: PropTypes.bool,
+     isJoinedImagesPdf: PropTypes.bool,
     canvasId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     pdfUrl: PropTypes.string,
     hocrUrl: PropTypes.string,
     isRepresentativeThumbnail: PropTypes.bool,
+    rowThumbnailUrl: PropTypes.string,
+    thumbnailUrl: PropTypes.string.isRequired,
     showUrl: PropTypes.string.isRequired,
     downloadUrl: PropTypes.string.isRequired,
     editUrl: PropTypes.string,
   }).isRequired,
   onViewMember: PropTypes.func,
+  showViewColumn: PropTypes.bool,
 };
 
 FilePanelRow.defaultProps = {
   onViewMember: undefined,
+  showViewColumn: true,
 };
 
 export default FilePanelRow;

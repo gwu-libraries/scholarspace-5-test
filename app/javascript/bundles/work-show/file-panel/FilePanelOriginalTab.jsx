@@ -18,12 +18,13 @@ const FilePanelOriginalTab = ({ members, onViewMember, onViewReadingMode }) => {
           key={group.label}
           label={group.label}
           count={group.members.length}
+          defaultOpen={false}
         >
           {group.label === 'Images' && onViewReadingMode && (
             <div className={styles.groupInlineAction}>
               <button
                 type="button"
-                className="btn btn-default"
+                className={`btn btn-sm btn-default ${styles.readingModeButton}`}
                 onClick={onViewReadingMode}
               >
                 View in reading mode
