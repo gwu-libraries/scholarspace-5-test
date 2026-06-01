@@ -42,7 +42,7 @@ module WorkViewerHelper
 
   def pdf_file_set_id_for_work(presenter)
     all_pdf_file_sets = member_file_sets_for(presenter).select { |file_set| file_set && pdf_file_set?(file_set) }
-    joined = all_pdf_file_sets.find { |file_set| file_set_filename(file_set) == ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME }
+    joined = all_pdf_file_sets.find { |file_set| file_set_filename(file_set) == Derivatives::ImagesToPdf::JOINED_PDF_FILENAME }
     joined ||= all_pdf_file_sets.first
     joined&.id&.to_s
   end
@@ -62,7 +62,7 @@ module WorkViewerHelper
   def joined_pdf_hocr_file_set_id(presenter, pdf_file_set)
     return nil unless joined_pdf_file_set?(pdf_file_set)
 
-    joined_hocr_filename = ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME
+    joined_hocr_filename = Derivatives::ImagesToPdf::JOINED_PDF_FILENAME
                              .sub('.pdf', '_HOCR.hocr')
     match = member_file_sets_for(presenter).find do |file_set|
       hocr_file_set?(file_set) && file_set_filename(file_set) == joined_hocr_filename
@@ -78,7 +78,7 @@ module WorkViewerHelper
   end
 
   def joined_pdf_file_set?(file_set)
-    file_set_filename(file_set) == ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME
+    file_set_filename(file_set) == Derivatives::ImagesToPdf::JOINED_PDF_FILENAME
   end
 
   def has_source_image_files?(presenter)
