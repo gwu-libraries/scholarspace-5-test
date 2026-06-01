@@ -7,15 +7,15 @@ only_pdf_text_extraction = ENV['SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION'] == 'true'
 
 :queues:
 <% if only_audio_transcript %>
-  - [derivatives_audio_transcript, 1]
+  - [audio_transcript, 1]
 <% elsif only_pdf_text_extraction %>
-  - [derivatives_pdf_text_extraction, 1]
+  - [pdf_text_extraction, 1]
 <% else %>
   - [ingest, 4]
   - [batch, 2]
-  - [derivatives_pdf_to_images, 1]
-  - [derivatives_images_to_pdf, 1]
-  - [derivatives_thumbnail, 1]
+  - [pdf_to_images, 1]
+  - [images_to_pdf, 1]
+  - [thumbnail, 1]
   - [default, 1]
 <% end %>
 

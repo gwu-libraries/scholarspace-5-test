@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class PdfTextExtractionJob < ApplicationJob
-  queue_as :derivatives_pdf_text_extraction
+  queue_as :pdf_text_extraction
 
   def perform(work_id:, pdf_file_set_id: nil, file_set_id: nil)
     work = Hyrax.query_service.find_by(id: work_id)
     return unless work
 
-    service = DerivativesServices::PdfTextExtractionService.new(work)
+    service = Derivatives::PdfTextExtraction.new(work)
     target_pdf_file_set_id = pdf_file_set_id.presence || file_set_id
 
     if target_pdf_file_set_id.present?
