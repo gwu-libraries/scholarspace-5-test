@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-module ScholarspaceDerivativesServices
+module Derivatives
   module Concerns
     module FileSetAttachable
       include WorkLockable
-      include DerivativeCacheable
+      include DerivativeCacheWriter
       include PersistenceAdapter
       def file_set_attached_with_name?(filename)
         @work.member_file_sets.any? do |file_set|
@@ -33,7 +33,7 @@ module ScholarspaceDerivativesServices
 
         file_set.service_file = true
         file_set = save_and_index(file_set)
-        cache_derivative_file(
+        cache_derivative(
           file_path: file_path,
           file_set: file_set,
           derivative_type: derivative_type_for(file_path)
@@ -87,7 +87,7 @@ module ScholarspaceDerivativesServices
 
         Hyrax::AccessControlList.copy_permissions(source: source_file_set, target: file_set)
         file_set.visibility = source_file_set.visibility if file_set.respond_to?(:visibility=) && source_file_set.respond_to?(:visibility)
-        save_and_index(file_set)
+        file_set = save_and_index(file_set)
       end
 
       def apply_source_file_set_metadata(file_set:, source_file_set:, derivative_type: nil)
@@ -101,7 +101,7 @@ module ScholarspaceDerivativesServices
         return file_set if merged_values == existing_values
 
         file_set.related_url = merged_values
-        save_and_index(file_set)
+        file_set = save_and_index(file_set)
       end
 
       def attach_file_set_to_work(file_set)

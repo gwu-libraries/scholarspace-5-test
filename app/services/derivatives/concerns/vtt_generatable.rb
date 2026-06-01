@@ -3,7 +3,7 @@
 require 'fileutils'
 require 'whisper'
 
-module ScholarspaceDerivativesServices
+module Derivatives
   module Concerns
     module VttGeneratable
       include FileOperations

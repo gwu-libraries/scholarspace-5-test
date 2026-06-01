@@ -2,7 +2,7 @@
 
 require 'nokogiri'
 
-module ScholarspaceDerivativesServices
+module Derivatives
   module Concerns
     module HocrMergeable
       include FileOperations

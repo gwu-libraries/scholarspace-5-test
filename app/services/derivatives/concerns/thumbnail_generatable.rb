@@ -2,7 +2,7 @@
 
 require 'open3'
 
-module ScholarspaceDerivativesServices
+module Derivatives
   module Concerns
     module ThumbnailGeneratable
 

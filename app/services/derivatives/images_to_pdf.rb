@@ -2,8 +2,8 @@
 
 require 'open3'
 
-module ScholarspaceDerivativesServices
-  class ImagesToPdfDerivativesService
+module Derivatives
+  class ImagesToPdf
     JOINED_PDF_FILENAME = 'joined_images_pdf.pdf'
 
     include Concerns::FileSetAttachable
@@ -32,7 +32,7 @@ module ScholarspaceDerivativesServices
         attach_joined_hocr_to_work(image_derivatives)
       end
     rescue StandardError => e
-      Rails.logger.error("ImagesToPdfDerivativesService failed for work #{@work.id}: #{e.class} #{e.message}")
+      Rails.logger.error("ImagesToPdf failed for work #{@work.id}: #{e.class} #{e.message}")
       raise
     end
 
@@ -129,7 +129,7 @@ module ScholarspaceDerivativesServices
         attached_count += 1
       end
 
-      Rails.logger.info("ImagesToPdfDerivativesService attached #{attached_count} per-image hOCR file(s) for work #{@work.id}")
+      Rails.logger.info("ImagesToPdf attached #{attached_count} per-image hOCR file(s) for work #{@work.id}")
     end
 
     def attach_file_to_work(file_path, source_file_set: nil)

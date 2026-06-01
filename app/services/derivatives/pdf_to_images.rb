@@ -2,8 +2,8 @@
 
 require 'open3'
 
-module ScholarspaceDerivativesServices
-  class PdfToImagesDerivativesService
+module Derivatives
+  class PdfToImages
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
     include FileOperations
@@ -35,7 +35,7 @@ module ScholarspaceDerivativesServices
         end
       end
     rescue StandardError => e
-      Rails.logger.error("PdfToImagesDerivativesService failed for work #{@work.id}: #{e.class} #{e.message}")
+      Rails.logger.error("PdfToImages failed for work #{@work.id}: #{e.class} #{e.message}")
       raise
     end
 
@@ -98,7 +98,7 @@ module ScholarspaceDerivativesServices
       end
       return if hocr_paths_to_attach.empty?
 
-      Rails.logger.info("PdfToImagesDerivativesService attaching #{hocr_paths_to_attach.size} hOCR file(s) for work #{@work.id}")
+      Rails.logger.info("PdfToImages attaching #{hocr_paths_to_attach.size} hOCR file(s) for work #{@work.id}")
       attach_files_to_work(hocr_paths_to_attach, source_file_set: source_file_set)
     end
 

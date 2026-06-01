@@ -4,12 +4,12 @@ require 'open3'
 require 'fileutils'
 require 'thread'
 
-module ScholarspaceDerivativesServices
-  class PdfTextExtractionService
+module Derivatives
+  class PdfTextExtraction
     include Concerns::FileSetAttachable
     include Concerns::HocrGeneratable
     include Concerns::HocrMergeable
-    include Concerns::DerivativeCacheable
+    include Concerns::DerivativeCacheWriter
     include FileOperations
     include FileSetDerivativeMetadata
     include PersistenceAdapter
@@ -104,7 +104,7 @@ module ScholarspaceDerivativesServices
       pdf_path = File.join(temp_dir, 'document.pdf')
       copy_file_to_disk(file_set.original_file.file_identifier, pdf_path)
 
-      cache_derivative_file(
+      cache_derivative(
         file_path: pdf_path,
         file_set: file_set,
         derivative_type: 'pdf'
@@ -245,7 +245,7 @@ module ScholarspaceDerivativesServices
 
       if file_set
         reindex_work_and_file_set(file_set)
-        cache_derivative_file(
+        cache_derivative(
           file_path: hocr_path,
           file_set: file_set,
           derivative_type: 'hocr'
@@ -273,7 +273,7 @@ module ScholarspaceDerivativesServices
 
     def image_joined_pdf_file_set?(file_set)
       filename = file_set.original_file&.original_filename.to_s
-      filename.casecmp(ScholarspaceDerivativesServices::ImagesToPdfDerivativesService::JOINED_PDF_FILENAME).zero?
+      filename.casecmp(Derivatives::ImagesToPdf::JOINED_PDF_FILENAME).zero?
     end
 
     def pdf_file_set?(file_set)

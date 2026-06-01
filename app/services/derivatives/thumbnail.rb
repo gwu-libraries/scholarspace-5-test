@@ -2,8 +2,8 @@
 
 require 'fileutils'
 
-module ScholarspaceDerivativesServices
-  class ThumbnailDerivativesService
+module Derivatives
+  class Thumbnail
     include Concerns::FileSetAttachable
     include Concerns::ThumbnailGeneratable
     include FileOperations
@@ -28,7 +28,7 @@ module ScholarspaceDerivativesServices
         ensure_best_thumbnail_is_representative
       end
     rescue StandardError => e
-      Rails.logger.error("ThumbnailDerivativesService failed for work #{@work.id}: #{e.class} #{e.message}")
+      Rails.logger.error("Thumbnail failed for work #{@work.id}: #{e.class} #{e.message}")
       raise
     end
 
@@ -47,16 +47,30 @@ module ScholarspaceDerivativesServices
     end
 
     def ensure_best_thumbnail_is_representative
-      best_source = best_source_file_for_thumbnail
-      return unless best_source
+      derivative_candidates = derivative_thumbnail_candidates
+      return if derivative_candidates.empty?
 
-      thumbnail_file_set = find_or_create_thumbnail_for(best_source)
+      thumbnail_file_set = build_representative_thumbnail(derivative_candidates: derivative_candidates)
       return unless thumbnail_file_set
 
       current_thumbnail_id = @work.thumbnail_id.to_s
       return if current_thumbnail_id == thumbnail_file_set.id.to_s
 
       set_work_thumbnail(representative_thumbnail_id: thumbnail_file_set.id)
+    end
+
+    def derivative_thumbnail_candidates
+      source_file_sets.filter_map do |source_file_set|
+        next unless thumbnail_supported?(source_file_set)
+
+        derivative_thumbnail = find_or_create_thumbnail_for(source_file_set)
+        next unless derivative_thumbnail
+
+        {
+          source_file_set: source_file_set,
+          derivative_thumbnail: derivative_thumbnail
+        }
+      end
     end
 
     def generate_thumbnail_for(source_file_set)
@@ -164,19 +178,18 @@ module ScholarspaceDerivativesServices
     end
 
     def build_representative_thumbnail(derivative_candidates:)
+      existing_representative = representative_thumbnail_file_set_by_metadata
+      return existing_representative if existing_representative
+
       candidate = best_representative_candidate(derivative_candidates)
       return nil unless candidate
 
       source_file_set = candidate.fetch(:source_file_set)
-      source_id = source_file_set.id.to_s
-      existing_representative = find_representative_thumbnail_for_source(source_id)
-      return existing_representative if existing_representative
-
       derivative_thumbnail = candidate.fetch(:derivative_thumbnail)
       source_path = copy_source_to_working_dir(derivative_thumbnail)
       return nil unless source_path
 
-      output_path = File.join(@working_dir, representative_thumbnail_filename_for(source_file_set))
+      output_path = File.join(@working_dir, REPRESENTATIVE_THUMBNAIL_FILENAME)
       FileUtils.cp(source_path, output_path)
 
       representative_thumbnail = attach_single_file_to_work(
@@ -195,20 +208,19 @@ module ScholarspaceDerivativesServices
       end
     end
 
-    def find_representative_thumbnail_for_source(source_file_set_id)
-      @work.member_file_sets.find do |file_set|
-        next false unless thumbnail_service_file_set?(file_set)
-        next false unless representative_thumbnail_tagged_for_work?(file_set)
-
-        source_file_set_id_tag_for(file_set) == source_file_set_id.to_s
-      end
-    end
-
     def best_representative_candidate(derivative_candidates)
       derivative_candidates.min_by do |candidate|
         source_file_set = candidate.fetch(:source_file_set)
-        [representative_priority_for(source_file_set), candidate.fetch(:source_order)]
+        [representative_priority_for(source_file_set), representative_sort_name_for(source_file_set)]
       end
+    end
+
+    def representative_sort_name_for(file_set)
+      file_set
+        .original_file
+        &.original_filename
+        .to_s
+        .downcase
     end
 
     def representative_priority_for(file_set)
@@ -238,13 +250,6 @@ module ScholarspaceDerivativesServices
       return false unless mime_type.start_with?('image/')
 
       original_filename.include?('_thumbnail.') || title.include?('_thumbnail.')
-    end
-
-    def representative_thumbnail_filename_for(source_file_set)
-      source_stem = File.basename(source_file_set.original_file&.original_filename.to_s, File.extname(source_file_set.original_file&.original_filename.to_s))
-      sanitized_stem = source_stem.gsub(/[^0-9A-Za-z.-]+/, '_').gsub(/\A_+|_+\z/, '')
-      sanitized_stem = 'source' if sanitized_stem.blank?
-      "#{sanitized_stem}_#{REPRESENTATIVE_THUMBNAIL_FILENAME}"
     end
 
     def representative_thumbnail_tag

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module ScholarspaceDerivativesServices
-  class AudioTranscriptDerivativesService
+module Derivatives
+  class AudioTranscript
     include Concerns::FileSetAttachable
     include Concerns::VttGeneratable
     include Concerns::WavConvertible
@@ -58,15 +58,23 @@ module ScholarspaceDerivativesServices
       @depositor ||= User.find_by(email: @work.depositor)
     end
 
-    def transcript_already_attached?(filename)
-      file_set_attached_with_name?(filename)
+    def transcript_already_attached?(filename, source_file_set:)
+      @work.member_file_sets.any? do |file_set|
+        attached_name = file_set.original_file&.original_filename.to_s
+        attached_title = file_set.title.to_a.join(' ')
+        name_matches = attached_name == filename || attached_title == filename
+        next false unless name_matches
+
+        source_tag = Array(file_set.related_url).map(&:to_s).find { |v| v.start_with?('source_file_set_id:') }
+        source_tag == "source_file_set_id:#{source_file_set.id}"
+      end
     end
 
     def attach_vtt_to_work(vtt_path, source_file_set:)
       return unless File.exist?(vtt_path) && depositor
 
       filename = File.basename(vtt_path)
-      return if transcript_already_attached?(filename)
+      return if transcript_already_attached?(filename, source_file_set: source_file_set)
 
       file_set = attach_single_file_to_work(file_path: vtt_path, user: depositor, service_file: true,
                                             source_file_set: source_file_set)
