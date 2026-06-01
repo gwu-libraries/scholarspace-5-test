@@ -96,9 +96,17 @@ class WorkShowPresenter < Hyrax::WorkShowPresenter
     end
 
     def manifest_canvas_member_presenters
-      original_item_members.select do |member_presenter|
+      # Keep canvas indexes aligned with manifest canvas order used by the
+      # IIIF manifest builder and RAMP, including representative-first ordering.
+      manifest_ordered_file_set_presenters.select do |member_presenter|
         av_member_presenter?(member_presenter) || image_member_presenter?(member_presenter)
       end
+    end
+
+    def manifest_ordered_file_set_presenters
+      IiifManifestBuilder::WorkPresenterWrapper
+        .new(self)
+        .member_presenters
     end
 
     def image_member_presenter?(member_presenter)

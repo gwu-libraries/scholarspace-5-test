@@ -85,10 +85,12 @@ class WorkShowSerializer
       visibility: (member.respond_to?(:visibility) ? member.visibility.to_s : ''),
       showUrl: Rails.application.routes.url_helpers.hyrax_file_set_path(member.id),
       downloadUrl: download_url,
+      thumbnailUrl: thumbnail_url_for_member(member),
       editUrl: (Rails.application.routes.url_helpers.edit_hyrax_file_set_path(member.id) if can_edit),
       isAv: is_av,
       isPdf: is_pdf,
       isImage: is_image,
+      isJoinedImagesPdf: joined_images_pdf_member?(member),
       isReadingModePdf: reading_mode_pdf_member?(member),
       canvasId: member_canvas_id(member, is_av: is_av, is_image: is_image),
       pdfUrl: (download_url if is_pdf),
@@ -231,9 +233,57 @@ class WorkShowSerializer
     entry.to_s.sub('source_file_set_id:', '')
   end
 
+  def thumbnail_url_for_member(member)
+    thumbnail_member = if thumbnail_service_member?(member)
+                         member
+                       else
+                         thumbnail_members_by_source_id[member.id.to_s]
+                       end
+
+    if thumbnail_member
+      return Hyrax::Engine.routes.url_helpers.download_path(id: thumbnail_member.id, locale: nil)
+    end
+
+    # Fallback for setups where /downloads/:id?file=thumbnail is available.
+    Hyrax::Engine.routes.url_helpers.download_path(id: member.id, file: 'thumbnail', locale: nil)
+  end
+
+  def thumbnail_members_by_source_id
+    @thumbnail_members_by_source_id ||= presenter.service_item_members.each_with_object({}) do |service_member, map|
+      next unless thumbnail_service_member?(service_member)
+      next if representative_thumbnail_tagged_member?(service_member)
+
+      source_id = source_file_set_id(service_member).to_s
+      next if source_id.blank?
+
+      map[source_id] ||= service_member
+    end
+  end
+
+  def thumbnail_service_member?(member)
+    label = member_label(member).to_s.downcase
+    return true if label.include?('_thumbnail.')
+
+    related_url_candidates(member).any? do |value|
+      value == 'derivative_type:thumbnail' || value.start_with?('representative_thumbnail_for_work:')
+    end
+  end
+
+  def representative_thumbnail_tagged_member?(member)
+    related_url_candidates(member).any? do |value|
+      value.start_with?('representative_thumbnail_for_work:')
+    end
+  end
+
   def reading_mode_pdf_member?(member)
     return false unless member.respond_to?(:id)
 
     member.id.to_s == pdf_viewer_file_id.to_s
+  end
+
+  def joined_images_pdf_member?(member)
+    return false unless member_pdf?(member, member_label(member), member_mime_type(member))
+
+    member_label(member).to_s == Derivatives::ImagesToPdf::JOINED_PDF_FILENAME
   end
 end
