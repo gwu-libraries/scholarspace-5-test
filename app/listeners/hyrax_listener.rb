@@ -46,7 +46,7 @@ class HyraxListener
 
     return if derivatives_enqueue_debounced?(work.id.to_s)
 
-    ScholarspaceDerivativesJob.set(wait: 2.minutes).perform_later(
+    DerivativesJob.set(wait: 2.minutes).perform_later(
       work_id: work.id.to_s
     )
   rescue StandardError
