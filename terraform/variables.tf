@@ -118,9 +118,9 @@ variable "ssm_env_parameter_name" {
 }
 
 variable "ssm_env_file_path" {
-  description = "Path to the local .env file whose contents are written to SSM SecureString"
+  description = "Path to the production env file whose contents are written to SSM SecureString"
   type        = string
-  default     = "../.env"
+  default     = "../.env.prod.ssm"
 }
 
 variable "s3_bucket_name" {

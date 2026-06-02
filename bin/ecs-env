@@ -1,0 +1,50 @@
+#!/bin/sh
+set -eu
+
+app_env_file=${APP_ENV_FILE:-/tmp/app.env}
+
+# Container startup receives APP_ENV_CONTENT via ECS secrets.
+# ECS Exec sessions usually do not, so reuse the previously materialized file.
+if [ -n "${APP_ENV_CONTENT:-}" ]; then
+  printf '%s' "$APP_ENV_CONTENT" > "$app_env_file"
+elif [ ! -s "$app_env_file" ]; then
+  echo "ecs-env: APP_ENV_CONTENT is not set and $app_env_file is missing" >&2
+  exit 1
+fi
+
+while IFS= read -r line; do
+  case "$line" in
+    ''|\#*)
+      continue
+      ;;
+  esac
+
+  key=${line%%=*}
+  value=${line#*=}
+
+  if [ "${value#\"}" != "$value" ] && [ "${value%\"}" != "$value" ]; then
+    value=${value#\"}
+    value=${value%\"}
+  fi
+
+  export "$key=$value"
+done < "$app_env_file"
+
+if [ -n "${AURORA_ENDPOINT:-}" ]; then
+  export DB_HOST="$AURORA_ENDPOINT"
+  export DB_PORT="5432"
+fi
+
+if [ -n "${APP_HOST_PRIVATE_IP:-}" ]; then
+  export REDIS_HOST="$APP_HOST_PRIVATE_IP"
+  export REDIS_PORT="6379"
+  export MEMCACHED_HOST="$APP_HOST_PRIVATE_IP:11211"
+  export SOLR_PROD_URL="http://$APP_HOST_PRIVATE_IP:62821/solr/scholarspace_prod"
+  export FEDORA_URL="http://${FEDORA_USER:-fedoraAdmin}:${FEDORA_PASSWORD:-fedoraAdmin}@$APP_HOST_PRIVATE_IP:8080/fcrepo/rest"
+fi
+
+if [ -n "${FITS_INTERNAL_HOST:-}" ]; then
+  export FITS_SERVLET_URL="http://$FITS_INTERNAL_HOST:8080/fits"
+fi
+
+exec "$@"

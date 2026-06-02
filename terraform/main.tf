@@ -20,9 +20,6 @@ locals {
   ssm_env_content       = trimspace(file(var.ssm_env_file_path))
   ssm_env_parameter_arn = aws_ssm_parameter.app_env.arn
 
-  ecs_env_bootstrap_command = "set -euo pipefail && printf '%s' \"$APP_ENV_CONTENT\" > /tmp/app.env && while IFS= read -r line; do case \"$line\" in ''|\\#*) continue ;; esac; key=\"$${line%%=*}\"; value=\"$${line#*=}\"; if [ \"$${value#\\\"}\" != \"$value\" ] && [ \"$${value%\\\"}\" != \"$value\" ]; then value=\"$${value#\\\"}\"; value=\"$${value%\\\"}\"; fi; export \"$key=$value\"; done < /tmp/app.env"
-  ecs_common_runtime_exports = "export DB_HOST=\"$AURORA_ENDPOINT\" DB_PORT=\"5432\" REDIS_HOST=\"$APP_HOST_PRIVATE_IP\" REDIS_PORT=\"6379\" MEMCACHED_HOST=\"$APP_HOST_PRIVATE_IP:11211\" SOLR_PROD_URL=\"http://$APP_HOST_PRIVATE_IP:62821/solr/scholarspace_prod\" FITS_SERVLET_URL=\"http://$FITS_INTERNAL_HOST:8080/fits\" FEDORA_URL=\"http://$${FEDORA_USER:-fedoraAdmin}:$${FEDORA_PASSWORD:-fedoraAdmin}@$APP_HOST_PRIVATE_IP:8080/fcrepo/rest\""
-
   ecs_common_container_environment = [
     { name = "RAILS_ENV", value = "production" },
     { name = "PUMA_ENV", value = "production" },

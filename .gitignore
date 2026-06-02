@@ -57,6 +57,8 @@
 fits.log
 
 .env
+.env.local
+.env.prod.ssm
 
 /.vscode
 

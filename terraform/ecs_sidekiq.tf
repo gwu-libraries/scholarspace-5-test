@@ -91,9 +91,10 @@ resource "aws_ecs_task_definition" "sidekiq" {
       image     = local.sidekiq_image_uri
       essential = true
       command = [
+        "/app/scholarspace/bin/ecs-env",
         "sh",
         "-lc",
-        "${local.ecs_env_bootstrap_command} && ${local.ecs_common_runtime_exports} && export SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=\"${each.value.sidekiq_only_audio_transcript}\" SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=\"${each.value.sidekiq_only_pdf_text_extraction}\" SIDEKIQ_WORKERS=\"${each.value.sidekiq_workers}\" && exec bundle exec sidekiq"
+        "export SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=\"${each.value.sidekiq_only_audio_transcript}\" SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=\"${each.value.sidekiq_only_pdf_text_extraction}\" SIDEKIQ_WORKERS=\"${each.value.sidekiq_workers}\" && exec bundle exec sidekiq"
       ]
       environment = local.ecs_common_container_environment
       secrets     = local.ecs_common_container_secrets
@@ -172,10 +173,6 @@ resource "aws_ecs_service" "sidekiq" {
   }
 
   depends_on = [
-    aws_security_group_rule.web_server_redis_from_sidekiq,
-    aws_security_group_rule.web_server_fedora_from_sidekiq,
-    aws_security_group_rule.web_server_solr_from_sidekiq,
-    aws_security_group_rule.web_server_memcached_from_sidekiq,
     aws_security_group_rule.aurora_from_sidekiq_tasks,
     aws_rds_cluster_instance.aurora,
     aws_ecs_service.fits,

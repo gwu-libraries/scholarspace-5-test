@@ -151,6 +151,17 @@ data "aws_iam_policy_document" "sidekiq_task_policy" {
     ]
     resources = ["${aws_s3_bucket.app_bucket.arn}/*"]
   }
+
+  # Required for ECS Exec (rails console via aws ecs execute-command)
+  statement {
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "sidekiq_task_policy" {

@@ -64,9 +64,10 @@ resource "aws_ecs_task_definition" "web" {
       image     = local.web_image_uri
       essential = true
       command = [
+        "/app/scholarspace/bin/ecs-env",
         "sh",
         "-lc",
-        "${local.ecs_env_bootstrap_command} && ${local.ecs_common_runtime_exports} && bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0"
+        "bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0"
       ]
       environment = local.ecs_common_container_environment
       secrets     = local.ecs_common_container_secrets
@@ -136,10 +137,6 @@ resource "aws_ecs_service" "web" {
 
   depends_on = [
     aws_lb_listener.scholarspace_http,
-    aws_security_group_rule.web_server_redis_from_web,
-    aws_security_group_rule.web_server_fedora_from_web,
-    aws_security_group_rule.web_server_solr_from_web,
-    aws_security_group_rule.web_server_memcached_from_web,
     aws_security_group_rule.aurora_from_web_tasks,
     aws_rds_cluster_instance.aurora,
     aws_ecs_service.fits,

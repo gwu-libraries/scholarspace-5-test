@@ -59,7 +59,7 @@ services:
   whisper-model-preload:
     image: scholarspace-worker-prod:${RAILS_TAG:-latest}
     env_file:
-      - .env
+      - .env.local
     environment:
       - RAILS_ENV=production
     command: >-
