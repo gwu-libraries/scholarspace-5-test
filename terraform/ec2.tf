@@ -88,6 +88,12 @@ resource "aws_instance" "web_server" {
   chown ubuntu:ubuntu .env
   chmod 600 .env
 
+  # Base compose services (including redis) read .env.local; keep it aligned
+  # with the SSM-sourced production env used for .env.
+  cp .env .env.local
+  chown ubuntu:ubuntu .env.local
+  chmod 600 .env.local
+
   openssl req -x509 -newkey rsa:4096 \
     -keyout nginx/certs/key.pem \
     -out nginx/certs/certificate.pem \
