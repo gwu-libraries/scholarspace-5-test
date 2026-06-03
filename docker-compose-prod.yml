@@ -186,6 +186,9 @@ services:
       - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
 
   redis:
+    # Bitnami Redis performs startup chmod on internal config paths.
+    # Run as root in prod overlay to avoid permission-denied crash loops.
+    user: "0:0"
     ports:
       - "6379:6379"
 
