@@ -58,6 +58,11 @@ output "fits_internal_host" {
   value       = "${aws_service_discovery_service.fits.name}.${aws_service_discovery_private_dns_namespace.internal.name}"
 }
 
+output "elasticache_redis_endpoint" {
+  description = "Primary endpoint for the ElastiCache Redis cluster"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+}
+
 output "aurora_writer_endpoint" {
   description = "Aurora cluster writer endpoint (use as DB_HOST)"
   value       = aws_rds_cluster.aurora.endpoint

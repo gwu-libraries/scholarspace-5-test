@@ -91,12 +91,15 @@ resource "aws_ecs_task_definition" "sidekiq" {
       image     = local.sidekiq_image_uri
       essential = true
       command = [
-        "/app/scholarspace/bin/ecs-env",
         "sh",
         "-lc",
-        "export SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=\"${each.value.sidekiq_only_audio_transcript}\" SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=\"${each.value.sidekiq_only_pdf_text_extraction}\" SIDEKIQ_WORKERS=\"${each.value.sidekiq_workers}\" && exec bundle exec sidekiq"
+        "exec bundle exec sidekiq"
       ]
-      environment = local.ecs_common_container_environment
+      environment = concat(local.ecs_common_container_environment, [
+        { name = "SIDEKIQ_ONLY_AUDIO_TRANSCRIPT", value = each.value.sidekiq_only_audio_transcript },
+        { name = "SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION", value = each.value.sidekiq_only_pdf_text_extraction },
+        { name = "SIDEKIQ_WORKERS", value = each.value.sidekiq_workers }
+      ])
       secrets     = local.ecs_common_container_secrets
       mountPoints = [
         local.ecs_uploads_mount_point,

@@ -120,7 +120,7 @@ variable "ssm_env_parameter_name" {
 variable "ssm_env_file_path" {
   description = "Path to the production env file whose contents are written to SSM SecureString"
   type        = string
-  default     = "../.env.prod.ssm"
+  default     = "../.env"
 }
 
 variable "s3_bucket_name" {
@@ -474,4 +474,12 @@ variable "aurora_deletion_protection" {
   description = "Enable deletion protection on the Aurora cluster."
   type        = bool
   default     = true
+}
+
+# ── ElastiCache ──────────────────────────────────────────────────────────────
+
+variable "elasticache_node_type" {
+  description = "ElastiCache node type for the managed Redis cluster"
+  type        = string
+  default     = "cache.t4g.micro"
 }

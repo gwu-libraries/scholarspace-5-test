@@ -85,14 +85,13 @@ resource "aws_instance" "web_server" {
   # Keep FITS endpoint aligned with ECS service discovery.
   upsert_env "FITS_SERVLET_URL" "http://${aws_service_discovery_service.fits.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fits"
 
+  # Point EC2-hosted Rails at ElastiCache instead of a local Redis container.
+  upsert_env "REDIS_HOST" "${aws_elasticache_replication_group.redis.primary_endpoint_address}"
+  upsert_env "REDIS_PORT" "6379"
+  upsert_env "REDIS_PASSWORD" ""
+
   chown ubuntu:ubuntu .env
   chmod 600 .env
-
-  # Base compose services (including redis) read .env.local; keep it aligned
-  # with the SSM-sourced production env used for .env.
-  cp .env .env.local
-  chown ubuntu:ubuntu .env.local
-  chmod 600 .env.local
 
   openssl req -x509 -newkey rsa:4096 \
     -keyout nginx/certs/key.pem \

@@ -81,9 +81,9 @@ resource "aws_security_group" "sidekiq_tasks" {
 }
 
 # Mapping of backing services accessible from both web and sidekiq ECS tasks
+# Redis is excluded here — it is served by ElastiCache, not the EC2 host.
 locals {
   ecs_backing_services = {
-    redis     = { port = 6379, description = "Redis" }
     fedora    = { port = 8080, description = "Fedora" }
     solr      = { port = 62821, description = "Solr" }
     memcached = { port = 11211, description = "Memcached" }

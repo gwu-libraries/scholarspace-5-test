@@ -92,6 +92,13 @@ resource "aws_rds_cluster" "aurora" {
   tags = {
     Name = "${var.site_prefix}-aurora"
   }
+
+  lifecycle {
+    precondition {
+      condition     = length(var.aurora_master_password) > 0
+      error_message = "Set aurora_master_password and keep it in sync with DB_PASSWORD in ssm_env_file_path."
+    }
+  }
 }
 
 resource "aws_rds_cluster_instance" "aurora" {

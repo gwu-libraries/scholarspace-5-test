@@ -64,7 +64,6 @@ resource "aws_ecs_task_definition" "web" {
       image     = local.web_image_uri
       essential = true
       command = [
-        "/app/scholarspace/bin/ecs-env",
         "sh",
         "-lc",
         "bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0"

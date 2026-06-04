@@ -47,6 +47,9 @@ sidekiq_pdf_text_desired_count = 1
 sidekiq_pdf_text_min_capacity  = 1
 sidekiq_pdf_text_max_capacity  = 4
 
+sidekiq_pdf_text_task_cpu    = 1024
+sidekiq_pdf_text_task_memory = 2048
+
 sidekiq_target_cpu_utilization    = 70
 sidekiq_target_memory_utilization = 80
 
@@ -101,7 +104,7 @@ fits_service_discovery_namespace = "internal"
 aurora_engine_version        = "16.6"
 aurora_database_name         = "scholarspace_production"
 aurora_master_username       = "scholarspace"
-aurora_master_password       = "changeme-set-in-tfvars"   # sensitive — do not commit
+aurora_master_password       = "changeme-set-in-tfvars"   # sensitive - do not commit
 aurora_instance_class        = "db.t4g.medium"
 aurora_instance_count        = 1
 aurora_backup_retention_days = 7
