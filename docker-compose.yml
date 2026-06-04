@@ -5,7 +5,7 @@ services:
   postgres:
     image: postgres:15-alpine
     env_file:
-      - .env.local
+      - .env
     volumes:
       - type: volume
         source: db
@@ -20,7 +20,7 @@ services:
   redis:
     image: bitnami/redis:latest
     env_file:
-      - .env.local
+      - .env
     volumes:
       - type: volume
         source: redis

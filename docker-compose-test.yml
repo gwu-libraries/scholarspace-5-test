@@ -17,7 +17,7 @@ services:
     command: sh -c 'RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
-      - .env.local
+      - .env
     environment:
       - RAILS_ENV=test
       - RAILS_ROOT=/app/scholarspace
@@ -60,7 +60,7 @@ services:
     command: sh -lc 'exec bundle exec sidekiq'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
-      - .env.local
+      - .env
     environment:
       - RAILS_ENV=test
       - RAILS_ROOT=/app/scholarspace
