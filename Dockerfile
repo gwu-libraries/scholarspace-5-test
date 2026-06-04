@@ -79,9 +79,6 @@ RUN if [ "$BUILD_ENV" = "prod" ] || [ "$BUILD_ENV" = "dev" ] || [ "$BUILD_ENV" =
 
 COPY --chown=app:app . ./
 
-RUN test -f /app/scholarspace/bin/ecs-env
-RUN chmod +x /app/scholarspace/bin/ecs-env
-
 RUN if [ "$BUILD_ENV" = "prod" ]; then \
       yarn build:prod; \
     elif [ "$BUILD_ENV" = "dev" || "$BUILD_ENV" = "test" ]; then \
