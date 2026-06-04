@@ -38,6 +38,11 @@ locals {
       : entry.raw_value
     )
   }
+  ssm_env_values_nonempty = {
+    for key, value in local.ssm_env_values :
+    key => value
+    if length(trimspace(value)) > 0
+  }
 
   ecs_managed_env = {
     RAILS_ENV        = "production"
@@ -99,7 +104,7 @@ resource "aws_ssm_parameter" "app_env" {
 }
 
 resource "aws_ssm_parameter" "app_env_var" {
-  for_each = local.ssm_env_values
+  for_each = local.ssm_env_values_nonempty
 
   name      = "${trimsuffix(var.ssm_env_parameter_name, "/")}/${each.key}"
   type      = "SecureString"

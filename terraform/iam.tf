@@ -88,10 +88,16 @@ data "aws_kms_alias" "ssm" {
   name = "alias/aws/ssm"
 }
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  ssm_env_parameter_children_arn = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${trimsuffix(var.ssm_env_parameter_name, "/")}/*"
+}
+
 data "aws_iam_policy_document" "ecs_task_execution_ssm" {
   statement {
     actions   = ["ssm:GetParameters", "ssm:GetParameter"]
-    resources = [local.ssm_env_parameter_arn]
+    resources = [local.ssm_env_parameter_arn, local.ssm_env_parameter_children_arn]
   }
 
   statement {
@@ -122,7 +128,7 @@ resource "aws_iam_role" "sidekiq_task_role" {
 data "aws_iam_policy_document" "sidekiq_task_policy" {
   statement {
     actions   = ["ssm:GetParameters", "ssm:GetParameter"]
-    resources = [local.ssm_env_parameter_arn]
+    resources = [local.ssm_env_parameter_arn, local.ssm_env_parameter_children_arn]
   }
 
   statement {
