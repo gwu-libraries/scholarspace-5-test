@@ -87,7 +87,8 @@ module Derivatives
 
         Hyrax::AccessControlList.copy_permissions(source: source_file_set, target: file_set)
         file_set.visibility = source_file_set.visibility if file_set.respond_to?(:visibility=) && source_file_set.respond_to?(:visibility)
-        file_set = save_and_index(file_set)
+        # Persist intermediate state without indexing; upload + final save handles index updates.
+        file_set = Hyrax.persister.save(resource: file_set)
       end
 
       def apply_source_file_set_metadata(file_set:, source_file_set:, derivative_type: nil)
@@ -101,7 +102,8 @@ module Derivatives
         return file_set if merged_values == existing_values
 
         file_set.related_url = merged_values
-        file_set = save_and_index(file_set)
+        # Persist intermediate state without indexing; upload + final save handles index updates.
+        file_set = Hyrax.persister.save(resource: file_set)
       end
 
       def attach_file_set_to_work(file_set)

@@ -4,6 +4,7 @@ require 'fileutils'
 
 class DerivativesJob < ApplicationJob
   include FileOperations
+  include PersistenceAdapter
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
@@ -89,8 +90,7 @@ class DerivativesJob < ApplicationJob
     return if @work.representative_id.to_s == preferred_id
 
     @work.representative_id = preferred_source.id
-    @work = Hyrax.persister.save(resource: @work)
-    Hyrax.index_adapter.save(resource: @work)
+    @work = save_and_index(@work)
   end
 
   def preferred_representative_source_file_set
