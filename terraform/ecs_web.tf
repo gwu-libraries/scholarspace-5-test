@@ -77,7 +77,14 @@ resource "aws_ecs_task_definition" "web" {
           protocol      = "tcp"
         }
       ]
-      mountPoints = [local.ecs_uploads_mount_point]
+      mountPoints = [
+        local.ecs_uploads_mount_point,
+        {
+          sourceVolume  = "ocr-cache"
+          containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
+          readOnly      = false
+        }
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -99,6 +106,21 @@ resource "aws_ecs_task_definition" "web" {
 
       authorization_config {
         access_point_id = aws_efs_access_point.uploads.id
+        iam             = "DISABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "ocr-cache"
+
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.uploads.id
+      root_directory     = "/"
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.ocr_cache.id
         iam             = "DISABLED"
       }
     }

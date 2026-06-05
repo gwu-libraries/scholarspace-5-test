@@ -51,7 +51,19 @@ resource "aws_instance" "web_server" {
   timedatectl set-timezone America/New_York
 
   apt-get update
-  apt-get install -y git curl docker-compose-plugin awscli
+  apt-get install -y git curl docker-compose-plugin awscli nfs-common
+
+  mkdir -p /mnt/efs
+  if ! mountpoint -q /mnt/efs; then
+    mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${aws_efs_file_system.uploads.id}.efs.${var.aws_region}.amazonaws.com:/ /mnt/efs
+  fi
+  mkdir -p /mnt/efs/ocr-cache
+  chown -R 1001:101 /mnt/efs/ocr-cache || true
+  chmod 0775 /mnt/efs/ocr-cache || true
+
+  if ! grep -q "${aws_efs_file_system.uploads.id}.efs.${var.aws_region}.amazonaws.com:/ /mnt/efs nfs4" /etc/fstab; then
+    echo "${aws_efs_file_system.uploads.id}.efs.${var.aws_region}.amazonaws.com:/ /mnt/efs nfs4 defaults,_netdev,nofail 0 0" >> /etc/fstab
+  fi
 
   mkdir -p /opt/scholarspace
   chown -R ubuntu:ubuntu /opt/scholarspace
@@ -89,6 +101,7 @@ resource "aws_instance" "web_server" {
   upsert_env "REDIS_HOST" "${aws_elasticache_replication_group.redis.primary_endpoint_address}"
   upsert_env "REDIS_PORT" "6379"
   upsert_env "REDIS_PASSWORD" ""
+  upsert_env "EFS_OCR_CACHE_MOUNT" "/mnt/efs/ocr-cache"
 
   chown ubuntu:ubuntu .env
   chmod 600 .env
