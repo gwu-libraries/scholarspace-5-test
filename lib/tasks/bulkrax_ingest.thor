@@ -2,89 +2,130 @@ require 'thor'
 require 'fileutils'
 require 'sidekiq/api'
 
+
 class BulkraxIngestTask < Thor
-  # Pass the name of a file (expects .zip) for importing
-  desc "bulk_import FILE", "runs a Bulkrax importer"
+  # Pass the name of a file or glob pattern (expects .zip) for importing
+  desc "bulk_import FILE || PATTERN", "runs a Bulkrax importer"
   # Include the name of an admin set (if other than default)
   option :admin_set, required: false, type: :string, aliases: :a
   # Provide the ID (email address) of a user; otherwise, it will be extracted from the CSV's depositor field
-  option :user, required: false, type: :string, aliases: :u
+  option :user, required: true, type: :string, aliases: :u
   def bulk_import(file)
-      # Only run if Sidekiq ingest queue is empty
-      #queue = Sidekiq::Queue.new("ingest")
-      #if queue.map { |job| job.jid }.length > 0
-      # return
-      #end
-      user_email = options.fetch(:user, get_depositor_from_csv(file))
-      user = get_user(user_email)
-      # Use the default Admin Set if none provided
-      admin_set_id = options[:admin_set].nil? ? Hyrax::AdminSetCreateService.find_or_create_default_admin_set.id : get_admin_sets(user, options[:admin_set])
 
-      parser_fields = {"visibility"=>"open",
+    # Capture UUID strings from import filenames
+    uuid_re =  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/
+
+    files = File.file?(file) ? [file] : Dir.glob(file)
+    # find the first file in the list that has no importer with a name matching the ID its name
+    importers = Bulkrax::Importer.all.map { |importer| importer.name }
+    to_import = files.map do |file|
+      batch_id = uuid_re.match(file)&.captures[0] # Expect UUID in filename
+      [batch_id, file]
+    end.select do |(batch_id, file)|
+      batch_id && !importers.include?(batch_id)
+    end.first
+    if to_import.nil?
+      raise "No files to import found or all files have been imported. Importer files should have a UUID in the filename for matching with Bulkrax importers."
+    end
+    user_email = options.fetch(:user)
+    user = get_user(user_email)
+    # Use the default Admin Set if none provided
+    admin_set_id = options[:admin_set].nil? ? Hyrax::AdminSetCreateService.find_or_create_default_admin_set.id : get_admin_sets(user, options[:admin_set])
+
+    parser_fields = {"visibility"=>"open",
                         "rights_statement"=>"",
                         "override_rights_statement"=>"0",
                         "file_style"=>"Upload a File",
                         "entry_statuses"=>[""],
-                        "import_file_path" => file
-      }
-      importer_params = {name: "rake-import",
+                        "import_file_path" => to_import[1]
+    }
+    importer_params = {name: "#{to_import[0]}",
         user_id: user.id,
         parser_fields: parser_fields,
         frequency: "PT0S",
         parser_klass: "Bulkrax::CsvParser",
         admin_set_id: admin_set_id
-      }
-      importer = Bulkrax::Importer.new(importer_params)
-      importer.field_mapping = Bulkrax.field_mappings["Bulkrax::CsvParser"]
-      importer.save
-      # TO DO: confirm that this result is returned on success
-      enqueue_result = Bulkrax::ImporterJob.send(importer.parser.perform_method, importer.id)
-      if not enqueue_result
-        raise "Importer job could not be enqueued!"
-      end
-      update_pending(importer)
-    end
+    }
+    importer = Bulkrax::Importer.new(importer_params)
+    importer.field_mapping = Bulkrax.field_mappings["Bulkrax::CsvParser"]
+    importer.save
+    Bulkrax::ImporterJob.send(importer.parser.perform_method, importer.id)
+  end
 
-    desc "update_importer_status", "updates the status of pending Bulkrax entries"
-    # TO DO: handle failures not associated with specific entries
-    option :import_id, required: false, type: :string, aliases: :i
-    def update_importer_status
-      # Glob files in pending directory
-      pending = Dir.glob("tmp/imports/pending/*")
-      # For each, retrieve the importer by its id, get the last run, and check the status
-      import_id = options.fetch(:import_id, nil)
-      if import_id
-        # If import_id provided, use only files matching that ID
-        pending = pending.select { |f| f.ends_with?("_#{import_id}") }
-      end
-      pending.each do |file|
-        # Extract the import ID from the file name
-        importer = get_importer(file)
-        # Skip any still pending
-        next if (!importer) || (importer.status == "Pending")
-        # If complete with failures inspect the failed entries
-        failure_rows = []
-        importer.failed_statuses.each do |status|
-          # If the failure is due to a failed entry, get its identifier
-          entry_id = status.statusable_type == "Bulkrax::Entry" ? status.statusable_id : nil
-          if entry_id
-            # retrieve the entry associated with this status
-            entry = importer.entries.find { |entry| entry.id == entry_id }
-            row = entry.raw_metadata
-            # Update original metadata with errors
-            [:error_class, :error_message, :error_backtrace].each do |key|
-              row[key] = status[key]
-            end
-            # Convert backtrace from array to string
-            row[:error_backtrace] = row[:error_backtrace].join("\n")
-            failure_rows << row
-          end
-        end
-        # catch failures that occur prior to processing of entries
-        failure_report = importer.last_run.statuses.select { |s| s.status_message.include?("Failed") }
-        update_files(failure_report, failure_rows, importer, file)
+  desc "generate_migration_report REPORT_JSONL", "generates a report from all Bulkrax importers matching imported items in REPORT_JSONL"
+  def generate_migration_report(report_json)
+    report_data = Hash.new { |h, k| h[k] = [] } # initialize to hash of arrays
+    File::open(report_json) do |f|
+      f.each_line do |line|
+        line_json = JSON.parse(line)
+        report_data[line_json["batch"]] << line_json # Store each row under its batch ID
       end
     end
+    # Build hash of entries to importer data
+    importer_entry_data = Hash.new { |h, k| h[k] = {} } # initialize to hash of hashes
+    # For information about importers that failed before processing entries
+    importers_failed = {}
+    # Extract batch IDs from this report
+    batch_ids = report_data.keys
+    Bulkrax::Importer.all.each do |importer|
+      next unless batch_ids.include? importer.name
+      importer_id = importer.id
+      importer_name = importer.name # Assumes Importer.name matches the ID of an imported batch
+      zip_file = importer.original_file
+      # Extract any error messages for entries in this batch
+      status_hash = importer.failed_statuses.inject({}) do |h, status|
+        entry_id = status.statusable_type == "Bulkrax::Entry" ? status.statusable_id : nil
+        if entry_id
+          h[entry_id] =  status.slice(:error_class, :error_message, :error_backtrace)
+        end
+      end
+      importer.entries.each do |entry|
+        entry_data = { importer_id: importer_id, zip_file: zip_file, import_status: importer.status_message, status_message: entry[:status_message], entry_id: entry.id, batch_id: importer_name}
+        entry_data.merge!(status_hash.fetch(entry.id, {}))
+        importer_entry_data[entry["identifier"]][importer_name] = entry_data
+      end
+      if importer.entries.empty?
+        importers_failed[importer_name] = {importer_id: importer_id, importer_status: importer.status, importer_error_class: importer.error_class}
+      end
+    end
+    # Update original report
+    report_with_imports = []
+    report_data.each do |batch, rows|
+        rows.each do |row|
+          # skip files
+          next unless row.has_key? "row"
+          # TO DO: log those not found?
+          entry = importer_entry_data.fetch(row["row"]["bulkrax_identifier"], nil)
+          next unless !entry.nil?
+          entry_this_batch = entry.fetch(batch, nil)
+          next unless !entry_this_batch.nil?
+          updated_row = row["row"].merge(entry_this_batch)
+          if updated_row.fetch(:error_backtrace, nil)
+            updated_row[:error_backtrace] = updated_row[:error_backtrace].slice(0, 100).join("\n")
+          end
+          report_with_imports << {"batch": batch, "row": updated_row}
+        end
+    end
+    if !importers_failed.empty?
+      importers_failed_file = report_json.sub('.jsonl', '_failed_importers.json')
+      puts "Saving importer metadata for failed importers to #{importers_failed_file}"
+      File::open(importers_failed_file, 'w') do |f|
+        f.write(importers_failed.to_json)
+      end
+    end
+    if report_with_imports.empty?
+      puts "No entries found matching any works or files in the report."
+      return
+    end
+    updated_report_name = report_json.sub('.jsonl', '_with_import_status.jsonl')
+    puts "Saving import status and errors to #{updated_report_name}."
+    File::open(updated_report_name, "w") do |f|
+      report_with_imports.each do |row|
+          line_json = JSON.dump(row)
+          f.write("#{line_json}\n")
+      end
+    end
+  end
 end
 
   def update_pending(importer)
