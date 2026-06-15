@@ -1,15 +1,13 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-
 class DerivativesJob < ApplicationJob
-  include FileOperations
   include PersistenceAdapter
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
   # How many times should this process retry?
   RETRY_MAX = 10
+  WORK_LOCK_TTL = 2.minutes
 
   def perform(work_id:, retries: 0)
     @work_id = work_id
@@ -128,16 +126,11 @@ class DerivativesJob < ApplicationJob
   end
 
   def with_work_lock(work_id)
-    lock_root = Rails.root.join('tmp', 'derivatives-work-locks').to_s
-    ensure_directory_exists(lock_root)
-    FileUtils.chmod(0o755, lock_root) unless File.stat(lock_root).mode & 0o755 == 0o755
-    lock_path = File.join(lock_root, "#{work_id}.lock")
+    lock_key = "derivatives:work:lock:#{work_id}"
+    lock_acquired = Sidekiq.redis { |redis| redis.set(lock_key, 1, nx: true, ex: WORK_LOCK_TTL.to_i) }
 
-    File.open(lock_path, File::RDWR | File::CREAT, 0o666) do |lock_file|
-      lock_file.flock(File::LOCK_EX)
-      yield
-    ensure
-      lock_file.flock(File::LOCK_UN)
-    end
+    return unless lock_acquired
+
+    yield
   end
 end
