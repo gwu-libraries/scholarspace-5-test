@@ -19,6 +19,7 @@ RUN apk --no-cache upgrade && \
   cmake \
   curl \
   gcompat \
+  libreoffice \
   vips \
   libxml2 \
   libxml2-dev \
@@ -99,6 +100,7 @@ RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
   curl \
   gcompat \
+  libreoffice \
   vips \
   imagemagick \
   imagemagick-heic \
@@ -147,6 +149,7 @@ RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
   curl \
   gcompat \
+  libreoffice \
   vips \
   imagemagick \
   imagemagick-heic \
@@ -194,7 +197,7 @@ RUN apk --no-cache add ffmpeg
 
 USER app
 
-FROM scholarspace-sidekiq-default-prod AS scholarspace-sidekiq-pdf-text-prod
+FROM scholarspace-sidekiq-default-prod AS scholarspace-sidekiq-ocr-text-prod
 
 USER root
 
@@ -213,6 +216,7 @@ RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
   curl \
   gcompat \
+  libreoffice \
   vips \
   imagemagick \
   imagemagick-heic \
