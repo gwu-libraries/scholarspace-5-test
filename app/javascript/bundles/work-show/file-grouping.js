@@ -15,6 +15,9 @@ const ORIGINAL_FILE_GROUPS = [
 
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.webp', '.jp2'];
 const AV_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.oga', '.mp4', '.m4v', '.mov', '.avi', '.mkv', '.webm', '.mpeg', '.mpg'];
+const JOINED_IMAGES_GROUP_KEY = '__joined_images__';
+const JOINED_IMAGES_GROUP_LABEL = 'Joined Images';
+const JOINED_IMAGES_FILENAMES = new Set(['joined_images_pdf.pdf', 'joined_images_pdf_hocr.hocr']);
 
 function isAvMember(member) {
   if (member.isAv) return true;
@@ -63,7 +66,10 @@ function groupServiceMembers(members, originalMembers = []) {
   const groupedBySourceId = new Map();
 
   members.forEach((member) => {
-    const sourceId = (member.sourceFileSetId || '').toString().trim();
+    const filename = normalizeLabel(member.label).toLowerCase();
+    const sourceId = JOINED_IMAGES_FILENAMES.has(filename)
+      ? JOINED_IMAGES_GROUP_KEY
+      : (member.sourceFileSetId || '').toString().trim();
 
     if (!sourceId) return;
 
@@ -73,7 +79,9 @@ function groupServiceMembers(members, originalMembers = []) {
 
   return Array.from(groupedBySourceId.entries())
     .map(([sourceId, sourceMembers]) => ({
-      label: originalLabelById.get(sourceId) || `Source File ${sourceId}`,
+      label: sourceId === JOINED_IMAGES_GROUP_KEY
+        ? JOINED_IMAGES_GROUP_LABEL
+        : (originalLabelById.get(sourceId) || `Source File ${sourceId}`),
       members: sortedMembers(sourceMembers),
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
