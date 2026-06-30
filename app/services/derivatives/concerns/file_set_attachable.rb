@@ -3,6 +3,9 @@
 module Derivatives
   module Concerns
     module FileSetAttachable
+      include ::DerivativeTypeConstants
+      include ::FileExtensionConstants
+      include ::ThumbnailTagConstants
       include WorkLockable
       include DerivativeCacheWriter
       include PersistenceAdapter
@@ -14,11 +17,13 @@ module Derivatives
         end
       end
 
-      def attach_single_file_to_work(file_path:, user:, service_file: false, source_file_set: nil)
+      def attach_single_file_to_work(file_path:, user:, service_file: false, source_file_set: nil, derivative_type_override: nil)
         return nil unless File.exist?(file_path)
 
         file_io = File.open(file_path, 'rb')
-        derivative_type = service_file ? derivative_type_for(file_path) : nil
+        derivative_type = if service_file
+                            derivative_type_override.presence || derivative_type_for(file_path)
+                          end
         file_set = create_file_set_for_upload(
           file_path: file_path,
           user: user,
@@ -27,16 +32,21 @@ module Derivatives
           skip_derivatives: service_file,
           derivative_type: derivative_type
         )
+
+        # Persist service-file classification before membership attach so retries
+        # cannot leave derivative files visible as originals.
+        if file_set && service_file
+          file_set.service_file = true
+          file_set = save_and_index(file_set)
+        end
+
         attach_file_set_to_work(file_set)
 
         return file_set unless file_set && service_file
-
-        file_set.service_file = true
-        file_set = save_and_index(file_set)
         cache_derivative(
           file_path: file_path,
           file_set: file_set,
-          derivative_type: derivative_type_for(file_path)
+          derivative_type: derivative_type
         )
         file_set
       ensure
@@ -78,7 +88,7 @@ module Derivatives
         file_set = apply_source_file_set_permissions(file_set: file_set, source_file_set: source_file_set)
         file_set = apply_source_file_set_metadata(file_set: file_set, source_file_set: source_file_set, derivative_type: derivative_type)
 
-        Hyrax::ValkyrieUpload.file(filename: filename, file_set: file_set, io: io, user: user, skip_derivatives: skip_derivatives)
+        Hyrax::ValkyrieUpload.file(filename: filename, file_set: file_set, io: io, user: user, skip_derivatives: true)
         Hyrax.query_service.find_by(id: file_set.id)
       end
 
@@ -95,8 +105,12 @@ module Derivatives
         return file_set unless source_file_set || derivative_type.present?
         return file_set unless file_set.respond_to?(:related_url=)
 
-        source_tag = source_file_set ? "source_file_set_id:#{source_file_set.id}" : nil
-        derivative_tag = derivative_type.present? ? "derivative_type:#{derivative_type}" : nil
+        if derivative_type.present? && source_file_set.nil?
+          raise ArgumentError, "Missing source_file_set for derivative_type=#{derivative_type}"
+        end
+
+        source_tag = source_file_set ? "#{SOURCE_FILE_SET_ID_PREFIX}#{source_file_set.id}" : nil
+        derivative_tag = derivative_type.present? ? "#{THUMBNAIL_DERIVATIVE_PREFIX}#{derivative_type}" : nil
         existing_values = file_set.respond_to?(:related_url) ? Array(file_set.related_url).map(&:to_s) : []
         merged_values = (existing_values + [source_tag, derivative_tag].compact).uniq
         return file_set if merged_values == existing_values
@@ -126,16 +140,16 @@ module Derivatives
       def derivative_type_for(file_path)
         extension = File.extname(file_path.to_s).delete('.').downcase
         case extension
-        when 'hocr'
-          'hocr'
+        when DERIVATIVE_TYPE_HOCR
+          DERIVATIVE_TYPE_HOCR
         when 'vtt'
-          'transcript'
-        when 'jpg', 'jpeg', 'png', 'gif', 'tif', 'tiff', 'webp', 'jp2'
-          'thumbnail'
+          DERIVATIVE_TYPE_TRANSCRIPT
+        when *IMAGE_EXTENSIONS
+          DERIVATIVE_TYPE_THUMBNAIL
         when 'pdf'
-          'pdf_derivative'
+          DERIVATIVE_TYPE_PDF_DERIVATIVE
         else
-          extension.presence || 'derivative'
+          extension.presence || DERIVATIVE_TYPE_DEFAULT
         end
       end
 

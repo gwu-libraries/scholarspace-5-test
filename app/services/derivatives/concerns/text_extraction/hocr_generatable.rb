@@ -4,7 +4,8 @@ require 'open3'
 
 module Derivatives
   module Concerns
-    module HocrGeneratable
+    module TextExtraction
+      module HocrGeneratable
 
       private
 
@@ -20,3 +21,4 @@ module Derivatives
     end
   end
 end
+  end

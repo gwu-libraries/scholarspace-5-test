@@ -4,11 +4,13 @@ require 'open3'
 
 module Derivatives
   module Concerns
-    module WavConvertible
+    module TranscriptExtraction
+      module WavConvertible
 
     # method for creating a wav file
 
     private
+  end
 
     def transcription_source_path(file_path)
       return file_path if File.extname(file_path).casecmp('.wav').zero?

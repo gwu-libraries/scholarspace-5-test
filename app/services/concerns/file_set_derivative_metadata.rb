@@ -3,6 +3,7 @@
 module FileSetDerivativeMetadata
   extend ActiveSupport::Concern
   include PersistenceAdapter
+  include ::ThumbnailTagConstants
 
   # Get all tags (metadata entries) for a file set
   def tags_for_file_set(file_set)
@@ -16,8 +17,8 @@ module FileSetDerivativeMetadata
 
   # Extract source_file_set_id value from arbitrary related_url-style values
   def extract_source_file_set_id(values)
-    entry = Array(values).map(&:to_s).find { |value| value.start_with?('source_file_set_id:') }
-    entry.to_s.sub('source_file_set_id:', '')
+    entry = Array(values).map(&:to_s).find { |value| value.start_with?(SOURCE_FILE_SET_ID_PREFIX) }
+    entry.to_s.sub(SOURCE_FILE_SET_ID_PREFIX, '')
   end
 
   # Add a tag to file set's related_url field
@@ -45,13 +46,13 @@ module FileSetDerivativeMetadata
 
   # Add source_file_set_id tag to track which file set generated this derivative
   def tag_source_file_set(file_set, source_file_set_id)
-    tag = "source_file_set_id:#{source_file_set_id}"
+    tag = "#{SOURCE_FILE_SET_ID_PREFIX}#{source_file_set_id}"
     add_tag_to_file_set(file_set, tag)
   end
 
   # Add derivative_type tag to identify derivative purpose (thumbnail, hocr, vtt, etc)
   def tag_derivative_type(file_set, derivative_type)
-    tag = "derivative_type:#{derivative_type}"
+    tag = "#{THUMBNAIL_DERIVATIVE_PREFIX}#{derivative_type}"
     add_tag_to_file_set(file_set, tag)
   end
 

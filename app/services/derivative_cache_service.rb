@@ -6,9 +6,11 @@ require 'open3'
 require 'timeout'
 
 class DerivativeCacheService
+  include DerivativeTypeConstants
   include FileOperations
   CACHE_ROOT = '/app/scholarspace/tmp/cache/derivatives'
-  PDF_OPTIMIZE_TIMEOUT_SECONDS = 30
+  FALLBACK_CACHE_ROOT = '/tmp/scholarspace-cache/derivatives'
+  PDF_OPTIMIZE_TIMEOUT_SECONDS = 120
 
   def self.instance
     @instance ||= new
@@ -36,7 +38,7 @@ class DerivativeCacheService
     cache_path
   end
 
-  def store_derivative_from_path(file_identifier:, original_filename:, source_path:, derivative_type: 'derivative')
+  def store_derivative_from_path(file_identifier:, original_filename:, source_path:, derivative_type: DERIVATIVE_TYPE_DEFAULT)
     return nil unless File.exist?(source_path)
     return path_for(file_identifier, original_filename) if cached?(file_identifier: file_identifier, original_filename: original_filename)
 
@@ -67,7 +69,7 @@ class DerivativeCacheService
     return file_path unless File.exist?(file_path)
 
     case derivative_type
-    when 'pdf'
+    when DERIVATIVE_TYPE_PDF, DERIVATIVE_TYPE_PDF_DERIVATIVE
       optimize_pdf_for_web(file_path)
     else
       file_path
@@ -84,7 +86,15 @@ class DerivativeCacheService
       '-dSAFER',
       '-sDEVICE=pdfwrite',
       '-dCompatibilityLevel=1.4',
-      '-dPDFSETTINGS=/ebook',
+      '-dPDFSETTINGS=/default',
+      '-dDetectDuplicateImages=true',
+      '-dCompressFonts=true',
+      '-dColorImageDownsampleType=/Bicubic',
+      '-dColorImageResolution=150',
+      '-dGrayImageDownsampleType=/Bicubic',
+      '-dGrayImageResolution=150',
+      '-dMonoImageDownsampleType=/Subsample',
+      '-dMonoImageResolution=300',
       '-dEmbedAllFonts=true',
       '-dSubsetFonts=true',
       "-sOutputFile=#{optimized_path}",
@@ -126,11 +136,11 @@ class DerivativeCacheService
     ensure_directory_exists(path)
     return path if File.writable?(path)
 
-    fallback = '/app/scholarspace/tmp/cache/derivatives'
+    fallback = ENV.fetch('DERIVATIVES_CACHE_ROOT', FALLBACK_CACHE_ROOT)
     ensure_directory_exists(fallback)
     fallback
   rescue SystemCallError
-    fallback = '/app/scholarspace/tmp/cache/derivatives'
+    fallback = ENV.fetch('DERIVATIVES_CACHE_ROOT', FALLBACK_CACHE_ROOT)
     ensure_directory_exists(fallback)
     fallback
   end

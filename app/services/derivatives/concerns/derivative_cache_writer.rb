@@ -4,10 +4,11 @@ module Derivatives
   module Concerns
     module DerivativeCacheWriter
       extend ActiveSupport::Concern
+      include ::DerivativeTypeConstants
 
       private
 
-      def cache_derivative(file_path:, file_set:, derivative_type: 'derivative')
+      def cache_derivative(file_path:, file_set:, derivative_type: DERIVATIVE_TYPE_DEFAULT)
         original_file = file_set&.original_file
         return unless original_file
 

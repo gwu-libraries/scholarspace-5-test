@@ -5,10 +5,12 @@ require 'whisper'
 
 module Derivatives
   module Concerns
-    module VttGeneratable
+    module TranscriptExtraction
+      module VttGeneratable
       include FileOperations
 
       private
+  end
 
       def generate_vtt(file_path, output_dir:, title: File.basename(file_path, File.extname(file_path)))
         configure_whisper_cache_dir
@@ -26,12 +28,12 @@ module Derivatives
         ENV['XDG_CACHE_HOME'] = if File.writable?(cache_root)
                                   cache_root
                                 else
-                                  fallback = '/app/scholarspace/tmp/cache/whispercpp'
+                                  fallback = ENV.fetch('WHISPER_CACHE_ROOT', '/tmp/scholarspace-cache/whispercpp')
                                   ensure_directory_exists(fallback)
                                   fallback
                                 end
       rescue SystemCallError
-        fallback = '/app/scholarspace/tmp/cache/whispercpp'
+        fallback = ENV.fetch('WHISPER_CACHE_ROOT', '/tmp/scholarspace-cache/whispercpp')
         ensure_directory_exists(fallback)
         ENV['XDG_CACHE_HOME'] = fallback
       end

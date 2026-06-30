@@ -4,9 +4,11 @@ require 'nokogiri'
 
 module Derivatives
   module Concerns
-    module HocrMergeable
+    module TextExtraction
+      module HocrMergeable
       include FileOperations
       private
+  end
 
       def merge_hocr_files(hocr_paths)
         return nil if hocr_paths.empty?
