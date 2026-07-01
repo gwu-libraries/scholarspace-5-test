@@ -2,6 +2,10 @@ resource "aws_efs_file_system" "uploads" {
   creation_token = "${var.site_prefix}-uploads"
   encrypted      = true
 
+  lifecycle {
+    prevent_destroy = false
+  }
+
   tags = {
     Name = "${var.site_prefix}-uploads"
   }
@@ -51,6 +55,14 @@ resource "aws_security_group" "efs_uploads" {
     security_groups = [aws_security_group.sidekiq_tasks.id]
   }
 
+  ingress {
+    description     = "Allow Solr ECS tasks to mount EFS"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.solr_tasks.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -98,12 +110,49 @@ resource "aws_efs_access_point" "ocr_cache" {
   }
 }
 
-resource "aws_security_group_rule" "efs_from_ec2" {
-  type                     = "ingress"
-  from_port                = 2049
-  to_port                  = 2049
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.efs_uploads.id
-  source_security_group_id = aws_security_group.allow_web_traffic.id
-  description              = "Allow EC2 instance to mount EFS for OCR cache"
+resource "aws_efs_access_point" "derivatives_cache" {
+  file_system_id = aws_efs_file_system.uploads.id
+
+  posix_user {
+    uid = 1001
+    gid = 101
+  }
+
+  root_directory {
+    path = "/derivatives-cache"
+
+    creation_info {
+      owner_gid   = 101
+      owner_uid   = 1001
+      permissions = "0775"
+    }
+  }
+
+  tags = {
+    Name = "${var.site_prefix}-derivatives-cache-access-point"
+  }
 }
+
+resource "aws_efs_access_point" "solr_data" {
+  file_system_id = aws_efs_file_system.uploads.id
+
+  posix_user {
+    uid = 8983
+    gid = 8983
+  }
+
+  root_directory {
+    path = "/solr-data"
+
+    creation_info {
+      owner_gid   = 8983
+      owner_uid   = 8983
+      permissions = "0775"
+    }
+  }
+
+  tags = {
+    Name = "${var.site_prefix}-solr-data-access-point"
+  }
+}
+

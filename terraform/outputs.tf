@@ -1,8 +1,3 @@
-output "prod_public_url" {
-  description = "Public URL for prod deployment"
-  value       = "http://${aws_eip.eip.public_ip}"
-}
-
 output "prod_s3_bucket_name" {
   description = "S3 bucket used by prod"
   value       = aws_s3_bucket.app_bucket.bucket
@@ -28,6 +23,11 @@ output "sidekiq_ecr_repository_url" {
   value       = aws_ecr_repository.sidekiq.repository_url
 }
 
+output "sidekiq_ecr_repository_name" {
+  description = "ECR repository name for Sidekiq images"
+  value       = aws_ecr_repository.sidekiq.name
+}
+
 output "sidekiq_ecs_cluster_name" {
   description = "ECS cluster name for Sidekiq workers"
   value       = aws_ecs_cluster.sidekiq.name
@@ -36,6 +36,11 @@ output "sidekiq_ecs_cluster_name" {
 output "web_ecr_repository_url" {
   description = "ECR repository URL for Rails web images"
   value       = aws_ecr_repository.web.repository_url
+}
+
+output "web_ecr_repository_name" {
+  description = "ECR repository name for Rails web images"
+  value       = aws_ecr_repository.web.name
 }
 
 output "web_ecs_service_name" {
@@ -48,6 +53,11 @@ output "fits_ecr_repository_url" {
   value       = aws_ecr_repository.fits.repository_url
 }
 
+output "fits_ecr_repository_name" {
+  description = "ECR repository name for FITS images"
+  value       = aws_ecr_repository.fits.name
+}
+
 output "fits_ecs_service_name" {
   description = "ECS service name for FITS"
   value       = aws_ecs_service.fits.name
@@ -56,6 +66,36 @@ output "fits_ecs_service_name" {
 output "fits_internal_host" {
   description = "Private DNS host used by ECS services to reach FITS"
   value       = "${aws_service_discovery_service.fits.name}.${aws_service_discovery_private_dns_namespace.internal.name}"
+}
+
+output "memcached_ecs_service_name" {
+  description = "ECS service name for Memcached"
+  value       = aws_ecs_service.memcached.name
+}
+
+output "memcached_internal_host" {
+  description = "Private DNS host used by ECS services to reach Memcached"
+  value       = "${aws_service_discovery_service.memcached.name}.${aws_service_discovery_private_dns_namespace.internal.name}"
+}
+
+output "fedora_ecs_service_name" {
+  description = "ECS service name for Fedora"
+  value       = aws_ecs_service.fedora.name
+}
+
+output "fedora_internal_host" {
+  description = "Private DNS host used by ECS services to reach Fedora"
+  value       = "${aws_service_discovery_service.fedora.name}.${aws_service_discovery_private_dns_namespace.internal.name}"
+}
+
+output "solr_ecs_service_name" {
+  description = "ECS service name for Solr"
+  value       = aws_ecs_service.solr.name
+}
+
+output "solr_internal_host" {
+  description = "Private DNS host used by ECS services to reach Solr"
+  value       = "${aws_service_discovery_service.solr.name}.${aws_service_discovery_private_dns_namespace.internal.name}"
 }
 
 output "elasticache_redis_endpoint" {

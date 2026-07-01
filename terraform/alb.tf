@@ -10,7 +10,7 @@ resource "aws_lb_target_group" "scholarspace" {
     unhealthy_threshold = 2
     timeout             = 3
     interval            = 30
-    path                = "/"
+    path                = "/up"
     matcher             = "200,404"
   }
 
@@ -25,7 +25,7 @@ resource "aws_lb" "scholarspace" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = [aws_subnet.app_subnet.id, aws_subnet.app_subnet_secondary.id]
-  idle_timeout       = 300
+  idle_timeout       = 900
 
   enable_deletion_protection = false
 

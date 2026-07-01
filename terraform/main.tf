@@ -53,9 +53,9 @@ locals {
     REDIS_PORT       = "6379"
     REDIS_PASSWORD   = ""
     REDIS_URL        = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379/0"
-    MEMCACHED_HOST   = "${aws_instance.web_server.private_ip}:11211"
-    SOLR_PROD_URL    = "http://${aws_instance.web_server.private_ip}:62821/solr/scholarspace_prod"
-    FEDORA_URL       = "http://${lookup(local.ssm_env_values, "FEDORA_USER", "fedoraAdmin")}:${lookup(local.ssm_env_values, "FEDORA_PASSWORD", "fedoraAdmin")}@${aws_instance.web_server.private_ip}:8080/fcrepo/rest"
+    MEMCACHED_HOST   = "${aws_service_discovery_service.memcached.name}.${aws_service_discovery_private_dns_namespace.internal.name}:11211"
+    SOLR_PROD_URL    = "http://${aws_service_discovery_service.solr.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8983/solr/scholarspace_prod"
+    FEDORA_URL       = "http://${lookup(local.ssm_env_values, "FEDORA_USER", "fedoraAdmin")}:${lookup(local.ssm_env_values, "FEDORA_PASSWORD", "fedoraAdmin")}@${aws_service_discovery_service.fedora.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fcrepo/rest"
     FITS_SERVLET_URL = "http://${aws_service_discovery_service.fits.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fits"
   }
 

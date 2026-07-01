@@ -16,7 +16,7 @@ resource "aws_db_subnet_group" "aurora" {
 
 resource "aws_security_group" "aurora" {
   name        = "${var.site_prefix}-aurora"
-  description = "Allow Postgres access from ECS tasks and EC2 host"
+  description = "Allow Postgres access from ECS tasks"
   vpc_id      = aws_vpc.app_vpc.id
 
   egress {
@@ -49,16 +49,6 @@ resource "aws_security_group_rule" "aurora_from_sidekiq_tasks" {
   security_group_id        = aws_security_group.aurora.id
   source_security_group_id = aws_security_group.sidekiq_tasks.id
   description              = "Allow Sidekiq ECS tasks to reach Aurora"
-}
-
-resource "aws_security_group_rule" "aurora_from_ec2" {
-  type                     = "ingress"
-  from_port                = 5432
-  to_port                  = 5432
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.aurora.id
-  source_security_group_id = aws_security_group.allow_web_traffic.id
-  description              = "Allow EC2 host to reach Aurora (admin, migrations)"
 }
 
 resource "aws_rds_cluster_parameter_group" "aurora" {

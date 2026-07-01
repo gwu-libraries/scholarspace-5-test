@@ -66,7 +66,7 @@ resource "aws_ecs_task_definition" "web" {
       command = [
         "sh",
         "-lc",
-        "bundle exec rails db:prepare && exec ./bin/rails server -p 3000 -b 0.0.0.0"
+        "bundle exec rails db:migrate && exec ./bin/rails server -p 3000 -b 0.0.0.0"
       ]
       environment = local.ecs_common_container_environment
       secrets     = local.ecs_common_container_secrets
@@ -82,6 +82,11 @@ resource "aws_ecs_task_definition" "web" {
         {
           sourceVolume  = "ocr-cache"
           containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
+          readOnly      = false
+        },
+        {
+          sourceVolume  = "derivatives-cache"
+          containerPath = "/app/scholarspace/tmp/cache/derivatives"
           readOnly      = false
         }
       ]
@@ -125,6 +130,21 @@ resource "aws_ecs_task_definition" "web" {
       }
     }
   }
+
+  volume {
+    name = "derivatives-cache"
+
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.uploads.id
+      root_directory     = "/"
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.derivatives_cache.id
+        iam             = "DISABLED"
+      }
+    }
+  }
 }
 
 resource "aws_ecs_service" "web" {
@@ -160,7 +180,10 @@ resource "aws_ecs_service" "web" {
     aws_lb_listener.scholarspace_http,
     aws_security_group_rule.aurora_from_web_tasks,
     aws_rds_cluster_instance.aurora,
+    aws_ecs_service.memcached,
     aws_ecs_service.fits,
+    aws_ecs_service.fedora,
+    aws_ecs_service.solr,
   ]
 }
 

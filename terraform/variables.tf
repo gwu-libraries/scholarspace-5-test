@@ -42,12 +42,6 @@ variable "aws_availability_zone_secondary" {
   type        = string
 }
 
-variable "ssh_allowed_cidrs" {
-  description = "CIDR blocks allowed for SSH access. Leave empty to disable SSH ingress."
-  type        = list(string)
-  default     = []
-}
-
 variable "site_prefix" {
   description = "Prefix for naming of resources"
   default     = "scholarspace"
@@ -58,56 +52,6 @@ variable "ssl_certificate_arn" {
   description = "ACM certificate ARN used for ALB HTTPS listener. Leave empty to run HTTP only."
   type        = string
   default     = ""
-}
-
-# ── EC2 ──────────────────────────────────────────────────────────────────────
-
-variable "instance_ami" {
-  default  = null
-  type     = string
-  nullable = true
-}
-
-variable "instance_type" {
-  description = "EC2 instance type used for each environment"
-  default     = "c7i.xlarge"
-  type        = string
-}
-
-variable "root_volume_size_gb" {
-  description = "Root EBS volume size for the EC2 instance in GiB"
-  default     = 80
-  type        = number
-}
-
-variable "root_volume_type" {
-  description = "Root EBS volume type"
-  default     = "gp3"
-  type        = string
-}
-
-variable "key_name" {
-  description = "Name for Terraform-managed EC2 key pair"
-  default     = "scholarspace-prod-key"
-  type        = string
-}
-
-variable "public_key_path" {
-  description = "Absolute path to the SSH public key (.pub) used for EC2 access"
-  default     = "~/.ssh/id_rsa.pub"
-  type        = string
-}
-
-variable "repo_clone_url" {
-  description = "Repository URL cloned on instance boot"
-  default     = "https://github.com/gwu-libraries/scholarspace-5-test.git"
-  type        = string
-}
-
-variable "deploy_git_ref" {
-  description = "Git ref (branch/tag/sha) deployed on instance boot"
-  default     = "react-av-viewers"
-  type        = string
 }
 
 # ── SSM / S3 ─────────────────────────────────────────────────────────────────
@@ -132,12 +76,37 @@ variable "s3_prefix" {
   default = ""
 }
 
-# ── ECS Sidekiq ──────────────────────────────────────────────────────────────
-
-variable "sidekiq_image" {
-  description = "Full image URI used by ECS Sidekiq tasks. Defaults to the Terraform-managed ECR repository with :latest tag."
+variable "sidekiq_default_image" {
+  description = "Full image URI for the default Sidekiq ECS service. Must be explicitly set."
   type        = string
   default     = ""
+
+  validation {
+    condition     = length(trimspace(var.sidekiq_default_image)) > 0
+    error_message = "sidekiq_default_image must be set to a non-empty image URI."
+  }
+}
+
+variable "sidekiq_whisper_image" {
+  description = "Full image URI for the whisper Sidekiq ECS service. Must be explicitly set."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = length(trimspace(var.sidekiq_whisper_image)) > 0
+    error_message = "sidekiq_whisper_image must be set to a non-empty image URI."
+  }
+}
+
+variable "sidekiq_ocr_text_image" {
+  description = "Full image URI for the OCR text extraction Sidekiq ECS service. Must be explicitly set."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = length(trimspace(var.sidekiq_ocr_text_image)) > 0
+    error_message = "sidekiq_ocr_text_image must be set to a non-empty image URI."
+  }
 }
 
 variable "sidekiq_task_cpu" {
@@ -152,6 +121,18 @@ variable "sidekiq_task_memory" {
   default     = 2048
 }
 
+variable "sidekiq_container_stop_timeout_seconds" {
+  description = "ECS container stop timeout in seconds for Sidekiq tasks (Fargate max is 120)"
+  type        = number
+  default     = 120
+}
+
+variable "sidekiq_shutdown_timeout_seconds" {
+  description = "Sidekiq shutdown timeout in seconds passed via -t"
+  type        = number
+  default     = 90
+}
+
 variable "sidekiq_whisper_task_cpu" {
   description = "CPU units for whisper Sidekiq ECS tasks"
   type        = number
@@ -164,14 +145,38 @@ variable "sidekiq_whisper_task_memory" {
   default     = 4096
 }
 
-variable "sidekiq_pdf_text_task_cpu" {
-  description = "CPU units for PDF text extraction Sidekiq ECS tasks"
+variable "sidekiq_ocr_text_task_cpu" {
+  description = "CPU units for OCR text extraction Sidekiq ECS tasks"
   type        = number
   default     = 1024
 }
 
-variable "sidekiq_pdf_text_task_memory" {
-  description = "Memory (MiB) for PDF text extraction Sidekiq ECS tasks"
+variable "sidekiq_ocr_text_task_memory" {
+  description = "Memory (MiB) for OCR text extraction Sidekiq ECS tasks"
+  type        = number
+  default     = 2048
+}
+
+variable "sidekiq_derivatives_task_cpu" {
+  description = "CPU units for derivatives-only Sidekiq ECS tasks"
+  type        = number
+  default     = 2048
+}
+
+variable "sidekiq_derivatives_task_memory" {
+  description = "Memory (MiB) for derivatives-only Sidekiq ECS tasks"
+  type        = number
+  default     = 4096
+}
+
+variable "sidekiq_thumbnail_task_cpu" {
+  description = "CPU units for thumbnail-only Sidekiq ECS tasks"
+  type        = number
+  default     = 1024
+}
+
+variable "sidekiq_thumbnail_task_memory" {
+  description = "Memory (MiB) for thumbnail-only Sidekiq ECS tasks"
   type        = number
   default     = 2048
 }
@@ -212,20 +217,56 @@ variable "sidekiq_whisper_max_capacity" {
   default     = 4
 }
 
-variable "sidekiq_pdf_text_desired_count" {
-  description = "Desired task count for PDF text extraction Sidekiq service"
+variable "sidekiq_ocr_text_desired_count" {
+  description = "Desired task count for OCR text extraction Sidekiq service"
   type        = number
   default     = 0
 }
 
-variable "sidekiq_pdf_text_min_capacity" {
-  description = "Minimum autoscaling capacity for PDF text extraction Sidekiq service"
+variable "sidekiq_ocr_text_min_capacity" {
+  description = "Minimum autoscaling capacity for OCR text extraction Sidekiq service"
   type        = number
   default     = 0
 }
 
-variable "sidekiq_pdf_text_max_capacity" {
-  description = "Maximum autoscaling capacity for PDF text extraction Sidekiq service"
+variable "sidekiq_ocr_text_max_capacity" {
+  description = "Maximum autoscaling capacity for OCR text extraction Sidekiq service"
+  type        = number
+  default     = 4
+}
+
+variable "sidekiq_derivatives_desired_count" {
+  description = "Desired task count for derivatives Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_derivatives_min_capacity" {
+  description = "Minimum autoscaling capacity for derivatives Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_derivatives_max_capacity" {
+  description = "Maximum autoscaling capacity for derivatives Sidekiq service"
+  type        = number
+  default     = 4
+}
+
+variable "sidekiq_thumbnail_desired_count" {
+  description = "Desired task count for thumbnail Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_thumbnail_min_capacity" {
+  description = "Minimum autoscaling capacity for thumbnail Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_thumbnail_max_capacity" {
+  description = "Maximum autoscaling capacity for thumbnail Sidekiq service"
   type        = number
   default     = 4
 }
@@ -261,9 +302,15 @@ variable "sidekiq_enable_log_based_autoscaling" {
 }
 
 variable "sidekiq_log_autoscaling_pattern" {
-  description = "CloudWatch log filter pattern that indicates Sidekiq queue pressure and should trigger scale-out"
+  description = "CloudWatch log filter pattern that indicates Sidekiq queue latency pressure and should trigger scale-out"
   type        = string
   default     = "\"queue_latency_high\""
+}
+
+variable "sidekiq_log_autoscaling_depth_pattern" {
+  description = "CloudWatch log filter pattern that indicates Sidekiq queue depth pressure and should trigger scale-out"
+  type        = string
+  default     = "\"queue_depth_high\""
 }
 
 variable "sidekiq_log_autoscaling_period_seconds" {
@@ -280,6 +327,12 @@ variable "sidekiq_log_autoscaling_evaluation_periods" {
 
 variable "sidekiq_log_autoscaling_threshold" {
   description = "Minimum number of matching log events per period that triggers Sidekiq scale-out"
+  type        = number
+  default     = 5
+}
+
+variable "sidekiq_log_autoscaling_depth_threshold" {
+  description = "Minimum number of queue-depth pressure log events per period that triggers Sidekiq scale-out"
   type        = number
   default     = 5
 }
@@ -422,6 +475,240 @@ variable "fits_service_discovery_namespace" {
   default     = "internal"
 }
 
+variable "memcached_image" {
+  description = "Container image URI used by ECS Memcached tasks"
+  type        = string
+  default     = "bitnami/memcached"
+}
+
+variable "memcached_task_cpu" {
+  description = "CPU units for Memcached ECS tasks"
+  type        = number
+  default     = 256
+}
+
+variable "memcached_task_memory" {
+  description = "Memory (MiB) for Memcached ECS tasks"
+  type        = number
+  default     = 512
+}
+
+variable "memcached_desired_count" {
+  description = "Desired task count for Memcached ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "memcached_min_capacity" {
+  description = "Minimum autoscaling capacity for Memcached ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "memcached_max_capacity" {
+  description = "Maximum autoscaling capacity for Memcached ECS service"
+  type        = number
+  default     = 2
+}
+
+variable "memcached_target_cpu_utilization" {
+  description = "Target average CPU utilization percent for Memcached autoscaling"
+  type        = number
+  default     = 70
+}
+
+variable "memcached_target_memory_utilization" {
+  description = "Target average memory utilization percent for Memcached autoscaling"
+  type        = number
+  default     = 80
+}
+
+variable "memcached_assign_public_ip" {
+  description = "Assign public IPs to Memcached tasks. Keep false when using private subnets with NAT."
+  type        = bool
+  default     = false
+}
+
+variable "memcached_log_retention_days" {
+  description = "CloudWatch log retention in days for Memcached ECS service"
+  type        = number
+  default     = 30
+}
+
+variable "fedora_image" {
+  description = "Container image URI used by ECS Fedora tasks"
+  type        = string
+  default     = "fcrepo/fcrepo:6.5.1-tomcat9"
+}
+
+variable "fedora_task_cpu" {
+  description = "CPU units for Fedora ECS tasks"
+  type        = number
+  default     = 1024
+}
+
+variable "fedora_task_memory" {
+  description = "Memory (MiB) for Fedora ECS tasks"
+  type        = number
+  default     = 2048
+}
+
+variable "fedora_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for Fedora ECS Fargate tasks"
+  type        = number
+  default     = 100
+}
+
+variable "fedora_jvm_xms_mb" {
+  description = "Initial JVM heap size in MiB for Fedora"
+  type        = number
+  default     = 1024
+}
+
+variable "fedora_jvm_xmx_mb" {
+  description = "Maximum JVM heap size in MiB for Fedora"
+  type        = number
+  default     = 2048
+}
+
+variable "fedora_db_connection_checkout_timeout_ms" {
+  description = "Fedora database connection checkout timeout in milliseconds"
+  type        = number
+  default     = 120000
+}
+
+variable "fedora_session_timeout_ms" {
+  description = "Fedora session timeout in milliseconds"
+  type        = number
+  default     = 1800000
+}
+
+variable "fedora_ocfl_s3_connection_timeout_seconds" {
+  description = "Fedora OCFL S3 connection timeout in seconds"
+  type        = number
+  default     = 300
+}
+
+variable "fedora_ocfl_s3_read_timeout_seconds" {
+  description = "Fedora OCFL S3 read timeout in seconds"
+  type        = number
+  default     = 300
+}
+
+variable "fedora_ocfl_s3_write_timeout_seconds" {
+  description = "Fedora OCFL S3 write timeout in seconds"
+  type        = number
+  default     = 900
+}
+
+variable "fedora_desired_count" {
+  description = "Desired task count for Fedora ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "fedora_min_capacity" {
+  description = "Minimum autoscaling capacity for Fedora ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "fedora_max_capacity" {
+  description = "Maximum autoscaling capacity for Fedora ECS service"
+  type        = number
+  default     = 2
+}
+
+variable "fedora_target_cpu_utilization" {
+  description = "Target average CPU utilization percent for Fedora autoscaling"
+  type        = number
+  default     = 70
+}
+
+variable "fedora_target_memory_utilization" {
+  description = "Target average memory utilization percent for Fedora autoscaling"
+  type        = number
+  default     = 80
+}
+
+variable "fedora_assign_public_ip" {
+  description = "Assign public IPs to Fedora tasks. Keep false when using private subnets with NAT."
+  type        = bool
+  default     = false
+}
+
+variable "fedora_log_retention_days" {
+  description = "CloudWatch log retention in days for Fedora ECS service"
+  type        = number
+  default     = 30
+}
+
+variable "solr_image" {
+  description = "Container image URI used by ECS Solr tasks. Should be built from Dockerfile-solr so /opt/solr/server/configsets/hyraxconf exists."
+  type        = string
+  default     = "solr:8.11"
+}
+
+variable "solr_heap" {
+  description = "Heap value passed to SOLR_HEAP for Solr JVM"
+  type        = string
+  default     = "1g"
+}
+
+variable "solr_task_cpu" {
+  description = "CPU units for Solr ECS tasks"
+  type        = number
+  default     = 1024
+}
+
+variable "solr_task_memory" {
+  description = "Memory (MiB) for Solr ECS tasks"
+  type        = number
+  default     = 2048
+}
+
+variable "solr_desired_count" {
+  description = "Desired task count for Solr ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "solr_min_capacity" {
+  description = "Minimum autoscaling capacity for Solr ECS service"
+  type        = number
+  default     = 1
+}
+
+variable "solr_max_capacity" {
+  description = "Maximum autoscaling capacity for Solr ECS service"
+  type        = number
+  default     = 2
+}
+
+variable "solr_target_cpu_utilization" {
+  description = "Target average CPU utilization percent for Solr autoscaling"
+  type        = number
+  default     = 70
+}
+
+variable "solr_target_memory_utilization" {
+  description = "Target average memory utilization percent for Solr autoscaling"
+  type        = number
+  default     = 80
+}
+
+variable "solr_assign_public_ip" {
+  description = "Assign public IPs to Solr tasks. Keep false when using private subnets with NAT."
+  type        = bool
+  default     = false
+}
+
+variable "solr_log_retention_days" {
+  description = "CloudWatch log retention in days for Solr ECS service"
+  type        = number
+  default     = 30
+}
+
 variable "aurora_engine_version" {
   description = "Aurora PostgreSQL engine version"
   type        = string
@@ -476,10 +763,56 @@ variable "aurora_deletion_protection" {
   default     = true
 }
 
-# ── ElastiCache ──────────────────────────────────────────────────────────────
-
 variable "elasticache_node_type" {
   description = "ElastiCache node type for the managed Redis cluster"
   type        = string
   default     = "cache.t4g.micro"
+}
+
+variable "elasticache_num_cache_clusters" {
+  description = "Number of cache nodes in the Redis replication group (set >1 for failover/read replica)"
+  type        = number
+  default     = 1
+}
+
+variable "elasticache_parameter_group_family" {
+  description = "ElastiCache Redis parameter group family"
+  type        = string
+  default     = "redis7"
+}
+
+variable "elasticache_maxmemory_policy" {
+  description = "Redis maxmemory-policy for Sidekiq safety; noeviction prevents silent queue data loss"
+  type        = string
+  default     = "noeviction"
+}
+
+variable "elasticache_alarm_period_seconds" {
+  description = "CloudWatch period for ElastiCache alarms"
+  type        = number
+  default     = 60
+}
+
+variable "elasticache_alarm_evaluation_periods" {
+  description = "CloudWatch evaluation periods for ElastiCache alarms"
+  type        = number
+  default     = 5
+}
+
+variable "elasticache_evictions_alarm_threshold" {
+  description = "Alarm when Redis evictions over the period are >= this value"
+  type        = number
+  default     = 1
+}
+
+variable "elasticache_memory_usage_alarm_threshold" {
+  description = "Alarm when Redis memory usage percentage exceeds this threshold"
+  type        = number
+  default     = 80
+}
+
+variable "elasticache_alarm_actions" {
+  description = "SNS topic ARNs or other alarm actions for ElastiCache alarms"
+  type        = list(string)
+  default     = []
 }

@@ -1,10 +1,15 @@
 locals {
-  sidekiq_image_uri = length(trimspace(var.sidekiq_image)) > 0 ? var.sidekiq_image : "${aws_ecr_repository.sidekiq.repository_url}:latest"
+  sidekiq_default_image_uri  = trimspace(var.sidekiq_default_image)
+  sidekiq_whisper_image_uri  = trimspace(var.sidekiq_whisper_image)
+  sidekiq_ocr_text_image_uri = trimspace(var.sidekiq_ocr_text_image)
 
   sidekiq_service_configs = {
     default = {
+      image                            = local.sidekiq_default_image_uri
       sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_pdf_text_extraction = "false"
+      sidekiq_only_ocr_text_extraction = "false"
+      sidekiq_only_derivatives         = "false"
+      sidekiq_only_thumbnail           = "false"
       sidekiq_workers                  = "4"
       desired_count                    = var.sidekiq_default_desired_count
       min_capacity                     = var.sidekiq_default_min_capacity
@@ -13,8 +18,11 @@ locals {
       memory                           = var.sidekiq_task_memory
     }
     whisper = {
+      image                            = local.sidekiq_whisper_image_uri
       sidekiq_only_audio_transcript    = "true"
-      sidekiq_only_pdf_text_extraction = "false"
+      sidekiq_only_ocr_text_extraction = "false"
+      sidekiq_only_derivatives         = "false"
+      sidekiq_only_thumbnail           = "false"
       sidekiq_workers                  = "1"
       desired_count                    = var.sidekiq_whisper_desired_count
       min_capacity                     = var.sidekiq_whisper_min_capacity
@@ -22,15 +30,44 @@ locals {
       cpu                              = var.sidekiq_whisper_task_cpu
       memory                           = var.sidekiq_whisper_task_memory
     }
-    pdf_text = {
+    ocr_text = {
+      image                            = local.sidekiq_ocr_text_image_uri
       sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_pdf_text_extraction = "true"
+      sidekiq_only_ocr_text_extraction = "true"
+      sidekiq_only_derivatives         = "false"
+      sidekiq_only_thumbnail           = "false"
       sidekiq_workers                  = "1"
-      desired_count                    = var.sidekiq_pdf_text_desired_count
-      min_capacity                     = var.sidekiq_pdf_text_min_capacity
-      max_capacity                     = var.sidekiq_pdf_text_max_capacity
-      cpu                              = var.sidekiq_pdf_text_task_cpu
-      memory                           = var.sidekiq_pdf_text_task_memory
+      desired_count                    = var.sidekiq_ocr_text_desired_count
+      min_capacity                     = var.sidekiq_ocr_text_min_capacity
+      max_capacity                     = var.sidekiq_ocr_text_max_capacity
+      cpu                              = var.sidekiq_ocr_text_task_cpu
+      memory                           = var.sidekiq_ocr_text_task_memory
+    }
+    derivatives = {
+      image                            = local.sidekiq_default_image_uri
+      sidekiq_only_audio_transcript    = "false"
+      sidekiq_only_ocr_text_extraction = "false"
+      sidekiq_only_derivatives         = "true"
+      sidekiq_only_thumbnail           = "false"
+      sidekiq_workers                  = "2"
+      desired_count                    = var.sidekiq_derivatives_desired_count
+      min_capacity                     = var.sidekiq_derivatives_min_capacity
+      max_capacity                     = var.sidekiq_derivatives_max_capacity
+      cpu                              = var.sidekiq_derivatives_task_cpu
+      memory                           = var.sidekiq_derivatives_task_memory
+    }
+    thumbnail = {
+      image                            = local.sidekiq_default_image_uri
+      sidekiq_only_audio_transcript    = "false"
+      sidekiq_only_ocr_text_extraction = "false"
+      sidekiq_only_derivatives         = "false"
+      sidekiq_only_thumbnail           = "true"
+      sidekiq_workers                  = "2"
+      desired_count                    = var.sidekiq_thumbnail_desired_count
+      min_capacity                     = var.sidekiq_thumbnail_min_capacity
+      max_capacity                     = var.sidekiq_thumbnail_max_capacity
+      cpu                              = var.sidekiq_thumbnail_task_cpu
+      memory                           = var.sidekiq_thumbnail_task_memory
     }
   }
 
@@ -87,25 +124,33 @@ resource "aws_ecs_task_definition" "sidekiq" {
 
   container_definitions = jsonencode([
     {
-      name      = "sidekiq-${each.key}"
-      image     = local.sidekiq_image_uri
-      essential = true
+      name        = "sidekiq-${each.key}"
+      image       = each.value.image
+      essential   = true
+      stopTimeout = var.sidekiq_container_stop_timeout_seconds
       command = [
         "sh",
         "-lc",
-        "exec bundle exec sidekiq"
+        "exec bundle exec sidekiq -t ${var.sidekiq_shutdown_timeout_seconds}"
       ]
       environment = concat(local.ecs_common_container_environment, [
         { name = "SIDEKIQ_ONLY_AUDIO_TRANSCRIPT", value = each.value.sidekiq_only_audio_transcript },
-        { name = "SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION", value = each.value.sidekiq_only_pdf_text_extraction },
+        { name = "SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION", value = each.value.sidekiq_only_ocr_text_extraction },
+        { name = "SIDEKIQ_ONLY_DERIVATIVES", value = each.value.sidekiq_only_derivatives },
+        { name = "SIDEKIQ_ONLY_THUMBNAIL", value = each.value.sidekiq_only_thumbnail },
         { name = "SIDEKIQ_WORKERS", value = each.value.sidekiq_workers }
       ])
-      secrets     = local.ecs_common_container_secrets
+      secrets = local.ecs_common_container_secrets
       mountPoints = [
         local.ecs_uploads_mount_point,
         {
           sourceVolume  = "ocr-cache"
           containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
+          readOnly      = false
+        },
+        {
+          sourceVolume  = "derivatives-cache"
+          containerPath = "/app/scholarspace/tmp/cache/derivatives"
           readOnly      = false
         }
       ]
@@ -149,6 +194,21 @@ resource "aws_ecs_task_definition" "sidekiq" {
       }
     }
   }
+
+  volume {
+    name = "derivatives-cache"
+
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.uploads.id
+      root_directory     = "/"
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.derivatives_cache.id
+        iam             = "DISABLED"
+      }
+    }
+  }
 }
 
 resource "aws_ecs_service" "sidekiq" {
@@ -178,7 +238,10 @@ resource "aws_ecs_service" "sidekiq" {
   depends_on = [
     aws_security_group_rule.aurora_from_sidekiq_tasks,
     aws_rds_cluster_instance.aurora,
+    aws_ecs_service.memcached,
     aws_ecs_service.fits,
+    aws_ecs_service.fedora,
+    aws_ecs_service.solr,
   ]
 }
 
@@ -245,6 +308,21 @@ resource "aws_cloudwatch_log_metric_filter" "sidekiq_queue_pressure" {
   }
 }
 
+resource "aws_cloudwatch_log_metric_filter" "sidekiq_queue_depth_pressure" {
+  for_each = local.sidekiq_log_autoscaling_configs
+
+  name           = "${var.site_prefix}-sidekiq-${each.key}-queue-depth-pressure"
+  log_group_name = aws_cloudwatch_log_group.sidekiq[each.key].name
+  pattern        = var.sidekiq_log_autoscaling_depth_pattern
+
+  metric_transformation {
+    name          = "${var.site_prefix}-sidekiq-${each.key}-queue-depth-pressure"
+    namespace     = "${var.site_prefix}/Sidekiq"
+    value         = "1"
+    default_value = 0
+  }
+}
+
 resource "aws_appautoscaling_policy" "sidekiq_log_scale_out" {
   for_each = local.sidekiq_log_autoscaling_configs
 
@@ -275,6 +353,23 @@ resource "aws_cloudwatch_metric_alarm" "sidekiq_log_scale_out" {
   evaluation_periods  = var.sidekiq_log_autoscaling_evaluation_periods
   threshold           = var.sidekiq_log_autoscaling_threshold
   metric_name         = aws_cloudwatch_log_metric_filter.sidekiq_queue_pressure[each.key].metric_transformation[0].name
+  namespace           = "${var.site_prefix}/Sidekiq"
+  period              = var.sidekiq_log_autoscaling_period_seconds
+  statistic           = "Sum"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_appautoscaling_policy.sidekiq_log_scale_out[each.key].arn]
+  ok_actions          = []
+}
+
+resource "aws_cloudwatch_metric_alarm" "sidekiq_log_depth_scale_out" {
+  for_each = local.sidekiq_log_autoscaling_configs
+
+  alarm_name          = "${var.site_prefix}-sidekiq-${each.key}-log-depth-scale-out"
+  alarm_description   = "Scale out Sidekiq ${each.key} service when log queue depth pressure events increase"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = var.sidekiq_log_autoscaling_evaluation_periods
+  threshold           = var.sidekiq_log_autoscaling_depth_threshold
+  metric_name         = aws_cloudwatch_log_metric_filter.sidekiq_queue_depth_pressure[each.key].metric_transformation[0].name
   namespace           = "${var.site_prefix}/Sidekiq"
   period              = var.sidekiq_log_autoscaling_period_seconds
   statistic           = "Sum"
