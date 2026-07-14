@@ -1,10 +1,44 @@
 ---
+# allows for splitting of derivative jobs into separate sidekiq containers by workload type:
+# audio/transcript, pdf text extraction, thumbnail, and images-to-pdf processing
+<%
+only_audio_transcript = ENV['SIDEKIQ_ONLY_AUDIO_TRANSCRIPT'] == 'true'
+only_ocr_text_extraction = ENV['SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION'] == 'true' || ENV['SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION'] == 'true'
+only_derivatives = ENV['SIDEKIQ_ONLY_DERIVATIVES'] == 'true'
+only_thumbnail = ENV['SIDEKIQ_ONLY_THUMBNAIL'] == 'true'
+%>
+
 :queues:
+<% if only_audio_transcript %>
+  - [derivatives_audio_transcript_generate, 1]
+  - [derivatives_audio_transcript_persist, 1]
+  - [derivatives_presentation_version_av_generate, 1]
+  - [derivatives_presentation_version_av_persist, 1]
+<% elsif only_ocr_text_extraction %>
+  - [derivatives_text_extraction_from_pdf_persist, 1]
+  - [derivatives_text_extraction_from_pdf_generate, 1]
+  - [derivatives_text_extraction_from_images_generate, 1]
+  - [derivatives_text_extraction_from_images_persist, 1]
+  - [derivatives_presentation_version_pdf_generate, 1]
+  - [derivatives_presentation_version_pdf_persist, 1]
+<% elsif only_thumbnail %>
+  - [derivatives_thumbnail_generate, 1]
+  - [derivatives_thumbnail_persist, 1]
+  - [derivatives_representative_thumbnail_generate, 1]
+  - [derivatives_representative_thumbnail_persist, 1]
+<% elsif only_derivatives %>
+  - [derivatives_images_to_pdf_orchestrate, 1]
+  - [derivatives_images_to_pdf_assemble_pdf, 1]
+  - [derivatives_images_to_pdf_assemble_hocr, 1]
+  - [derivatives_presentation_version_image_generate, 1]
+  - [derivatives_presentation_version_image_persist, 1]
+<% else %>
   - [ingest, 4]
   - [batch, 2]
   - [default, 1]
+<% end %>
 
-test: # n/a
+test:
   :concurrency: 1
 
 development:
@@ -12,4 +46,4 @@ development:
   :logfile: ./log/sidekiq_development.log
 
 production:
-  :concurrency: <%= ENV['SIDEKIQ_WORKERS'] || 2 %>
+  :concurrency: <%= ENV['SIDEKIQ_WORKERS'] || 4 %>
