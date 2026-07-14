@@ -190,19 +190,6 @@ services:
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-  nginx:
-    image: nginx:latest
-    ports:
-      - "443:443"
-      - "80:80"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/ssl
-    restart: always
-    depends_on:
-      rails:
-        condition: service_healthy
-
   solr:
     ports:
       - "62821:8983"
