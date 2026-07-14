@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+APP_UID="${APP_UID:-$(id -u)}"
+APP_GID="${APP_GID:-$(id -g)}"
+COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
+
+# in dev, this helps with making sure uids/gids are the same when using bind mounts
+export APP_UID APP_GID COMPOSE_ENV_FILE
+
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  run --rm --no-deps -T app-volumes-init
+
+exec docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-dev.yml" \
+  up --build "$@"

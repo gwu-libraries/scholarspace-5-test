@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+APP_UID="${APP_UID:-1001}"
+APP_GID="${APP_GID:-101}"
+COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
+
+export APP_UID APP_GID COMPOSE_ENV_FILE
+
+# set up shared volumes
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  run --rm --no-deps -T app-volumes-init
+
+# build test docker containers
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  build rspec worker
+
+# boot dependencies in detached mode
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  up -d postgres redis solr fedora fits memcached worker
+
+# run tests in rails test container
+set +e
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  run --rm rspec sh -lc 'RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec "$@"' sh "$@"
+rspec_exit_code=$?
+set -e
+
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  down --remove-orphans
+
+exit "$rspec_exit_code"
