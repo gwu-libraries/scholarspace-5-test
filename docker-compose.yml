@@ -1,2 +1,181 @@
-include:
-  - docker-compose-dev.yml
+# Requires Docker Compose v2
+name: ${COMPOSE_PROJECT_NAME:-scholarspace}
+
+services:
+  app-volumes-init:
+    image: alpine:3.21
+    user: root
+    command:
+      - sh
+      - "-lc"
+      - |
+        mkdir -p /app/scholarspace/tmp/cache/assets/sprockets \
+                  /app/scholarspace/tmp/test_storage \
+                  /app/scholarspace/tmp/derivatives-work-locks \
+                  /app/scholarspace/node_modules \
+                  /app/scholarspace/storage \
+                  /app/scholarspace/uploads \
+                  /app/scholarspace/tmp/cache/yarn \
+                  /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+                  /app/scholarspace/tmp/cache/derivatives \
+                  /app/scholarspace/tmp/cache/whispercpp
+        chown -R ${APP_UID:-1001}:${APP_GID:-101} \
+               /app/scholarspace/node_modules \
+               /app/scholarspace/tmp/test_storage \
+               /app/scholarspace/tmp \
+               /app/scholarspace/storage \
+               /app/scholarspace/uploads \
+               /app/scholarspace/tmp/cache/yarn \
+               /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+               /app/scholarspace/tmp/cache/derivatives \
+               /app/scholarspace/tmp/cache/whispercpp \
+               /app/scholarspace/tmp/derivatives-work-locks
+        chmod -R ug+rwX /app/scholarspace/node_modules \
+                        /app/scholarspace/tmp/test_storage \
+                        /app/scholarspace/tmp \
+                        /app/scholarspace/storage \
+                        /app/scholarspace/uploads \
+                        /app/scholarspace/tmp/cache/yarn \
+                        /app/scholarspace/tmp/cache/solr-ocr-index-cache \
+                        /app/scholarspace/tmp/cache/derivatives \
+                        /app/scholarspace/tmp/cache/whispercpp \
+                        /app/scholarspace/tmp/derivatives-work-locks
+    restart: "no"
+    volumes:
+      - node_modules:/app/scholarspace/node_modules
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  whisper-model-preload:
+    image: scholarspace-worker-prod:${RAILS_TAG:-latest}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - RAILS_ENV=production
+    command: >-
+      sh -lc 'bundle exec rails runner "ENV["XDG_CACHE_HOME"] = "/app/scholarspace/tmp/cache/whispercpp"; Whisper::Context.new(ENV.fetch("WHISPER_PRELOAD_MODEL", "base"))"'
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: "no"
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    volumes:
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  postgres:
+    image: postgres:15-alpine
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    volumes:
+      - type: volume
+        source: db
+        target: /var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: bitnami/redis:latest
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    volumes:
+      - type: volume
+        source: redis
+        target: /bitnami/redis/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    restart: always
+
+  memcached:
+    image: bitnami/memcached
+    restart: always
+
+  fedora:
+    image: fcrepo/fcrepo:6.5.1-tomcat9
+    restart: always
+    environment:
+      - >-
+        CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
+        -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
+        -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
+        -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
+        -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+        -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
+        -Dfcrepo.db.url=jdbc:h2:/fcrepo-home/data/fcrepo-h2\;FILE_LOCK=FILE
+      - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
+    volumes:
+      - type: volume
+        source: fedora
+        target: /fcrepo-home
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --http-user=fedoraAdmin --http-password=fedoraAdmin http://localhost:8080/fcrepo/ || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
+
+  fits:
+    build:
+      dockerfile: Dockerfile-fits
+      context: .
+    restart: always
+
+  solr:
+    image: solr:8.11
+    user: 8983:8983
+    command:
+      - sh
+      - "-c"
+      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
+    volumes:
+      - type: volume
+        source: solr_home
+        target: /var/solr/data
+        consistency: cached
+      - ./solr/conf:/opt/solr/server/configsets/hyraxconf
+      - ./solr/plugins:/opt/solr/contrib/plugins
+      - type: volume
+        source: solr-ocr-index-cache
+        target: /app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - type: volume
+        source: derivatives-cache
+        target: /app/scholarspace/tmp/cache/derivatives
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 524288
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+    restart: always
+
+volumes:
+  db:
+  node_modules:
+  storage:
+  uploads:
+  public:
+  tmp:
+  yarn-cache:
+  redis:
+  fedora:
+  solr_home:
+  solr-ocr-index-cache:
+  derivatives-cache:
+  whispercpp-cache:
