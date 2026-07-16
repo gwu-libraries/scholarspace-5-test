@@ -31,7 +31,7 @@ set +e
 docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-test.yml" \
-  run --rm rspec sh -lc 'RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec "$@"' sh "$@"
+  run --rm rspec sh -lc 'bundle check || bundle install; RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec "$@"' sh "$@"
 rspec_exit_code=$?
 set -e
 

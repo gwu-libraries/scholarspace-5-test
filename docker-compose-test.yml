@@ -14,7 +14,7 @@ services:
       args:
         - BUILD_ENV=test
         - BUNDLE_GEMFILE=Gemfile
-    command: sh -c 'RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec'
+    command: sh -c 'bundle check || bundle install; RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
       - ${COMPOSE_ENV_FILE:-dev.env}
@@ -45,6 +45,7 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
+      - bundle-cache:/app/scholarspace/vendor/bundle
       - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
@@ -57,7 +58,7 @@ services:
       args:
         - BUILD_ENV=test
         - BUNDLE_GEMFILE=Gemfile
-    command: sh -lc 'exec bundle exec sidekiq'
+    command: sh -lc 'bundle check || bundle install; exec bundle exec sidekiq'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
       - ${COMPOSE_ENV_FILE:-dev.env}
@@ -87,6 +88,7 @@ services:
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
+      - bundle-cache:/app/scholarspace/vendor/bundle
       - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
@@ -122,3 +124,6 @@ services:
 networks:
   default:
     name: scholarspace-test-net
+
+volumes:
+  bundle-cache:
