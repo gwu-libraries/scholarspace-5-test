@@ -96,7 +96,10 @@ services:
       - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
-      - SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+      - SIDEKIQ_WORKERS=${SIDEKIQ_DEFAULT_WORKERS:-4}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -134,7 +137,9 @@ services:
       - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
-      - SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
       - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-1}
     depends_on:
       app-volumes-init:
@@ -151,7 +156,7 @@ services:
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-  worker_pdf_text:
+  worker_ocr_text:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
@@ -173,8 +178,92 @@ services:
       - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
       - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
-      - SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION=true
-      - SIDEKIQ_WORKERS=${SIDEKIQ_PDF_TEXT_WORKERS:-1}
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=true
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+      - SIDEKIQ_WORKERS=${SIDEKIQ_OCR_TEXT_WORKERS:-1}
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  worker_images:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=true
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+      - SIDEKIQ_WORKERS=${SIDEKIQ_DERIVATIVES_WORKERS:-2}
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  worker_thumbnail:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=true
+      - SIDEKIQ_WORKERS=${SIDEKIQ_THUMBNAIL_WORKERS:-2}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
