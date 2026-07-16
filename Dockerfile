@@ -28,6 +28,7 @@ RUN apk --no-cache upgrade && \
   jemalloc \
   ruby-grpc \
   tzdata \
+  ffmpeg \
   $EXTRA_APK_PACKAGES
 
 RUN setfacl -d -m o::rwx /usr/local/bundle && \
