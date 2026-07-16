@@ -107,7 +107,7 @@ memcached_assign_public_ip          = false
 memcached_log_retention_days        = 30
 
 # Fedora
-fedora_image                              = "fcrepo/fcrepo:6.5.1-tomcat9"
+fedora_image                              = "fcrepo/fcrepo:6.5.2-tomcat9"
 fedora_desired_count                      = 1
 fedora_min_capacity                       = 1
 fedora_max_capacity                       = 1 # KEEP THIS AT 1
