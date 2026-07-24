@@ -140,7 +140,7 @@ solr_assign_public_ip          = false
 solr_log_retention_days        = 30
 
 # Aurora PostgreSQL settings
-aurora_engine_version        = "16.6"
+aurora_engine_version        = "16.9"
 aurora_database_name         = "scholarspacetftestab"
 aurora_master_username       = "scholarspace"
 aurora_master_password       = "changeme-set-in-tfvars" # sensitive - do not commit

@@ -731,7 +731,7 @@ variable "solr_log_retention_days" {
 variable "aurora_engine_version" {
   description = "Aurora PostgreSQL engine version"
   type        = string
-  default     = "16.6"
+  default     = "16.9"
 }
 
 variable "aurora_database_name" {
