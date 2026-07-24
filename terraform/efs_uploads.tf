@@ -3,7 +3,7 @@ resource "aws_efs_file_system" "uploads" {
   encrypted      = true
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   tags = {
@@ -13,6 +13,10 @@ resource "aws_efs_file_system" "uploads" {
 
 resource "aws_efs_access_point" "uploads" {
   file_system_id = aws_efs_file_system.uploads.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   posix_user {
     uid = 1001
@@ -89,6 +93,10 @@ resource "aws_efs_mount_target" "uploads_secondary" {
 
 resource "aws_efs_access_point" "solr_data" {
   file_system_id = aws_efs_file_system.uploads.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   posix_user {
     uid = 8983

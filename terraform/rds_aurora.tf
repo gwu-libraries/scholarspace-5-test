@@ -84,6 +84,8 @@ resource "aws_rds_cluster" "aurora" {
   }
 
   lifecycle {
+    prevent_destroy = true
+
     precondition {
       condition     = length(var.aurora_master_password) > 0
       error_message = "Set aurora_master_password and keep it in sync with DB_PASSWORD in ssm_env_file_path."
@@ -99,6 +101,10 @@ resource "aws_rds_cluster_instance" "aurora" {
   instance_class     = var.aurora_instance_class
   engine             = aws_rds_cluster.aurora.engine
   engine_version     = aws_rds_cluster.aurora.engine_version
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = {
     Name = "${var.site_prefix}-aurora-${count.index}"

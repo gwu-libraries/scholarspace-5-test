@@ -78,6 +78,10 @@ resource "aws_elasticache_replication_group" "redis" {
   tags = {
     Name = "${var.site_prefix}-redis"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "redis_evictions" {

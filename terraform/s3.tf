@@ -1,6 +1,10 @@
 resource "aws_s3_bucket" "app_bucket" {
   bucket = var.s3_bucket_name
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name = "${var.site_prefix}_prod_app_bucket"
   }
