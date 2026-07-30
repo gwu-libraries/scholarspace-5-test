@@ -1,6 +1,14 @@
 # Requires Docker Compose v2
 name: scholarspace-test
 
+x-scholarspace-test-build: &scholarspace-test-build
+  dockerfile: Dockerfile
+  context: .
+  target: scholarspace-default
+  args:
+    - BUILD_ENV=test
+    - BUNDLE_GEMFILE=Gemfile
+
 services:
 
   # creates container with dev/test requirements, runs rspec tests, shuts down
@@ -8,12 +16,7 @@ services:
 
   rspec:
     image: scholarspace-rspec:${RAILS_TAG:-latest}
-    build:
-      dockerfile: Dockerfile
-      context: .
-      args:
-        - BUILD_ENV=test
-        - BUNDLE_GEMFILE=Gemfile
+    build: *scholarspace-test-build
     command: sh -c 'bundle check || bundle install; RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -52,12 +55,7 @@ services:
 
   worker:
     image: scholarspace-worker-test:${RAILS_TAG:-latest}
-    build:
-      dockerfile: Dockerfile
-      context: .
-      args:
-        - BUILD_ENV=test
-        - BUNDLE_GEMFILE=Gemfile
+    build: *scholarspace-test-build
     command: sh -lc 'bundle check || bundle install; exec bundle exec sidekiq'
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:

@@ -262,6 +262,7 @@ COPY --from=scholarspace-sidekiq-builder --chown=app:app /app/scholarspace /app/
 COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/assets /app/scholarspace/public/assets
 COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/packs /app/scholarspace/public/packs
 
-# Keep default target aligned with existing compose workflows that build a
-# single image for both rails and worker containers.
+# Keep default target aligned with local dev and test/CI compose
+# workflows. This target includes the shared Rails, asset, and Sidekiq runtime;
+# ECS deployment images are built from explicit prod targets by the push script.
 FROM scholarspace-web-builder AS scholarspace-default

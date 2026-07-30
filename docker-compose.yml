@@ -51,28 +51,6 @@ services:
       - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
       - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-  whisper-model-preload:
-    image: scholarspace-worker-prod:${RAILS_TAG:-latest}
-    env_file:
-      - ${COMPOSE_ENV_FILE:-dev.env}
-    environment:
-      - RAILS_ENV=production
-    command: >-
-      sh -lc 'bundle exec rails runner "ENV["XDG_CACHE_HOME"] = "/app/scholarspace/tmp/cache/whispercpp"; Whisper::Context.new(ENV.fetch("WHISPER_PRELOAD_MODEL", "base"))"'
-    depends_on:
-      app-volumes-init:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
-    restart: "no"
-    user: ${APP_UID:-1001}:${APP_GID:-101}
-    volumes:
-      - storage:/app/scholarspace/storage
-      - uploads:/app/scholarspace/uploads
-      - tmp:/app/scholarspace/tmp
-      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
-      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
-
   postgres:
     image: postgres:15-alpine
     env_file:

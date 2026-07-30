@@ -1,18 +1,18 @@
 # Requires Docker Compose v2
 name: scholarspace-dev
 
-services:
-  whisper-model-preload:
-    profiles: ["prod"]
+x-scholarspace-dev-build: &scholarspace-dev-build
+  dockerfile: Dockerfile
+  context: .
+  target: scholarspace-default
+  args:
+    - BUILD_ENV=dev
+    - BUNDLE_GEMFILE=Gemfile
 
+services:
   rails:
     image: scholarspace-rails:${RAILS_TAG:-latest}
-    build:
-      dockerfile: Dockerfile
-      context: .
-      args:
-        - BUILD_ENV=dev
-        - BUNDLE_GEMFILE=Gemfile
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && yarn install --force && yarn build:dev && bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails db:seed && exec ./bin/rails server -p 3000 -b 0.0.0.0'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
@@ -72,12 +72,7 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
-    build:
-      dockerfile: Dockerfile
-      context: .
-      args:
-        - BUILD_ENV=dev
-        - BUNDLE_GEMFILE=Gemfile
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
@@ -119,6 +114,7 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
@@ -160,6 +156,7 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
@@ -201,6 +198,7 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
@@ -242,6 +240,7 @@ services:
     stdin_open: true
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
     command: sh -lc 'bundle install && exec bundle exec sidekiq'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
