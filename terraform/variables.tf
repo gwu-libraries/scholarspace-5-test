@@ -701,7 +701,7 @@ variable "solr_min_capacity" {
 variable "solr_max_capacity" {
   description = "Maximum autoscaling capacity for Solr ECS service"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "solr_target_cpu_utilization" {
