@@ -42,8 +42,5 @@ test:
   :concurrency: 1
 
 development:
-  :concurrency: <%= ENV['SIDEKIQ_WORKERS'] || 1 %>
+  :concurrency: 1
   :logfile: ./log/sidekiq_development.log
-
-production:
-  :concurrency: <%= ENV['SIDEKIQ_WORKERS'] || 4 %>
