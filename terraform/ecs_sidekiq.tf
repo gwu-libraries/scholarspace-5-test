@@ -10,7 +10,7 @@ locals {
       sidekiq_only_ocr_text_extraction = "false"
       sidekiq_only_derivatives         = "false"
       sidekiq_only_thumbnail           = "false"
-      sidekiq_workers                  = "4"
+      concurrency                      = "4"
       desired_count                    = var.sidekiq_default_desired_count
       min_capacity                     = var.sidekiq_default_min_capacity
       max_capacity                     = var.sidekiq_default_max_capacity
@@ -23,7 +23,7 @@ locals {
       sidekiq_only_ocr_text_extraction = "false"
       sidekiq_only_derivatives         = "false"
       sidekiq_only_thumbnail           = "false"
-      sidekiq_workers                  = "1"
+      concurrency                      = "1"
       desired_count                    = var.sidekiq_whisper_desired_count
       min_capacity                     = var.sidekiq_whisper_min_capacity
       max_capacity                     = var.sidekiq_whisper_max_capacity
@@ -36,7 +36,7 @@ locals {
       sidekiq_only_ocr_text_extraction = "true"
       sidekiq_only_derivatives         = "false"
       sidekiq_only_thumbnail           = "false"
-      sidekiq_workers                  = "1"
+      concurrency                      = "1"
       desired_count                    = var.sidekiq_ocr_text_desired_count
       min_capacity                     = var.sidekiq_ocr_text_min_capacity
       max_capacity                     = var.sidekiq_ocr_text_max_capacity
@@ -49,7 +49,7 @@ locals {
       sidekiq_only_ocr_text_extraction = "false"
       sidekiq_only_derivatives         = "true"
       sidekiq_only_thumbnail           = "false"
-      sidekiq_workers                  = "2"
+      concurrency                      = "2"
       desired_count                    = var.sidekiq_derivatives_desired_count
       min_capacity                     = var.sidekiq_derivatives_min_capacity
       max_capacity                     = var.sidekiq_derivatives_max_capacity
@@ -62,7 +62,7 @@ locals {
       sidekiq_only_ocr_text_extraction = "false"
       sidekiq_only_derivatives         = "false"
       sidekiq_only_thumbnail           = "true"
-      sidekiq_workers                  = "2"
+      concurrency                      = "2"
       desired_count                    = var.sidekiq_thumbnail_desired_count
       min_capacity                     = var.sidekiq_thumbnail_min_capacity
       max_capacity                     = var.sidekiq_thumbnail_max_capacity
@@ -118,14 +118,13 @@ resource "aws_ecs_task_definition" "sidekiq" {
       command = [
         "sh",
         "-lc",
-        "exec bundle exec sidekiq -t ${var.sidekiq_shutdown_timeout_seconds}"
+        "exec bundle exec sidekiq -c ${each.value.concurrency} -t ${var.sidekiq_shutdown_timeout_seconds}"
       ]
       environment = concat(local.ecs_common_container_environment, [
         { name = "SIDEKIQ_ONLY_AUDIO_TRANSCRIPT", value = each.value.sidekiq_only_audio_transcript },
         { name = "SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION", value = each.value.sidekiq_only_ocr_text_extraction },
         { name = "SIDEKIQ_ONLY_DERIVATIVES", value = each.value.sidekiq_only_derivatives },
-        { name = "SIDEKIQ_ONLY_THUMBNAIL", value = each.value.sidekiq_only_thumbnail },
-        { name = "SIDEKIQ_WORKERS", value = each.value.sidekiq_workers }
+        { name = "SIDEKIQ_ONLY_THUMBNAIL", value = each.value.sidekiq_only_thumbnail }
       ])
       secrets = local.ecs_common_container_secrets
       mountPoints = [
