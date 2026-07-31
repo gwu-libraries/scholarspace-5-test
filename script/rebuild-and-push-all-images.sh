@@ -118,20 +118,20 @@ ensure_ecr_repo_exists() {
   fi
 }
 
-AWS_REGION="${AWS_REGION:-$(aws configure get region)}"
-if [[ -z "$AWS_REGION" ]]; then
-  echo "AWS region is empty. Set AWS_REGION or run 'aws configure' first." >&2
+if [[ ! -f "$TFVARS_FILE" ]]; then
+  echo "terraform.tfvars not found: $TFVARS_FILE" >&2
+  exit 1
+fi
+
+AWS_REGION="${AWS_REGION:-$(get_tfvars_value aws_region "$TFVARS_FILE")}"
+if [[ -z "${AWS_REGION:-}" ]]; then
+  echo "AWS_REGION is not set. Export AWS_REGION or define aws_region in $TFVARS_FILE." >&2
   exit 1
 fi
 
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}"
 if [[ -z "$AWS_ACCOUNT_ID" ]]; then
   echo "AWS account id is empty. Set AWS_ACCOUNT_ID or authenticate AWS CLI first." >&2
-  exit 1
-fi
-
-if [[ ! -f "$TFVARS_FILE" ]]; then
-  echo "terraform.tfvars not found: $TFVARS_FILE" >&2
   exit 1
 fi
 

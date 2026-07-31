@@ -3,15 +3,35 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TERRAFORM_DIR="${ROOT_DIR}/terraform"
+TFVARS_FILE="${TFVARS_FILE:-${TERRAFORM_DIR}/terraform.tfvars}"
 
 if [[ ! -d "${TERRAFORM_DIR}" ]]; then
   echo "Terraform directory not found: ${TERRAFORM_DIR}" >&2
   exit 1
 fi
 
-AWS_REGION="${AWS_REGION:-$(aws configure get region)}"
-if [[ -z "${AWS_REGION}" ]]; then
-  echo "AWS_REGION is not set and no default AWS CLI region is configured." >&2
+get_tfvars_value() {
+  local key="$1"
+  local file_path="$2"
+  awk -F'=' -v k="$key" '
+    $0 ~ "^[[:space:]]*" k "[[:space:]]*=" {
+      v = $2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
+      gsub(/"/, "", v)
+      print v
+      exit
+    }
+  ' "$file_path"
+}
+
+if [[ ! -f "${TFVARS_FILE}" ]]; then
+  echo "terraform.tfvars not found: ${TFVARS_FILE}" >&2
+  exit 1
+fi
+
+AWS_REGION="${AWS_REGION:-$(get_tfvars_value aws_region "${TFVARS_FILE}")}"
+if [[ -z "${AWS_REGION:-}" ]]; then
+  echo "AWS_REGION is not set. Export AWS_REGION or define aws_region in ${TFVARS_FILE}." >&2
   exit 1
 fi
 
