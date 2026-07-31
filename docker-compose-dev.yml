@@ -73,7 +73,7 @@ services:
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
     build: *scholarspace-dev-build
-    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DEFAULT_WORKERS:-4}"'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -94,7 +94,6 @@ services:
       - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
       - SIDEKIQ_ONLY_DERIVATIVES=false
       - SIDEKIQ_ONLY_THUMBNAIL=false
-      - SIDEKIQ_WORKERS=${SIDEKIQ_DEFAULT_WORKERS:-4}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -115,7 +114,7 @@ services:
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
     build: *scholarspace-dev-build
-    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_TRANSCRIPT_WORKERS:-1}"'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -136,7 +135,6 @@ services:
       - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
       - SIDEKIQ_ONLY_DERIVATIVES=false
       - SIDEKIQ_ONLY_THUMBNAIL=false
-      - SIDEKIQ_WORKERS=${SIDEKIQ_TRANSCRIPT_WORKERS:-1}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -157,7 +155,7 @@ services:
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
     build: *scholarspace-dev-build
-    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_OCR_TEXT_WORKERS:-1}"'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -178,7 +176,6 @@ services:
       - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=true
       - SIDEKIQ_ONLY_DERIVATIVES=false
       - SIDEKIQ_ONLY_THUMBNAIL=false
-      - SIDEKIQ_WORKERS=${SIDEKIQ_OCR_TEXT_WORKERS:-1}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -199,7 +196,7 @@ services:
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
     build: *scholarspace-dev-build
-    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DERIVATIVES_WORKERS:-2}"'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -220,7 +217,6 @@ services:
       - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
       - SIDEKIQ_ONLY_DERIVATIVES=true
       - SIDEKIQ_ONLY_THUMBNAIL=false
-      - SIDEKIQ_WORKERS=${SIDEKIQ_DERIVATIVES_WORKERS:-2}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
@@ -241,7 +237,7 @@ services:
     tty: true
     image: scholarspace-worker:${RAILS_TAG:-latest}
     build: *scholarspace-dev-build
-    command: sh -lc 'bundle install && exec bundle exec sidekiq'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_THUMBNAIL_WORKERS:-2}"'
     restart: always
     user: ${APP_UID:-1001}:${APP_GID:-101}
     env_file:
@@ -262,7 +258,6 @@ services:
       - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
       - SIDEKIQ_ONLY_DERIVATIVES=false
       - SIDEKIQ_ONLY_THUMBNAIL=true
-      - SIDEKIQ_WORKERS=${SIDEKIQ_THUMBNAIL_WORKERS:-2}
     depends_on:
       app-volumes-init:
         condition: service_completed_successfully
