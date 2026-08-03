@@ -90,4 +90,3 @@ resource "aws_efs_mount_target" "uploads_secondary" {
   subnet_id       = aws_subnet.app_private_subnet_secondary.id
   security_groups = [aws_security_group.efs_uploads.id]
 }
-
