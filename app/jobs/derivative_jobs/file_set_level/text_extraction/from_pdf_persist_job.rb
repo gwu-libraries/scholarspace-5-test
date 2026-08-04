@@ -13,8 +13,8 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromPdfPersistJob < Applicat
     )
 
     with_work(work_id: work_id) do |work|
-      Derivatives::FileSetLevel::TextExtraction
-        .from_pdf(work)
+      Derivatives::FileSetLevel::TextExtraction::FromPdf
+        .new(work)
         .persist_pdf_hocr_from_cache(
           source_file_set_id: source_file_set_id,
           cache_file_identifier_hocr: cache_file_identifier_hocr,

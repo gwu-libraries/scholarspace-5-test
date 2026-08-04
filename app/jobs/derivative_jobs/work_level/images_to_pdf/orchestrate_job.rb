@@ -5,9 +5,8 @@ class DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob < ApplicationJob
 
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
-      source_image_file_set_ids = Derivatives::FileSetLevel::TextExtraction
-                  .from_images
-                  .source_image_file_set_ids(work)
+      source_image_file_set_ids = Derivatives::FileSetLevel::TextExtraction::FromImages
+                                  .source_image_file_set_ids(work)
 
       return if source_image_file_set_ids.empty?
 

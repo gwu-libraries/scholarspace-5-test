@@ -5,8 +5,8 @@ class DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob < ApplicationJo
 
   def perform(work_id:, source_file_set_id:)
     with_work(work_id: work_id) do |work|
-      payload = Derivatives::FileSetLevel::TranscriptExtraction
-                .from_audio_video(work)
+      payload = Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVideo
+                .new(work)
                 .generate_for_source_file_set_to_cache(source_file_set_id: source_file_set_id)
 
       next unless payload

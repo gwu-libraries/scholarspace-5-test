@@ -90,8 +90,8 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
 
     # if a/v, generate a transcript
     if has_av_source_files?
-      Derivatives::FileSetLevel::TranscriptExtraction
-        .from_audio_video(@work)
+      Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVideo
+        .new(@work)
         .source_file_set_ids
         .each do |source_file_set_id|
         DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_later(
@@ -111,7 +111,7 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
     # if a pdf source file is present, run OCR to produce hOCR for full-text search and text overlay
     # This is ALWAYS done regardless of preferences
     if has_pdf_source_files?
-      Derivatives::FileSetLevel::TextExtraction.from_pdf(@work).pending_source_pdf_file_set_ids.each do |pdf_file_set_id|
+      Derivatives::FileSetLevel::TextExtraction::FromPdf.new(@work).pending_source_pdf_file_set_ids.each do |pdf_file_set_id|
         DerivativeJobs::FileSetLevel::TextExtraction::FromPdfGenerateJob.perform_later(
           work_id: @work.id.to_s,
           pdf_file_set_id: pdf_file_set_id
