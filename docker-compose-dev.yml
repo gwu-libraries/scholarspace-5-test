@@ -1,207 +1,310 @@
 # Requires Docker Compose v2
 name: scholarspace-dev
+
+x-scholarspace-dev-build: &scholarspace-dev-build
+  dockerfile: Dockerfile
+  context: .
+  target: scholarspace-default
+  args:
+    - BUILD_ENV=dev
+    - BUNDLE_GEMFILE=Gemfile
+
 services:
-    rails:
-        container_name: rails
-        hostname: rails
-        image: scholarspace-5-test-rails:${RAILS_TAG:-latest}
-        build:
-            dockerfile: Dockerfile-dev
-            context: .
-            target: scholarspace-dev
-            args:
-                - EXTRA_APK_PACKAGES=git less
-                - BUNDLE_GEMFILE=Gemfile
-                - VALKYRIE_METADATA_ADAPTER=fedora_metadata
-                - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-        command: "./bin/rails server -p 3000 -b 0.0.0.0"
-        restart: unless-stopped
-        stdin_open: true
-        user: 8983:8983
-        tty: true
-        env_file:
-            - .env
-        environment:
-            - RAILS_ROOT=/app/scholarspace
-        ports:
-            - "3000:3000"
-        volumes:
-            - dev-storage:/app/scholarspace/storage
-            - dev-derivatives:/app/scholarspace/derivatives
-            - dev-uploads:/app/scholarspace/uploads
-            - ./public:/app/scholarspace/public
-            - dev-tmp:/app/scholarspace/tmp
-        networks:
-            - ss-dev
+  rails:
+    image: scholarspace-rails:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && yarn install --force && yarn build:dev && bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails db:seed && exec ./bin/rails server -p 3000 -b 0.0.0.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: always
+    stdin_open: true
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    tty: true
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
+      - CHOKIDAR_USEPOLLING=true # webpacker autorefresh
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app/scholarspace
+      - node_modules:/app/scholarspace/node_modules
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      fedora:
+        condition: service_healthy
+      fits:
+        condition: service_started
+      memcached:
+        condition: service_started
 
-    worker:
-        container_name: worker
-        hostname: worker
-        stdin_open: true
-        tty: true
-        image: scholarspace-5-test-rails:${RAILS_TAG:-latest}
-        build:
-            dockerfile: Dockerfile-dev
-            context: .
-            target: scholarspace-dev-worker
-            args:
-                - EXTRA_APK_PACKAGES=git less
-                - BUNDLE_GEMFILE=Gemfile
-                - VALKYRIE_METADATA_ADAPTER=fedora_metadata
-                - VALKYRIE_STORAGE_ADAPTER=fedora_storage
-        command: sh -c 'bundle exec sidekiq'
-        restart: unless-stopped
-        user: 8983:8983
-        env_file:
-            - .env
-        depends_on:
-            - fits
-            - memcached
-            - postgres
-            - redis
-            - solr
-            - fedora
-        volumes:
-            - dev-storage:/app/scholarspace/storage
-            - dev-derivatives:/app/scholarspace/derivatives
-            - dev-uploads:/app/scholarspace/uploads
-            - dev-tmp:/app/scholarspace/tmp
-        networks:
-            - ss-dev
-    nginx:
-        container_name: nginx
-        hostname: nginx
-        image: "nginx:latest"
-        ports:
-            - 443:443
-            - 80:80
-        volumes:
-            - ./nginx/conf.d:/etc/nginx/conf.d
-            - ./nginx/certs:/etc/ssl
-        restart: unless-stopped
-        depends_on:
-            - rails
-        networks:
-            - ss-dev
+  worker:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DEFAULT_WORKERS:-4}"'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-    fedora:
-        container_name: fedora
-        hostname: fedora
-        image: fcrepo/fcrepo:6.5.1-tomcat9
-        restart: unless-stopped
-        environment:
-            - >-
-                CATALINA_OPTS=-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8
-                -server -Xms1G -Xmx2G -XX:NewSize=256m -XX:MaxNewSize=1G
-                -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem
-                -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true
-                -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-                -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true
-            - JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4
-        volumes:
-            - dev-fedora:/fcrepo-home
-        ports:
-            - 8080:8080
-        networks:
-            - ss-dev
+  worker_whisper:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_TRANSCRIPT_WORKERS:-1}"'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=true
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-    postgres:
-        image: postgres:15-alpine
-        container_name: postgres
-        hostname: postgres
-        env_file:
-            - .env
-        volumes:
-            - dev-db:/var/lib/postgresql/data
-        networks:
-            - ss-dev
-        ports:
-            - "5432:5432"
-        restart: unless-stopped
-        healthcheck:
-            test:
-                ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
-            interval: 30s
-            timeout: 5s
-            retries: 5
+  worker_ocr_text:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_OCR_TEXT_WORKERS:-1}"'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=true
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-    fits:
-        container_name: fits
-        hostname: fits
-        image: ghcr.io/samvera/fitsservlet:1.6.0
-        ports:
-            - 8081
-        networks:
-            - ss-dev
-        restart: unless-stopped
+  worker_images:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DERIVATIVES_WORKERS:-2}"'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=true
+      - SIDEKIQ_ONLY_THUMBNAIL=false
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-    memcached:
-        image: bitnami/memcached
-        networks:
-            - ss-dev
-        restart: unless-stopped
+  worker_thumbnail:
+    stdin_open: true
+    tty: true
+    image: scholarspace-worker:${RAILS_TAG:-latest}
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_THUMBNAIL_WORKERS:-2}"'
+    restart: always
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - HOME=/app/scholarspace
+      - XDG_CONFIG_HOME=/app/scholarspace/tmp/cache/yarn/config
+      - YARN_GLOBAL_FOLDER=/app/scholarspace/tmp/cache/yarn/global
+      - YARN_CACHE_FOLDER=/app/scholarspace/tmp/cache/yarn
+      - RAILS_ROOT=/app/scholarspace
+      - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-scholarspace}
+      - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
+      - SIDEKIQ_ONLY_AUDIO_TRANSCRIPT=false
+      - SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION=false
+      - SIDEKIQ_ONLY_DERIVATIVES=false
+      - SIDEKIQ_ONLY_THUMBNAIL=true
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      rails:
+        condition: service_healthy
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - yarn-cache:/app/scholarspace/tmp/cache/yarn
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
-    redis:
-        container_name: redis
-        hostname: redis
-        image: bitnami/redis:latest
-        env_file:
-            - .env
-        volumes:
-            - dev-redis:/bitnami/redis/data
-        networks:
-            - ss-dev
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-        restart: unless-stopped
+  solr:
+    ports:
+      - "62821:8983"
+    command:
+      - sh
+      - "-c"
+      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
 
-    solr:
-        container_name: solr
-        hostname: solr
-        image: solr:8.11
-        user: 8983:8983
-        command:
-            - sh
-            - "-c"
-            - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_dev /opt/solr/server/configsets/hyraxconf"
-        volumes:
-            - dev-solr_home:/var/solr/data:cached
-            - dev-derivatives:/app/scholarspace/derivatives
-            - ./solr/conf:/opt/solr/server/configsets/hyraxconf
-            - ./solr/plugins:/opt/solr/contrib/plugins
-        ulimits:
-            nofile:
-                soft: 65536
-                hard: 524288
-        networks:
-            - ss-dev
-        ports:
-            - 8983
-        healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "wget --no-verbose --spider --tries=1 localhost:8983 || exit 1",
-                ]
-            interval: 30s
-            timeout: 5s
-            retries: 20
-        restart: unless-stopped
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  memcached:
+    ports:
+      - "11211:11211"
+
+  fedora:
+    ports:
+      - "8080:8080"
+
+  fits:
+    ports:
+      - "8081:8081"
 
 volumes:
-    dev-db:
-    dev-storage:
-    dev-derivatives:
-    dev-uploads:
-    dev-public:
-    dev-tmp:
-    dev-redis:
-    dev-fedora:
-    sidekiq-public:
-    sidekiq-tmp:
-    dev-solr_home:
+  node_modules:
+  yarn-cache:
+
 networks:
-    ss-dev:
-        driver: bridge
-        driver_opts:
-            com.docker.network.bridge.name: br-ss-dev
+  default:
+    name: scholarspace-dev-net

@@ -1,0 +1,127 @@
+# Requires Docker Compose v2
+name: scholarspace-test
+
+x-scholarspace-test-build: &scholarspace-test-build
+  dockerfile: Dockerfile
+  context: .
+  target: scholarspace-default
+  args:
+    - BUILD_ENV=test
+    - BUNDLE_GEMFILE=Gemfile
+
+services:
+
+  # creates container with dev/test requirements, runs rspec tests, shuts down
+  # run via bin/test
+
+  rspec:
+    image: scholarspace-rspec:${RAILS_TAG:-latest}
+    build: *scholarspace-test-build
+    command: sh -c 'bundle check || bundle install; RAILS_ENV=test bundle exec rails db:prepare && RAILS_ENV=test bundle exec rspec'
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - RAILS_ENV=test
+      - RAILS_ROOT=/app/scholarspace
+      - HOME=/app/scholarspace # this is needed because alpine (the image we're using), uses HOME
+      - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+      - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+      - HYRAX_DERIVATIVES_PATH=/app/scholarspace/tmp/derivatives
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      fedora:
+        condition: service_healthy
+      fits:
+        condition: service_started
+      memcached:
+        condition: service_started
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - bundle-cache:/app/scholarspace/vendor/bundle
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  worker:
+    image: scholarspace-worker-test:${RAILS_TAG:-latest}
+    build: *scholarspace-test-build
+    command: sh -lc 'bundle check || bundle install; exec bundle exec sidekiq'
+    user: ${APP_UID:-1001}:${APP_GID:-101}
+    env_file:
+      - ${COMPOSE_ENV_FILE:-dev.env}
+    environment:
+      - RAILS_ENV=test
+      - RAILS_ROOT=/app/scholarspace
+      - HOME=/app/scholarspace
+      - VALKYRIE_METADATA_ADAPTER=fedora_metadata
+      - VALKYRIE_STORAGE_ADAPTER=fedora_storage
+    depends_on:
+      app-volumes-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      fedora:
+        condition: service_healthy
+      fits:
+        condition: service_started
+      memcached:
+        condition: service_started
+    volumes:
+      - .:/app/scholarspace
+      - storage:/app/scholarspace/storage
+      - uploads:/app/scholarspace/uploads
+      - tmp:/app/scholarspace/tmp
+      - bundle-cache:/app/scholarspace/vendor/bundle
+      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
+      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
+      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
+
+  solr:
+    ports:
+      - "18983:8983"
+    command:
+      - sh
+      - "-c"
+      - "precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf; solr-precreate scholarspace_test /opt/solr/server/configsets/hyraxconf"
+
+  postgres:
+    ports:
+      - "15432:5432"
+
+  redis:
+    ports:
+      - "16379:6379"
+
+  memcached:
+    ports:
+      - "11212:11211"
+
+  fedora:
+    ports:
+      - "18080:8080"
+
+  fits:
+    ports:
+      - "18081:8081"
+
+networks:
+  default:
+    name: scholarspace-test-net
+
+volumes:
+  bundle-cache:
