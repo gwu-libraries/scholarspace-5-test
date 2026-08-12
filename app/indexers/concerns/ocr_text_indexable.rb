@@ -57,7 +57,7 @@ module OcrTextIndexable
 
     filename = file.original_filename.to_s
     return false if filename.empty?
-    return false if filename.casecmp?(JOINED_IMAGES_HOCR_FILENAME)
+    return false if filename.casecmp?(READING_MODE_HOCR_FILENAME)
 
     filename.downcase.end_with?('.hocr')
   end
