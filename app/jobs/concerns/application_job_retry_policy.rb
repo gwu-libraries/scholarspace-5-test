@@ -3,15 +3,17 @@
 module ApplicationJobRetryPolicy
   extend ActiveSupport::Concern
 
-  DEFAULT_MAX_RETRY_WAIT_SECONDS = 300
+  DEFAULT_MAX_RETRY_WAIT_SECONDS = DerivativeJobSettings.seconds(:retry_policy, :default_max_wait_seconds)
+  DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT = DerivativeJobSettings.seconds(:retry_policy, :default_error_attempts)
+  NO_METHOD_ERROR_RETRY_ATTEMPTS = DerivativeJobSettings.seconds(:retry_policy, :no_method_error_attempts)
   DEFAULT_ERROR_RETRY_ATTEMPTS = {
-    NoMethodError => 0,
-    RuntimeError => 10,
-    Valkyrie::StorageAdapter::FileNotFound => 10,
-    Valkyrie::Persistence::ObjectNotFoundError => 10,
-    Valkyrie::Persistence::StaleObjectError => 10,
-    **(defined?(::Ldp::Conflict) ? { ::Ldp::Conflict => 10 } : {}),
-    **(defined?(::Ldp::HttpError) ? { ::Ldp::HttpError => 10 } : {})
+    NoMethodError => NO_METHOD_ERROR_RETRY_ATTEMPTS,
+    RuntimeError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
+    Valkyrie::StorageAdapter::FileNotFound => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
+    Valkyrie::Persistence::ObjectNotFoundError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
+    Valkyrie::Persistence::StaleObjectError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
+    **(defined?(::Ldp::Conflict) ? { ::Ldp::Conflict => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT } : {}),
+    **(defined?(::Ldp::HttpError) ? { ::Ldp::HttpError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT } : {})
   }.freeze
 
   included do

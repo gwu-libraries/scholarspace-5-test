@@ -2,7 +2,7 @@
 
 class DerivativeJobs::WorkLevel::RepresentativeThumbnail::PersistJob < ApplicationJob
   include JobDistributedLock
-  include LockRetryProfiles::ShortBackoff
+  include LockRetryProfiles::LongRunningShortBackoff
 
   queue_as :derivatives_representative_thumbnail_persist
 

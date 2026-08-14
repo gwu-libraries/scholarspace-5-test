@@ -3,6 +3,9 @@
 class DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob < ApplicationJob
   queue_as :derivatives_images_to_pdf_orchestrate
 
+  ASSEMBLE_PDF_WAIT = DerivativeJobSettings.seconds(:waits, :images_to_pdf, :assemble_pdf_seconds).seconds
+  ASSEMBLE_HOCR_WAIT = DerivativeJobSettings.seconds(:waits, :images_to_pdf, :assemble_hocr_seconds).seconds
+
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
       source_image_file_set_ids = Derivatives::FileSetLevel::TextExtraction::FromImages
@@ -23,11 +26,11 @@ class DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob < ApplicationJob
       end
 
       DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob
-        .set(wait: 2.minutes)
+        .set(wait: ASSEMBLE_PDF_WAIT)
         .perform_later(work_id: work.id.to_s)
 
       DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob
-        .set(wait: 3.minutes)
+        .set(wait: ASSEMBLE_HOCR_WAIT)
         .perform_later(work_id: work.id.to_s)
 
       Rails.logger.info(

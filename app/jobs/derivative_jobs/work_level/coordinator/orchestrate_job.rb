@@ -8,9 +8,10 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
-  READINESS_RETRY_MAX = 10
-  READINESS_RETRY_STEP_SECONDS = 60
-  READINESS_RETRY_MAX_WAIT_SECONDS = 10.minutes.to_i
+  READINESS_RETRY_MAX = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_max)
+  READINESS_RETRY_STEP_SECONDS = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_step_seconds)
+  READINESS_RETRY_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_max_wait_seconds)
+  REPRESENTATIVE_THUMBNAIL_WAIT = DerivativeJobSettings.seconds(:waits, :coordinator, :representative_thumbnail_seconds).seconds
 
   def perform(work_id:, retries: 0)
     next_retry = retries.to_i + 1
@@ -73,7 +74,7 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
         )
       end
 
-      DerivativeJobs::WorkLevel::RepresentativeThumbnail::GenerateJob.set(wait: 2.minutes).perform_later(work_id: @work.id.to_s) if thumbnail_source_file_set_ids.any?
+      DerivativeJobs::WorkLevel::RepresentativeThumbnail::GenerateJob.set(wait: REPRESENTATIVE_THUMBNAIL_WAIT).perform_later(work_id: @work.id.to_s) if thumbnail_source_file_set_ids.any?
     end
 
     # if a collection of images, generate a pdf
@@ -115,13 +116,6 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
         DerivativeJobs::FileSetLevel::TextExtraction::FromPdfGenerateJob.perform_later(
           work_id: @work.id.to_s,
           pdf_file_set_id: pdf_file_set_id
-        )
-      end
-
-      Derivatives::FileSetLevel::PresentationVersion.source_pdf_file_set_ids(@work).each do |source_file_set_id|
-        DerivativeJobs::FileSetLevel::PresentationVersion::PdfGenerateJob.perform_later(
-          work_id: @work.id.to_s,
-          source_file_set_id: source_file_set_id
         )
       end
     end

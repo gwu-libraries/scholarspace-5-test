@@ -5,10 +5,10 @@ module JobDistributedLock
 
   class LockUnavailableError < RuntimeError; end
 
-  DEFAULT_LOCK_TIMEOUT_SECONDS = 3600
-  DEFAULT_LOCK_RETRY_COUNT = 3
-  DEFAULT_LOCK_RETRY_DELAY_MS = 200
-  DEFAULT_LOCK_RETRY_JITTER_MS = 50
+  DEFAULT_LOCK_TIMEOUT_SECONDS = DerivativeJobSettings.seconds(:distributed_lock, :default_timeout_seconds)
+  DEFAULT_LOCK_RETRY_COUNT = DerivativeJobSettings.seconds(:distributed_lock, :retry_count)
+  DEFAULT_LOCK_RETRY_DELAY_MS = DerivativeJobSettings.seconds(:distributed_lock, :retry_delay_ms)
+  DEFAULT_LOCK_RETRY_JITTER_MS = DerivativeJobSettings.seconds(:distributed_lock, :retry_jitter_ms)
 
   included do
     around_perform do |job, block|

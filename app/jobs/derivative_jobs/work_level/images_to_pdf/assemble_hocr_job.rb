@@ -2,7 +2,7 @@
 
 class DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob < ApplicationJob
   include JobDistributedLock
-  include LockRetryProfiles::ShortBackoff
+  include LockRetryProfiles::LongRunningShortBackoff
 
   queue_as :derivatives_images_to_pdf_assemble_hocr
 

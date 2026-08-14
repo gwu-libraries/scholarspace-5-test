@@ -1,0 +1,36 @@
+# Used for configuring derivative retry policies and lock profiles. In general the default settings 
+# should be reasonable, but adjust if you are running into timeouts or problematic lock contention
+
+shared:
+  retry_policy:
+    default_max_wait_seconds: 300
+    default_error_attempts: 10
+    no_method_error_attempts: 0
+
+  distributed_lock:
+    default_timeout_seconds: 3600
+    retry_count: 3
+    retry_delay_ms: 200
+    retry_jitter_ms: 50
+
+  lock_profiles:
+    default_backoff:
+      retry_attempts: 30
+      retry_max_wait_seconds: 20
+      retry_jitter_seconds: 2
+    short_backoff:
+      retry_attempts: 360
+      retry_max_wait_seconds: 10
+      retry_jitter_seconds: 1
+    long_running_short_backoff:
+      timeout_seconds: 28800
+
+  waits:
+    coordinator:
+      readiness_retry_max: 10
+      readiness_retry_step_seconds: 60
+      readiness_retry_max_wait_seconds: 600
+      representative_thumbnail_seconds: 1800
+    images_to_pdf:
+      assemble_pdf_seconds: 1800
+      assemble_hocr_seconds: 2700
