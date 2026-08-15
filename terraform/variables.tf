@@ -282,6 +282,12 @@ variable "sidekiq_target_memory_utilization" {
   default     = 80
 }
 
+variable "sidekiq_scale_in_cooldown_seconds" {
+  description = "Cooldown in seconds before Sidekiq CPU/memory target-tracking policies scale in"
+  type        = number
+  default     = 7200
+}
+
 variable "sidekiq_assign_public_ip" {
   description = "Assign public IPs to Sidekiq tasks. Keep false when using private subnets with NAT."
   type        = bool

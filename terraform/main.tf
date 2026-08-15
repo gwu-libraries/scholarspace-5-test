@@ -61,7 +61,9 @@ locals {
     RAILS_ENV        = "production"
     PUMA_ENV         = "production"
     DB_HOST          = aws_rds_cluster.aurora.endpoint
+    DB_NAME          = var.aurora_database_name
     DB_PORT          = "5432"
+    DB_USERNAME      = var.aurora_master_username
     REDIS_HOST       = aws_elasticache_replication_group.redis.primary_endpoint_address
     REDIS_PORT       = "6379"
     REDIS_PASSWORD   = ""
@@ -122,6 +124,6 @@ resource "aws_ssm_parameter" "app_env_var" {
 
   name      = "${trimsuffix(var.ssm_env_parameter_name, "/")}/${each.key}"
   type      = "SecureString"
-  value     = each.value
+  value     = each.key == "DB_PASSWORD" ? var.aurora_master_password : each.value
   overwrite = true
 }

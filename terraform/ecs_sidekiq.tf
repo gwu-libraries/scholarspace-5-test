@@ -255,7 +255,7 @@ resource "aws_appautoscaling_policy" "sidekiq_cpu" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
     target_value       = var.sidekiq_target_cpu_utilization
-    scale_in_cooldown  = 120
+    scale_in_cooldown  = var.sidekiq_scale_in_cooldown_seconds
     scale_out_cooldown = 120
   }
 }
@@ -274,7 +274,7 @@ resource "aws_appautoscaling_policy" "sidekiq_memory" {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
     target_value       = var.sidekiq_target_memory_utilization
-    scale_in_cooldown  = 120
+    scale_in_cooldown  = var.sidekiq_scale_in_cooldown_seconds
     scale_out_cooldown = 120
   }
 }

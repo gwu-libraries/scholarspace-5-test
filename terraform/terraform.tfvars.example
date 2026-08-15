@@ -19,6 +19,7 @@ sidekiq_container_stop_timeout_seconds     = 120
 sidekiq_shutdown_timeout_seconds           = 110
 sidekiq_target_cpu_utilization             = 70
 sidekiq_target_memory_utilization          = 80
+sidekiq_scale_in_cooldown_seconds          = 7200
 sidekiq_assign_public_ip                   = false
 sidekiq_log_retention_days                 = 30
 sidekiq_enable_log_based_autoscaling       = true
