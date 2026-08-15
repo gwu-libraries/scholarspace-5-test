@@ -49,7 +49,7 @@ class HyraxListener
 
     return if derivatives_enqueue_debounced?(work.id.to_s)
 
-    DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob.set(wait: 2.minutes).perform_later(
+    DerivativeJobs::WorkLevel::OrchestrateJob.set(wait: 2.minutes).perform_later(
       work_id: work.id.to_s
     )
   rescue StandardError
