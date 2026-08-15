@@ -26,11 +26,11 @@ shared:
       timeout_seconds: 28800
 
   waits:
-    coordinator:
+    work_level_orchestrate:
       readiness_retry_max: 10
       readiness_retry_step_seconds: 60
       readiness_retry_max_wait_seconds: 600
       representative_thumbnail_seconds: 1800
-    images_to_pdf:
-      assemble_pdf_seconds: 1800
+    reading_mode_pdf_generation:
+      from_images_generate_seconds: 1800
       assemble_hocr_seconds: 2700

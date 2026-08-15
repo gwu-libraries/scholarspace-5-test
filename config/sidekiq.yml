@@ -10,28 +10,29 @@ only_thumbnail = ENV['SIDEKIQ_ONLY_THUMBNAIL'] == 'true'
 
 :queues:
 <% if only_audio_transcript %>
-  - [derivatives_audio_transcript_generate, 1]
-  - [derivatives_audio_transcript_persist, 1]
-  - [derivatives_presentation_version_av_generate, 1]
-  - [derivatives_presentation_version_av_persist, 1]
+  - [derivatives_audio_transcript_from_audio_visual_generate, 1]
+  - [derivatives_audio_transcript_from_audio_visual_persist, 1]
+  - [derivatives_presentation_version_from_audio_visual_generate, 1]
+  - [derivatives_presentation_version_from_audio_visual_persist, 1]
 <% elsif only_ocr_text_extraction %>
   - [derivatives_text_extraction_from_pdf_persist, 1]
   - [derivatives_text_extraction_from_pdf_generate, 1]
   - [derivatives_text_extraction_from_images_generate, 1]
   - [derivatives_text_extraction_from_images_persist, 1]
-  - [derivatives_presentation_version_pdf_generate, 1]
-  - [derivatives_presentation_version_pdf_persist, 1]
+  - [derivatives_presentation_version_from_pdf_generate, 1]
+  - [derivatives_presentation_version_from_pdf_persist, 1]
 <% elsif only_thumbnail %>
   - [derivatives_thumbnail_generate, 1]
   - [derivatives_thumbnail_persist, 1]
   - [derivatives_representative_thumbnail_generate, 1]
   - [derivatives_representative_thumbnail_persist, 1]
 <% elsif only_derivatives %>
-  - [derivatives_images_to_pdf_orchestrate, 1]
-  - [derivatives_images_to_pdf_assemble_pdf, 1]
-  - [derivatives_images_to_pdf_assemble_hocr, 1]
-  - [derivatives_presentation_version_image_generate, 1]
-  - [derivatives_presentation_version_image_persist, 1]
+  - [derivatives_reading_mode_pdf_generation_orchestrate, 1]
+  - [derivatives_reading_mode_pdf_generation_from_images_generate, 1]
+  - [derivatives_reading_mode_pdf_generation_from_images_persist, 1]
+  - [derivatives_reading_mode_pdf_generation_assemble_hocr, 1]
+  - [derivatives_presentation_version_from_image_generate, 1]
+  - [derivatives_presentation_version_from_image_persist, 1]
 <% else %>
   - [ingest, 4]
   - [batch, 2]

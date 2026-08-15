@@ -1,0 +1,66 @@
+# Used for configuring derivative service constants shared across derivative services,
+# serializers, indexers, and resolvers.
+
+shared:
+  derivative_types:
+    default: derivative
+    hocr: hocr
+    transcript: transcript
+    thumbnail: thumbnail
+    pdf: pdf
+    pdf_derivative: pdf_derivative
+    presentation_version: presentation_version
+
+  derivative_filenames:
+    reading_mode_pdf: reading_mode_pdf.pdf
+    reading_mode_hocr: reading_mode_pdf_HOCR.hocr
+    pdf_presentation_version_suffix: _presentation_version.pdf
+    presentation_version_stem: _presentation_version
+
+  thumbnail_filenames:
+    representative: REPRESENTATIVE_THUMBNAIL.jpg
+    generated_suffix: _THUMBNAIL.jpg
+
+  thumbnail_tags:
+    derivative_tag: "derivative_type:thumbnail"
+    derivative_prefix: "derivative_type:"
+    representative_prefix: "representative_thumbnail_for_work:"
+    source_file_set_id_prefix: "source_file_set_id:"
+    filename_fragment: _thumbnail.
+
+  file_extensions:
+    audio_visual:
+      - mp3
+      - wav
+      - m4a
+      - aac
+      - flac
+      - ogg
+      - oga
+      - mp4
+      - m4v
+      - mov
+      - avi
+      - mkv
+      - webm
+      - mpeg
+      - mpg
+    image:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - tif
+      - tiff
+      - webp
+      - jp2
+
+  mime_types:
+    pdf: application/pdf
+    hocr: text/vnd.hocr+html
+    vtt: text/vtt
+
+  mime_prefixes:
+    audio: audio/
+    video: video/
+    image: image/
