@@ -64,7 +64,7 @@ FilePanelRow.propTypes = {
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     dateUploaded: PropTypes.string,
-    isAv: PropTypes.bool,
+    isAudioVisual: PropTypes.bool,
     isPdf: PropTypes.bool,
     isImage: PropTypes.bool,
     canvasId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),

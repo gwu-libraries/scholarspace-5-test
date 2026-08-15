@@ -1,5 +1,5 @@
 const ORIGINAL_FILE_GROUPS = [
-  { label: "Audio / Video", test: (member) => isAvMember(member) },
+  { label: "Audio / Video", test: (member) => isAudioVisualMember(member) },
   { label: "PDFs", test: (member) => member.isPdf },
   { label: "Images", test: (member) => isImageMember(member) },
   { label: "Other", test: () => true },
@@ -15,7 +15,7 @@ const IMAGE_EXTENSIONS = [
   ".webp",
   ".jp2",
 ];
-const AV_EXTENSIONS = [
+const AUDIO_VISUAL_EXTENSIONS = [
   ".mp3",
   ".wav",
   ".m4a",
@@ -39,10 +39,10 @@ const READING_MODE_FILENAMES = new Set([
   "reading_mode_pdf_hocr.hocr",
 ]);
 
-function isAvMember(member) {
-  if (member.isAv) return true;
+function isAudioVisualMember(member) {
+  if (member.isAudioVisual) return true;
   const label = (member.label || "").toLowerCase();
-  return AV_EXTENSIONS.some((ext) => label.endsWith(ext));
+  return AUDIO_VISUAL_EXTENSIONS.some((ext) => label.endsWith(ext));
 }
 
 function isImageMember(member) {
@@ -118,12 +118,12 @@ function isRepresentativeThumbnail(member) {
 }
 
 export {
-  AV_EXTENSIONS,
+  AUDIO_VISUAL_EXTENSIONS,
   IMAGE_EXTENSIONS,
   ORIGINAL_FILE_GROUPS,
   groupOriginalMembers,
   groupServiceMembers,
-  isAvMember,
+  isAudioVisualMember,
   isImageMember,
   isRepresentativeThumbnail,
 };

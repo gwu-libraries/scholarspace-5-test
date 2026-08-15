@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import FilePanelGroup from './FilePanelGroup';
 import FilePanelTable from './FilePanelTable';
-import { isAvMember, isImageMember } from '../utils';
+import { isAudioVisualMember, isImageMember } from '../utils';
 import * as styles from './FilePanel.module.css';
 
 const normalizeLabel = (value) => {
@@ -15,7 +15,7 @@ const byLabel = (a, b) => normalizeLabel(a?.label).localeCompare(normalizeLabel(
 
 const originalTypeLabel = (member) => {
   if (!member) return 'Other';
-  if (isAvMember(member)) return 'Audio / Video';
+  if (isAudioVisualMember(member)) return 'Audio / Video';
   if (member.isPdf) return 'PDFs';
   if (isImageMember(member)) return 'Images';
   return 'Other';
