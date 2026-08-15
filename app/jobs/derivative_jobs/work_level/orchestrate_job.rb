@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
+class DerivativeJobs::WorkLevel::OrchestrateJob < ApplicationJob
   include Constants::MimeTypeConstants
   include Derivatives::Concerns::SourceFileSetMimeDetection
   include JobDistributedLock
@@ -8,10 +8,10 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to
   # generating any of these scholarspace derivatives - as some require processing files from multiple filesets.
 
-  READINESS_RETRY_MAX = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_max)
-  READINESS_RETRY_STEP_SECONDS = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_step_seconds)
-  READINESS_RETRY_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:waits, :coordinator, :readiness_retry_max_wait_seconds)
-  REPRESENTATIVE_THUMBNAIL_WAIT = DerivativeJobSettings.seconds(:waits, :coordinator, :representative_thumbnail_seconds).seconds
+  READINESS_RETRY_MAX = DerivativeJobSettings.seconds(:waits, :work_level_orchestrate, :readiness_retry_max)
+  READINESS_RETRY_STEP_SECONDS = DerivativeJobSettings.seconds(:waits, :work_level_orchestrate, :readiness_retry_step_seconds)
+  READINESS_RETRY_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:waits, :work_level_orchestrate, :readiness_retry_max_wait_seconds)
+  REPRESENTATIVE_THUMBNAIL_WAIT = DerivativeJobSettings.seconds(:waits, :work_level_orchestrate, :representative_thumbnail_seconds).seconds
 
   def perform(work_id:, retries: 0)
     next_retry = retries.to_i + 1
@@ -30,7 +30,7 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
 
   def has_supported_derivative_source_files?
     @work.original_member_file_sets.any? do |file_set|
-      source_image_file_set?(file_set) || source_av_file_set?(file_set) || source_pdf_file_set?(file_set)
+      source_image_file_set?(file_set) || source_audio_visual_file_set?(file_set) || source_pdf_file_set?(file_set)
     end
   end
 
@@ -46,8 +46,8 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
     @has_video_source_files ||= @work.original_member_file_sets.any? { |file_set| source_video_file_set?(file_set) }
   end
 
-  def has_av_source_files?
-    @has_av_source_files ||= @work.original_member_file_sets.any? { |file_set| source_av_file_set?(file_set) }
+  def has_audio_visual_source_files?
+    @has_audio_visual_source_files ||= @work.original_member_file_sets.any? { |file_set| source_audio_visual_file_set?(file_set) }
   end
 
   # check if every file in the work has been characterized
@@ -79,30 +79,30 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
 
     # if a collection of images, generate a pdf
     if has_image_source_files?
-      DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob.perform_later(work_id: @work.id.to_s)
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::OrchestrateJob.perform_later(work_id: @work.id.to_s)
 
-      Derivatives::FileSetLevel::PresentationVersion.source_image_file_set_ids(@work).each do |source_file_set_id|
-        DerivativeJobs::FileSetLevel::PresentationVersion::ImageGenerateJob.perform_later(
+      Derivatives::FileSetLevel::PresentationVersion::FromImage.new(@work).source_file_set_ids.each do |source_file_set_id|
+        DerivativeJobs::FileSetLevel::PresentationVersion::FromImageGenerateJob.perform_later(
           work_id: @work.id.to_s,
           source_file_set_id: source_file_set_id
         )
       end
     end
 
-    # if a/v, generate a transcript
-    if has_av_source_files?
-      Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVideo
+    # if audio/visual, generate a transcript
+    if has_audio_visual_source_files?
+      Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual
         .new(@work)
         .source_file_set_ids
         .each do |source_file_set_id|
-        DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_later(
+        DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob.perform_later(
           work_id: @work.id.to_s,
           source_file_set_id: source_file_set_id
         )
       end
 
-      Derivatives::FileSetLevel::PresentationVersion.source_av_file_set_ids(@work).each do |source_file_set_id|
-        DerivativeJobs::FileSetLevel::PresentationVersion::AvGenerateJob.perform_later(
+      Derivatives::FileSetLevel::PresentationVersion::FromAudioVisual.new(@work).source_file_set_ids.each do |source_file_set_id|
+        DerivativeJobs::FileSetLevel::PresentationVersion::FromAudioVisualGenerateJob.perform_later(
           work_id: @work.id.to_s,
           source_file_set_id: source_file_set_id
         )
@@ -143,7 +143,7 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
 
   def thumbnail_source_file_set_ids
     @thumbnail_source_file_set_ids ||= Array(@work.original_member_file_sets)
-                                     .select { |file_set| Derivatives::FileSetLevel::ThumbnailGeneration::Thumbnail.thumbnail_supported_file_set?(file_set) }
+                                     .select { |file_set| Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail.thumbnail_supported_file_set?(file_set) }
                                      .map { |file_set| file_set.id.to_s }
   end
 
@@ -154,8 +154,8 @@ class DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob < ApplicationJob
   protected
 
   def lock_key_for(arguments)
-    # Serialize coordinator to prevent multiple DerivativeJobs::WorkLevel::Coordinator::OrchestrateJob from enqueueing
+    # Serialize work-level orchestration to prevent multiple jobs from enqueueing
     # conflicting child jobs simultaneously on the same work
-    "derivatives:coordinator:work:#{arguments[:work_id]}"
+    "derivatives:work_level_orchestrate:work:#{arguments[:work_id]}"
   end
 end

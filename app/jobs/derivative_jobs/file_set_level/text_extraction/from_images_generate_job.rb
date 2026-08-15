@@ -12,7 +12,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromImagesGenerateJob < Appl
     with_work(work_id: work_id) do |work|
       payload = Derivatives::FileSetLevel::TextExtraction::FromImages
                 .new(work)
-                .process_image_file_set_to_cache(source_file_set_id: source_file_set_id)
+                .generate_to_cache(source_file_set_id: source_file_set_id)
 
       next unless payload
 

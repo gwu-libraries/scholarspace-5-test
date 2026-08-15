@@ -6,9 +6,13 @@ class DerivativeJobs::WorkLevel::RepresentativeThumbnail::PersistJob < Applicati
 
   queue_as :derivatives_representative_thumbnail_persist
 
-  def perform(work_id:, source_file_set_id:)
+  def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     with_work(work_id: work_id) do |work|
-      Derivatives::WorkLevel::RepresentativeThumbnail.new(work).persist!(source_file_set_id: source_file_set_id)
+      Derivatives::WorkLevel::RepresentativeThumbnail::FromSourceFileSet.new(work).persist_from_cache(
+        source_file_set_id: source_file_set_id,
+        cache_file_identifier: cache_file_identifier,
+        cache_filename: cache_filename
+      )
     end
   end
 

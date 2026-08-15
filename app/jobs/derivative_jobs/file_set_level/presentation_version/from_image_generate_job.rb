@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-class DerivativeJobs::FileSetLevel::PresentationVersion::PdfGenerateJob < ApplicationJob
-  queue_as :derivatives_presentation_version_pdf_generate
+class DerivativeJobs::FileSetLevel::PresentationVersion::FromImageGenerateJob < ApplicationJob
+  queue_as :derivatives_presentation_version_from_image_generate
 
   def perform(work_id:, source_file_set_id:)
     with_work(work_id: work_id) do |work|
-      payload = Derivatives::FileSetLevel::PresentationVersion
+      payload = Derivatives::FileSetLevel::PresentationVersion::FromImage
                 .new(work)
-                .generate_pdf_presentation_to_cache(source_file_set_id: source_file_set_id)
+                .generate_to_cache(source_file_set_id: source_file_set_id)
 
       next unless payload
 
-      DerivativeJobs::FileSetLevel::PresentationVersion::PdfPersistJob.perform_later(
+      DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersistJob.perform_later(
         work_id: work.id.to_s,
         source_file_set_id: payload.fetch(:source_file_set_id),
         cache_file_identifier: payload.fetch(:cache_file_identifier),

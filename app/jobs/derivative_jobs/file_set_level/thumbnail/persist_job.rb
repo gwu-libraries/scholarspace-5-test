@@ -8,7 +8,7 @@ class DerivativeJobs::FileSetLevel::Thumbnail::PersistJob < ApplicationJob
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     with_work(work_id: work_id) do |work|
-      Derivatives::FileSetLevel::ThumbnailGeneration::Thumbnail.new(work).persist_thumbnail_from_cache(
+      Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail.new(work).persist_from_cache(
         source_file_set_id: source_file_set_id,
         cache_file_identifier: cache_file_identifier,
         cache_filename: cache_filename

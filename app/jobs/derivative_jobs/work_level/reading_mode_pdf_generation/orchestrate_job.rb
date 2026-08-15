@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob < ApplicationJob
-  queue_as :derivatives_images_to_pdf_orchestrate
+class DerivativeJobs::WorkLevel::ReadingModePdfGeneration::OrchestrateJob < ApplicationJob
+  queue_as :derivatives_reading_mode_pdf_generation_orchestrate
 
-  ASSEMBLE_PDF_WAIT = DerivativeJobSettings.seconds(:waits, :images_to_pdf, :assemble_pdf_seconds).seconds
-  ASSEMBLE_HOCR_WAIT = DerivativeJobSettings.seconds(:waits, :images_to_pdf, :assemble_hocr_seconds).seconds
+  FROM_IMAGES_GENERATE_WAIT = DerivativeJobSettings.seconds(:waits, :reading_mode_pdf_generation, :from_images_generate_seconds).seconds
+  ASSEMBLE_HOCR_WAIT = DerivativeJobSettings.seconds(:waits, :reading_mode_pdf_generation, :assemble_hocr_seconds).seconds
 
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
@@ -25,18 +25,18 @@ class DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob < ApplicationJob
         )
       end
 
-      DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob
-        .set(wait: ASSEMBLE_PDF_WAIT)
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob
+        .set(wait: FROM_IMAGES_GENERATE_WAIT)
         .perform_later(work_id: work.id.to_s)
 
-      DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob
         .set(wait: ASSEMBLE_HOCR_WAIT)
         .perform_later(work_id: work.id.to_s)
 
       Rails.logger.info(
         "derivative_pipeline event=image_text_orchestrate_enqueued work_id=#{work.id} " \
         "generate_jobs=#{source_image_file_set_ids.size} " \
-        "queues=derivatives_text_extraction_from_images_generate,derivatives_images_to_pdf_assemble_pdf,derivatives_images_to_pdf_assemble_hocr"
+        "queues=derivatives_text_extraction_from_images_generate,derivatives_reading_mode_pdf_generation_from_images_generate,derivatives_reading_mode_pdf_generation_assemble_hocr"
       )
     end
   end

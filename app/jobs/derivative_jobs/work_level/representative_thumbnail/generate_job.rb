@@ -8,12 +8,14 @@ class DerivativeJobs::WorkLevel::RepresentativeThumbnail::GenerateJob < Applicat
 
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
-      payload = Derivatives::WorkLevel::RepresentativeThumbnail.new(work).generate_payload
+      payload = Derivatives::WorkLevel::RepresentativeThumbnail::FromSourceFileSet.new(work).generate_to_cache
       next unless payload
 
       DerivativeJobs::WorkLevel::RepresentativeThumbnail::PersistJob.perform_later(
         work_id: work.id.to_s,
-        source_file_set_id: payload.fetch(:source_file_set_id)
+        source_file_set_id: payload.fetch(:source_file_set_id),
+        cache_file_identifier: payload.fetch(:cache_file_identifier),
+        cache_filename: payload.fetch(:cache_filename)
       )
     end
   end

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-class DerivativeJobs::FileSetLevel::PresentationVersion::PdfPersistJob < ApplicationJob
+class DerivativeJobs::FileSetLevel::PresentationVersion::FromPdfPersistJob < ApplicationJob
   include JobDistributedLock
   include LockRetryProfiles::ShortBackoff
 
-  queue_as :derivatives_presentation_version_pdf_persist
+  queue_as :derivatives_presentation_version_from_pdf_persist
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     with_work(work_id: work_id) do |work|
-      Derivatives::FileSetLevel::PresentationVersion.new(work).persist_pdf_presentation_from_cache(
+      Derivatives::FileSetLevel::PresentationVersion::FromPdf.new(work).persist_from_cache(
         source_file_set_id: source_file_set_id,
         cache_file_identifier: cache_file_identifier,
         cache_filename: cache_filename

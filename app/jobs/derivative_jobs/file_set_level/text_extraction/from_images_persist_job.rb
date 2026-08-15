@@ -13,7 +13,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromImagesPersistJob < Appli
     )
 
     with_work(work_id: work_id) do |work|
-      Derivatives::FileSetLevel::TextExtraction::FromImages.new(work).persist_page_hocr_from_cache(
+      Derivatives::FileSetLevel::TextExtraction::FromImages.new(work).persist_from_cache(
         source_file_set_id: source_file_set_id,
         cache_file_identifier: cache_file_identifier,
         cache_filename: cache_filename

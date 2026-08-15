@@ -17,7 +17,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromPdfGenerateJob < Applica
     with_work(work_id: work_id) do |work|
       payload = Derivatives::FileSetLevel::TextExtraction::FromPdf
                 .new(work)
-                .process_pdf_file_set_to_cache(pdf_file_set_id: target_pdf_file_set_id)
+                .generate_to_cache(pdf_file_set_id: target_pdf_file_set_id)
 
       next unless payload
 

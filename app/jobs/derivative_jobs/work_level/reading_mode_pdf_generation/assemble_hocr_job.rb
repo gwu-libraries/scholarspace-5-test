@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob < ApplicationJob
+class DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob < ApplicationJob
   include JobDistributedLock
   include LockRetryProfiles::LongRunningShortBackoff
 
-  queue_as :derivatives_images_to_pdf_assemble_hocr
+  queue_as :derivatives_reading_mode_pdf_generation_assemble_hocr
 
   def perform(work_id:)
     Rails.logger.info(
@@ -24,6 +24,6 @@ class DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob < ApplicationJob
   protected
 
   def lock_key_for(arguments)
-    "derivatives:images_to_pdf:work:#{arguments[:work_id]}:assemble_hocr"
+    "derivatives:reading_mode_pdf_generation:work:#{arguments[:work_id]}:assemble_hocr"
   end
 end
