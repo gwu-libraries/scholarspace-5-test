@@ -21,13 +21,18 @@ const originalTypeLabel = (member) => {
   return 'Other';
 };
 
-const typeSortOrder = ['Audio / Video', 'PDFs', 'Images', 'Other'];
 const READING_MODE_GROUP_ID = '__reading_mode_pdf__';
 const READING_MODE_FILENAME_PREFIX = 'reading_mode_pdf';
+const REPRESENTATIVE_THUMBNAIL_FILENAME_FRAGMENT = 'representative_thumbnail';
 
 const readingModeMember = (member) => {
   const label = (member?.label || '').toLowerCase();
   return label.startsWith(READING_MODE_FILENAME_PREFIX);
+};
+
+const representativeThumbnailMember = (member) => {
+  const label = (member?.label || '').toLowerCase();
+  return Boolean(member?.isRepresentativeThumbnail) || label.includes(REPRESENTATIVE_THUMBNAIL_FILENAME_FRAGMENT);
 };
 
 const hocrSiblingForPdf = (pdfMember, members) => {
@@ -43,8 +48,8 @@ const hocrSiblingForPdf = (pdfMember, members) => {
 const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) => {
   if (members.length === 0) return <p>No service files are attached to this work.</p>;
 
-  const representativeThumbnailMembers = members.filter((member) => Boolean(member?.isRepresentativeThumbnail));
-  const nonRepresentativeMembers = members.filter((member) => !member?.isRepresentativeThumbnail);
+  const representativeThumbnailMembers = members.filter((member) => representativeThumbnailMember(member));
+  const nonRepresentativeMembers = members.filter((member) => !representativeThumbnailMember(member));
   const readingModePdfMember = nonRepresentativeMembers.find((member) => member.isReadingModePdf);
   const readingModeHocrMember = hocrSiblingForPdf(readingModePdfMember, nonRepresentativeMembers);
   const standaloneMemberIds = new Set([
@@ -86,13 +91,9 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
         members: [...serviceSiblings].sort(byLabel),
       };
     })
-    .sort((a, b) => a.sourceLabel.localeCompare(b.sourceLabel));
-
-  const groupedByType = sourceGroups.reduce((map, group) => {
-    if (!map.has(group.typeLabel)) map.set(group.typeLabel, []);
-    map.get(group.typeLabel).push(group);
-    return map;
-  }, new Map());
+    .sort((a, b) => (
+      a.sourceLabel.localeCompare(b.sourceLabel) || a.typeLabel.localeCompare(b.typeLabel)
+    ));
 
   const readingModeMembers = [
     readingModePdfMember,
@@ -104,42 +105,27 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
     new Map(readingModeMembers.map((member) => [member.id, member])).values(),
   ).sort(byLabel);
 
-  if (uniqueReadingModeMembers.length > 0) {
-    if (!groupedByType.has('Images')) groupedByType.set('Images', []);
-
-    groupedByType.get('Images').unshift({
+  const workLevelGroups = [
+    representativeThumbnailMembers.length > 0 && {
+      sourceId: 'representative-thumbnail',
+      sourceLabel: 'Representative Thumbnail',
+      members: representativeThumbnailMembers.sort(byLabel),
+    },
+    uniqueReadingModeMembers.length > 0 && {
       sourceId: READING_MODE_GROUP_ID,
       sourceLabel: 'Reading Mode PDF',
-      typeLabel: 'Images',
       members: uniqueReadingModeMembers,
-    });
-  }
-
-  const typeGroups = Array.from(groupedByType.entries())
-    .map(([typeLabel, sourceFileGroups]) => ({
-      typeLabel,
-      sourceFileGroups,
-      groupCount: sourceFileGroups.length,
-    }))
-    .sort((a, b) => typeSortOrder.indexOf(a.typeLabel) - typeSortOrder.indexOf(b.typeLabel));
-
+    },
+  ].filter(Boolean);
   const sortedUnlinkedMembers = [...unlinkedMembers].sort(byLabel);
+  const filesetLevelCount = sourceGroups.reduce((sum, group) => sum + group.members.length, 0) + sortedUnlinkedMembers.length;
+  const workLevelCount = workLevelGroups.reduce((sum, group) => sum + group.members.length, 0);
 
   return (
     <>
-      {representativeThumbnailMembers.length > 0 && (
-        <FilePanelGroup label="Representative Thumbnail" count={representativeThumbnailMembers.length} defaultOpen={false}>
-          <FilePanelTable showViewColumn={false} members={representativeThumbnailMembers} />
-        </FilePanelGroup>
-      )}
-      {typeGroups.map((typeGroup) => (
-        <FilePanelGroup
-          key={typeGroup.typeLabel}
-          label={typeGroup.typeLabel}
-          count={typeGroup.groupCount}
-          defaultOpen={false}
-        >
-          {typeGroup.sourceFileGroups.map((sourceGroup) => (
+      {workLevelGroups.length > 0 && (
+        <FilePanelGroup label="Work Level Service Files" count={workLevelCount} defaultOpen={false}>
+          {workLevelGroups.map((sourceGroup) => (
             <FilePanelGroup
               key={sourceGroup.sourceId}
               label={sourceGroup.sourceLabel}
@@ -161,10 +147,24 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
             </FilePanelGroup>
           ))}
         </FilePanelGroup>
-      ))}
-      {sortedUnlinkedMembers.length > 0 && (
-        <FilePanelGroup label="Unlinked Service Files" count={sortedUnlinkedMembers.length} defaultOpen={false}>
-          <FilePanelTable showViewColumn={false} members={sortedUnlinkedMembers} />
+      )}
+      {filesetLevelCount > 0 && (
+        <FilePanelGroup label="Fileset Level Service Files" count={filesetLevelCount} defaultOpen={false}>
+          {sourceGroups.map((sourceGroup) => (
+            <FilePanelGroup
+              key={sourceGroup.sourceId}
+              label={sourceGroup.sourceLabel}
+              count={sourceGroup.members.length}
+              defaultOpen={false}
+            >
+              <FilePanelTable showViewColumn={false} members={sourceGroup.members} />
+            </FilePanelGroup>
+          ))}
+          {sortedUnlinkedMembers.length > 0 && (
+            <FilePanelGroup label="Unlinked Service Files" count={sortedUnlinkedMembers.length} defaultOpen={false}>
+              <FilePanelTable showViewColumn={false} members={sortedUnlinkedMembers} />
+            </FilePanelGroup>
+          )}
         </FilePanelGroup>
       )}
     </>

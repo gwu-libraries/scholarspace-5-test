@@ -32,12 +32,6 @@ const AUDIO_VISUAL_EXTENSIONS = [
   ".mpeg",
   ".mpg",
 ];
-const READING_MODE_GROUP_KEY = "__reading_mode__";
-const READING_MODE_GROUP_LABEL = "Reading Mode";
-const READING_MODE_FILENAMES = new Set([
-  "reading_mode_pdf.pdf",
-  "reading_mode_pdf_hocr.hocr",
-]);
 
 function isAudioVisualMember(member) {
   if (member.isAudioVisual) return true;
@@ -76,54 +70,12 @@ function sortedMembers(members) {
   );
 }
 
-function groupServiceMembers(members, originalMembers = []) {
-  const originalLabelById = new Map(
-    originalMembers.map((member) => [
-      String(member.id),
-      normalizeLabel(member.label),
-    ]),
-  );
-
-  const groupedBySourceId = new Map();
-
-  members.forEach((member) => {
-    const filename = normalizeLabel(member.label).toLowerCase();
-    const sourceId = READING_MODE_FILENAMES.has(filename)
-      ? READING_MODE_GROUP_KEY
-      : (member.sourceFileSetId || "").toString().trim();
-
-    if (!sourceId) return;
-
-    if (!groupedBySourceId.has(sourceId)) groupedBySourceId.set(sourceId, []);
-    groupedBySourceId.get(sourceId).push(member);
-  });
-
-  return Array.from(groupedBySourceId.entries())
-    .map(([sourceId, sourceMembers]) => ({
-      label:
-        sourceId === READING_MODE_GROUP_KEY
-          ? READING_MODE_GROUP_LABEL
-          : originalLabelById.get(sourceId) || `Source File ${sourceId}`,
-      members: sortedMembers(sourceMembers),
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-}
-
 function groupOriginalMembers(members) {
   return groupByRules(members, ORIGINAL_FILE_GROUPS, (member) => member);
 }
 
-function isRepresentativeThumbnail(member) {
-  return Boolean(member.isRepresentativeThumbnail);
-}
-
 export {
-  AUDIO_VISUAL_EXTENSIONS,
-  IMAGE_EXTENSIONS,
-  ORIGINAL_FILE_GROUPS,
   groupOriginalMembers,
-  groupServiceMembers,
   isAudioVisualMember,
   isImageMember,
-  isRepresentativeThumbnail,
 };
