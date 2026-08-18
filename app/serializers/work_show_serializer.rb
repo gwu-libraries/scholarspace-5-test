@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class WorkShowSerializer
-  THUMBNAIL_RESOLUTION_MEMBER_LIMIT = 80
-
   include Constants::FileExtensionConstants
   include Constants::MimeTypeConstants
 
@@ -156,20 +154,10 @@ class WorkShowSerializer
     candidate_members = Array(members).select { |member| thumbnail_candidate_member?(member) }
     return {} if candidate_members.empty?
 
-    if candidate_members.length > THUMBNAIL_RESOLUTION_MEMBER_LIMIT
-      return candidate_members.each_with_object({}) do |member, map|
-        map[member.id.to_s] = fallback_thumbnail_path_for(member)
-      end
-    end
-
     thumbnail_resolver.thumbnail_paths_by_member_id(
       members: candidate_members,
       service_members: service_members
     )
-  end
-
-  def fallback_thumbnail_path_for(member)
-    Hyrax::Engine.routes.url_helpers.download_path(id: member.id, file: 'thumbnail', locale: nil)
   end
 
   def thumbnail_candidate_member?(member)
