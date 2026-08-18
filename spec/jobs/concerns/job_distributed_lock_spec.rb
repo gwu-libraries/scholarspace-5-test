@@ -19,6 +19,10 @@ RSpec.describe JobDistributedLock do
       @executed = true
     end
 
+    def self.reset_lock_timeout_seconds
+      remove_const(:LOCK_TIMEOUT_SECONDS) if const_defined?(:LOCK_TIMEOUT_SECONDS)
+    end
+
     protected
 
     def lock_key_for(arguments)
@@ -34,6 +38,7 @@ RSpec.describe JobDistributedLock do
     let(:redis_client) { Sidekiq.redis { |r| r } }
 
     before do
+      LockedTestJob.reset_lock_timeout_seconds
       redis_client.del("test:work:#{work_id}")
       redis_client.del('test:work:work-1')
       redis_client.del('test:work:work-2')
@@ -91,6 +96,25 @@ RSpec.describe JobDistributedLock do
 
       # Cleanup
       redis_client.del(lock_key_1)
+    end
+
+    it 'uses the job lock timeout override when one is configured' do
+      stub_const('LockedTestJob::LOCK_TIMEOUT_SECONDS', 12_345)
+      redlock_client = instance_double(Redlock::Client)
+
+      allow(Redlock::Client).to receive(:new).and_return(redlock_client)
+      allow(redlock_client).to receive(:lock).and_return('lock-info')
+      allow(redlock_client).to receive(:unlock)
+
+      LockedTestJob.new(work_id: work_id).perform_now
+
+      expect(redlock_client).to have_received(:lock).with(
+        "test:work:#{work_id}",
+        12_345_000,
+        retry_count: JobDistributedLock::DEFAULT_LOCK_RETRY_COUNT,
+        retry_delay: JobDistributedLock::DEFAULT_LOCK_RETRY_DELAY_MS,
+        retry_jitter: JobDistributedLock::DEFAULT_LOCK_RETRY_JITTER_MS
+      )
     end
   end
 end

@@ -15,7 +15,7 @@ module JobDistributedLock
       lock_key = job.lock_key_for(job.send(:normalized_lock_arguments))
       
       if lock_key
-        timeout_seconds = job.respond_to?(:lock_timeout_seconds) ? job.lock_timeout_seconds : DEFAULT_LOCK_TIMEOUT_SECONDS
+        timeout_seconds = job.send(:lock_timeout_seconds)
         job.send(:with_distributed_lock, lock_key, timeout_seconds, &block)
       else
         block.call
