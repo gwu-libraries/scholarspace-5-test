@@ -13,6 +13,7 @@ module LockRetryProfiles
   # Short, frequent retries intended for lock-contention-prone persist/finalize
   # jobs so they stay in ActiveJob retry policy
   module ShortBackoff
+    LOCK_TIMEOUT_SECONDS = DerivativeJobSettings.seconds(:lock_profiles, :short_backoff, :timeout_seconds)
     LOCK_RETRY_ATTEMPTS = DerivativeJobSettings.seconds(:lock_profiles, :short_backoff, :retry_attempts)
     LOCK_RETRY_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:lock_profiles, :short_backoff, :retry_max_wait_seconds)
     LOCK_RETRY_JITTER_SECONDS = DerivativeJobSettings.seconds(:lock_profiles, :short_backoff, :retry_jitter_seconds)

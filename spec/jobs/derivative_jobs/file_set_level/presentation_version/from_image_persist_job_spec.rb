@@ -6,9 +6,9 @@ RSpec.describe DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersi
   subject(:job) { described_class.new }
 
   describe 'lock configuration' do
-    it 'uses the long-running short-backoff lock profile' do
-      expect(described_class::LOCK_TIMEOUT_SECONDS).to eq(LockRetryProfiles::LongRunningShortBackoff::LOCK_TIMEOUT_SECONDS)
-      expect(described_class::LOCK_RETRY_ATTEMPTS).to eq(LockRetryProfiles::LongRunningShortBackoff::LOCK_RETRY_ATTEMPTS)
+    it 'uses the short-backoff lock profile' do
+      expect(described_class::LOCK_TIMEOUT_SECONDS).to eq(LockRetryProfiles::ShortBackoff::LOCK_TIMEOUT_SECONDS)
+      expect(described_class::LOCK_RETRY_ATTEMPTS).to eq(LockRetryProfiles::ShortBackoff::LOCK_RETRY_ATTEMPTS)
     end
   end
 

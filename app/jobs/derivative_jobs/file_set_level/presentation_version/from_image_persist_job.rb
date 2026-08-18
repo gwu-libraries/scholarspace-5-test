@@ -2,7 +2,7 @@
 
 class DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersistJob < ApplicationJob
   include JobDistributedLock
-  include LockRetryProfiles::LongRunningShortBackoff
+  include LockRetryProfiles::ShortBackoff
 
   queue_as :derivatives_presentation_version_from_image_persist
 

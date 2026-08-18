@@ -19,8 +19,9 @@ shared:
       retry_max_wait_seconds: 20
       retry_jitter_seconds: 2
     short_backoff:
-      retry_attempts: 360
-      retry_max_wait_seconds: 10
+      timeout_seconds: 1800
+      retry_attempts: 1200
+      retry_max_wait_seconds: 3
       retry_jitter_seconds: 1
     long_running_short_backoff:
       timeout_seconds: 28800

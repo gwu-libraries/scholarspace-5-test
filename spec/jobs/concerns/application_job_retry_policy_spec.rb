@@ -52,6 +52,15 @@ RSpec.describe ApplicationJobRetryPolicy do
 
       expect(job.send(:configured_retry_wait_seconds_for, error)).to eq(5)
     end
+
+    it 'caps short-backoff lock retries at a low-latency wait' do
+      short_backoff_job = DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersistJob.new
+      error = JobDistributedLock::LockUnavailableError.new('lock contention')
+      allow(short_backoff_job).to receive(:executions).and_return(11)
+      allow(short_backoff_job).to receive(:rand).and_return(1)
+
+      expect(short_backoff_job.send(:configured_retry_wait_seconds_for, error)).to eq(4)
+    end
   end
 
   describe '#retry_context_for_error' do
