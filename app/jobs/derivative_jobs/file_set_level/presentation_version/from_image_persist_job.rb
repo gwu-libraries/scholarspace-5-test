@@ -19,6 +19,7 @@ class DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersistJob < A
   protected
 
   def lock_key_for(arguments)
-    "derivatives:presentation_version:image:work:#{arguments[:work_id]}:persist"
+    source_file_set_id = arguments[:source_file_set_id].to_s
+    "derivatives:presentation_version:image:work:#{arguments[:work_id]}:source:#{source_file_set_id}:persist"
   end
 end

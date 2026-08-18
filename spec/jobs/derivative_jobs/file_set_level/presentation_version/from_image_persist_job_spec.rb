@@ -37,17 +37,17 @@ RSpec.describe DerivativeJobs::FileSetLevel::PresentationVersion::FromImagePersi
   end
 
   describe '#lock_key_for' do
-    it 'uses a per-work persist lock key for image presentation' do
+    it 'uses a per-source-file-set persist lock key for image presentation' do
       key = job.send(:lock_key_for, { work_id: 'work-1', source_file_set_id: 'image-99' })
 
-      expect(key).to eq('derivatives:presentation_version:image:work:work-1:persist')
+      expect(key).to eq('derivatives:presentation_version:image:work:work-1:source:image-99:persist')
     end
 
-    it 'serializes presentation image persists for different source files on the same work' do
+    it 'allows presentation image persists for different source files on the same work to proceed independently' do
       first_key = job.send(:lock_key_for, { work_id: 'work-1', source_file_set_id: 'image-1' })
       second_key = job.send(:lock_key_for, { work_id: 'work-1', source_file_set_id: 'image-2' })
 
-      expect(first_key).to eq(second_key)
+      expect(first_key).not_to eq(second_key)
     end
   end
 end
