@@ -56,9 +56,19 @@ RSpec.describe 'Images to PDF derivatives end-to-end', type: :feature do
     allow_any_instance_of(Derivatives::FileSetLevel::TextExtraction::FromImages)
       .to receive(:file_set_attached_with_name?).and_return(false)
 
-    allow_any_instance_of(Derivatives::WorkLevel::PdfGeneration::FromImages)
-      .to receive(:assemble_joined_pdf!) do |instance, source_image_file_sets:|
-        record_stubbed_derivative_output.call('joined_images_pdf.pdf')
+    allow_any_instance_of(Derivatives::WorkLevel::ReadingModePdfGeneration::FromImages)
+      .to receive(:generate_to_cache) do |_instance, source_image_file_sets:|
+        source_file_set = source_image_file_sets.first
+        {
+          source_file_set_id: source_file_set.id.to_s,
+          cache_file_identifier: 'cache-reading-mode-pdf',
+          cache_filename: 'reading_mode_pdf.pdf'
+        }
+      end
+
+    allow_any_instance_of(Derivatives::WorkLevel::ReadingModePdfGeneration::FromImages)
+      .to receive(:persist_from_cache) do |_instance, source_file_set_id:, cache_file_identifier:, cache_filename:|
+        record_stubbed_derivative_output.call('reading_mode_pdf.pdf')
         nil
       end
 
@@ -69,7 +79,7 @@ RSpec.describe 'Images to PDF derivatives end-to-end', type: :feature do
       end
 
     allow_any_instance_of(Derivatives::FileSetLevel::TextExtraction::FromImages)
-      .to receive(:process_image_file_set_to_cache) do |_instance, source_file_set_id:|
+      .to receive(:generate_to_cache) do |_instance, source_file_set_id:|
         {
           source_file_set_id: source_file_set_id,
           cache_file_identifier: "cache-#{source_file_set_id}",
@@ -78,7 +88,7 @@ RSpec.describe 'Images to PDF derivatives end-to-end', type: :feature do
       end
 
     allow_any_instance_of(Derivatives::FileSetLevel::TextExtraction::FromImages)
-      .to receive(:persist_page_hocr_from_cache)
+      .to receive(:persist_from_cache)
       .and_return(nil)
 
     allow_any_instance_of(Derivatives::FileSetLevel::TextExtraction::FromImages)
@@ -87,35 +97,43 @@ RSpec.describe 'Images to PDF derivatives end-to-end', type: :feature do
         nil
       end
 
-    allow(DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob).to receive(:set).and_return(DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob)
-    allow(DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob).to receive(:set).and_return(DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob)
+    allow(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob).to receive(:set).and_return(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob)
+    allow(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob).to receive(:set).and_return(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob)
 
     allow(DerivativeJobs::FileSetLevel::TextExtraction::FromImagesGenerateJob).to receive(:perform_later) do |work_id:, source_file_set_id:|
       DerivativeJobs::FileSetLevel::TextExtraction::FromImagesGenerateJob.perform_now(work_id: work_id, source_file_set_id: source_file_set_id)
     end
-    allow(DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob).to receive(:perform_later) do |work_id:|
-      DerivativeJobs::WorkLevel::ImagesToPdf::AssemblePdfJob.perform_now(work_id: work_id)
+    allow(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob).to receive(:perform_later) do |work_id:|
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob.perform_now(work_id: work_id)
     end
-    allow(DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob).to receive(:perform_later) do |work_id:|
-      DerivativeJobs::WorkLevel::ImagesToPdf::AssembleHocrJob.perform_now(work_id: work_id)
+    allow(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesPersistJob).to receive(:perform_later) do |work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:|
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesPersistJob.perform_now(
+        work_id: work_id,
+        source_file_set_id: source_file_set_id,
+        cache_file_identifier: cache_file_identifier,
+        cache_filename: cache_filename
+      )
+    end
+    allow(DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob).to receive(:perform_later) do |work_id:|
+      DerivativeJobs::WorkLevel::ReadingModePdfGeneration::AssembleHocrJob.perform_now(work_id: work_id)
     end
   end
 
-  it 'creates joined PDF and hOCR derivatives for image members' do
-    DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob.perform_now(work_id: work.id.to_s)
+  it 'creates reading mode PDF and hOCR derivatives for image members' do
+    DerivativeJobs::WorkLevel::ReadingModePdfGeneration::OrchestrateJob.perform_now(work_id: work.id.to_s)
 
     names = stubbed_derivative_output_names
 
-    expect(names).to include('joined_images_pdf.pdf')
-    expect(names).to include('joined_images_pdf_HOCR.hocr')
+    expect(names).to include('reading_mode_pdf.pdf')
+    expect(names).to include('reading_mode_pdf_HOCR.hocr')
     expect(names.grep(/_HOCR\.hocr\z/)).not_to be_empty
   end
 
   it 'is idempotent when run twice' do
-    DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob.perform_now(work_id: work.id.to_s)
+    DerivativeJobs::WorkLevel::ReadingModePdfGeneration::OrchestrateJob.perform_now(work_id: work.id.to_s)
     first_run_names = stubbed_derivative_output_names.dup
 
-    DerivativeJobs::WorkLevel::ImagesToPdf::OrchestrateJob.perform_now(work_id: work.id.to_s)
+    DerivativeJobs::WorkLevel::ReadingModePdfGeneration::OrchestrateJob.perform_now(work_id: work.id.to_s)
     second_run_names = stubbed_derivative_output_names
 
     expect(second_run_names.tally).to eq(first_run_names.tally)

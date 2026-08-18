@@ -5,7 +5,7 @@ require 'rails_helper'
 
 RSpec.describe 'Audio transcript derivatives end-to-end', type: :feature do
   let(:stubbed_derivative_output_names) { [] }
-  let(:source_file_set_id) { 'source-av-1' }
+  let(:source_file_set_id) { 'source-audio_visual-1' }
   let(:cache_filename) { 'testing_mp4_VTT.vtt' }
 
   let(:user) do
@@ -27,20 +27,20 @@ RSpec.describe 'Audio transcript derivatives end-to-end', type: :feature do
       stubbed_derivative_output_names << name unless stubbed_derivative_output_names.include?(name)
     end
 
-    entrypoint = instance_double(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVideo)
-  allow(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVideo).to receive(:new).and_return(entrypoint)
+    entrypoint = instance_double(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual)
+  allow(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual).to receive(:new).and_return(entrypoint)
     allow(entrypoint).to receive(:source_file_set_ids).and_return([source_file_set_id])
 
-    allow(DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob).to receive(:perform_later) do |**args|
-      DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_now(**args)
+    allow(DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob).to receive(:perform_later) do |**args|
+      DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob.perform_now(**args)
     end
 
-    allow(DerivativeJobs::FileSetLevel::AudioTranscript::PersistJob).to receive(:perform_later) do |**args|
-      DerivativeJobs::FileSetLevel::AudioTranscript::PersistJob.perform_now(**args)
+    allow(DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualPersistJob).to receive(:perform_later) do |**args|
+      DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualPersistJob.perform_now(**args)
     end
 
     allow(entrypoint)
-      .to receive(:generate_for_source_file_set_to_cache)
+      .to receive(:generate_to_cache)
       .and_return(
         {
           source_file_set_id: source_file_set_id,
@@ -50,7 +50,7 @@ RSpec.describe 'Audio transcript derivatives end-to-end', type: :feature do
       )
 
     allow(entrypoint)
-      .to receive(:persist_transcript_from_cache) do |source_file_set_id:, cache_file_identifier:, cache_filename:|
+      .to receive(:persist_from_cache) do |source_file_set_id:, cache_file_identifier:, cache_filename:|
         expect(source_file_set_id).to be_present
         expect(cache_file_identifier).to be_present
         record_stubbed_derivative_output.call(cache_filename)
@@ -59,7 +59,7 @@ RSpec.describe 'Audio transcript derivatives end-to-end', type: :feature do
   end
 
   it 'creates a VTT transcript attachment from source audio' do
-    DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_now(
+    DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob.perform_now(
       work_id: work.id.to_s,
       source_file_set_id: source_file_set_id
     )
@@ -70,13 +70,13 @@ RSpec.describe 'Audio transcript derivatives end-to-end', type: :feature do
   end
 
   it 'is idempotent when run twice' do
-    DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_now(
+    DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob.perform_now(
       work_id: work.id.to_s,
       source_file_set_id: source_file_set_id
     )
     first_run_names = stubbed_derivative_output_names.dup
 
-    DerivativeJobs::FileSetLevel::AudioTranscript::GenerateJob.perform_now(
+    DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGenerateJob.perform_now(
       work_id: work.id.to_s,
       source_file_set_id: source_file_set_id
     )

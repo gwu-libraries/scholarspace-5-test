@@ -88,10 +88,30 @@ RSpec.describe ThumbnailResolver do
   describe '#representative_thumbnail_path_for_work' do
     let(:rep_original) { instance_double('OriginalFile', original_filename: 'REPRESENTATIVE_THUMBNAIL.jpg') }
     let(:representative_thumb) { instance_double('RepresentativeThumb', id: 'rep-1', service_file: true, title: ['REPRESENTATIVE_THUMBNAIL.jpg'], original_file: rep_original) }
-    let(:work) { instance_double('Work', thumbnail_id: 'rep-1') }
+    let(:work) { instance_double('Work', thumbnail_id: 'rep-1', member_file_sets: [representative_thumb]) }
 
     it 'returns download path when work thumbnail is a persisted representative thumbnail' do
       allow(query_service).to receive(:find_by).with(id: 'rep-1').and_return(representative_thumb)
+      allow(routes).to receive(:download_path).with(id: 'rep-1', locale: nil).and_return('/downloads/rep-1')
+
+      path = resolver.representative_thumbnail_path_for_work(work: work)
+
+      expect(path).to eq('/downloads/rep-1')
+    end
+
+    it 'finds a persisted representative thumbnail member when thumbnail_id is blank' do
+      work = instance_double('Work', thumbnail_id: nil, member_file_sets: [representative_thumb])
+      allow(routes).to receive(:download_path).with(id: 'rep-1', locale: nil).and_return('/downloads/rep-1')
+
+      path = resolver.representative_thumbnail_path_for_work(work: work)
+
+      expect(path).to eq('/downloads/rep-1')
+    end
+
+    it 'finds a persisted representative thumbnail member when thumbnail_id is stale' do
+      source_member = instance_double('SourceMember', id: 'source-1', service_file: false, title: ['source.pdf'], original_file: nil)
+      work = instance_double('Work', thumbnail_id: 'source-1', member_file_sets: [source_member, representative_thumb])
+      allow(query_service).to receive(:find_by).with(id: 'source-1').and_return(source_member)
       allow(routes).to receive(:download_path).with(id: 'rep-1', locale: nil).and_return('/downloads/rep-1')
 
       path = resolver.representative_thumbnail_path_for_work(work: work)
