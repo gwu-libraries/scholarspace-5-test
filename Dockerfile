@@ -266,3 +266,21 @@ COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/pa
 # workflows. This target includes the shared Rails, asset, and Sidekiq runtime;
 # ECS deployment images are built from explicit prod targets by the push script.
 FROM scholarspace-web-builder AS scholarspace-default
+
+USER root
+
+RUN apk --no-cache add \
+  imagemagick \
+  imagemagick-heic \
+  imagemagick-jpeg \
+  imagemagick-jxl \
+  imagemagick-pdf \
+  imagemagick-svg \
+  imagemagick-tiff \
+  imagemagick-webp \
+  ghostscript \
+  tesseract-ocr \
+  tesseract-ocr-data-eng \
+  poppler-utils
+
+USER app
