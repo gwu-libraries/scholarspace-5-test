@@ -34,47 +34,49 @@ sidekiq_log_scale_out_cooldown_seconds     = 120
 
 # Sidekiq Default Queue
 sidekiq_default_image         = "<ecr_repository_url>:<TAG>-sidekiq-default"
-sidekiq_default_desired_count = 3
-sidekiq_default_min_capacity  = 3
-sidekiq_default_max_capacity  = 6
+sidekiq_default_desired_count = 2
+sidekiq_default_min_capacity  = 2
+sidekiq_default_max_capacity  = 4
 sidekiq_task_cpu              = 2048
 sidekiq_task_memory           = 4096
 
 # Sidekiq Whisper
-sidekiq_whisper_image         = "<ecr_repository_url>:<TAG>-sidekiq-whisper"
-sidekiq_whisper_desired_count = 1
-sidekiq_whisper_min_capacity  = 1
-sidekiq_whisper_max_capacity  = 4
-sidekiq_whisper_task_cpu      = 2048
-sidekiq_whisper_task_memory   = 4096
+sidekiq_whisper_image                 = "<ecr_repository_url>:<TAG>-sidekiq-whisper"
+sidekiq_whisper_desired_count         = 1
+sidekiq_whisper_min_capacity          = 1
+sidekiq_whisper_max_capacity          = 3
+sidekiq_whisper_task_cpu              = 4096
+sidekiq_whisper_task_memory           = 16384
+sidekiq_whisper_ephemeral_storage_gib = 200
 
 # Sidekiq OCR Text
-sidekiq_ocr_text_image         = "<ecr_repository_url>:<TAG>-sidekiq-ocr-text"
-sidekiq_ocr_text_desired_count = 2
-sidekiq_ocr_text_min_capacity  = 2
-sidekiq_ocr_text_max_capacity  = 16
-sidekiq_ocr_text_task_cpu      = 1024
-sidekiq_ocr_text_task_memory   = 2048
+sidekiq_ocr_text_image                 = "<ecr_repository_url>:<TAG>-sidekiq-ocr-text"
+sidekiq_ocr_text_desired_count         = 2
+sidekiq_ocr_text_min_capacity          = 2
+sidekiq_ocr_text_max_capacity          = 8
+sidekiq_ocr_text_task_cpu              = 1024
+sidekiq_ocr_text_task_memory           = 2048
 
 # Derivatives (Sidekiq)
-sidekiq_derivatives_desired_count = 2
-sidekiq_derivatives_min_capacity  = 2
-sidekiq_derivatives_max_capacity  = 8
-sidekiq_derivatives_task_cpu      = 2048
-sidekiq_derivatives_task_memory   = 4096
+sidekiq_derivatives_desired_count         = 2
+sidekiq_derivatives_min_capacity          = 2
+sidekiq_derivatives_max_capacity          = 6
+sidekiq_derivatives_task_cpu              = 2048
+sidekiq_derivatives_task_memory           = 4096
 
 # Thumbnail (Sidekiq)
-sidekiq_thumbnail_desired_count = 2
-sidekiq_thumbnail_min_capacity  = 2
-sidekiq_thumbnail_max_capacity  = 8
-sidekiq_thumbnail_task_cpu      = 1024
-sidekiq_thumbnail_task_memory   = 2048
+sidekiq_thumbnail_desired_count         = 1
+sidekiq_thumbnail_min_capacity          = 1
+sidekiq_thumbnail_max_capacity          = 4
+sidekiq_thumbnail_task_cpu              = 2048
+sidekiq_thumbnail_task_memory           = 8192
+sidekiq_thumbnail_ephemeral_storage_gib = 200
 
 # Rails Web
 web_image                     = "<ecr_repository_url>:<TAG>-web"
-web_desired_count             = 2
-web_min_capacity              = 2
-web_max_capacity              = 6
+web_desired_count             = 1
+web_min_capacity              = 1
+web_max_capacity              = 3
 web_task_cpu                  = 2048
 web_task_memory               = 4096
 web_target_cpu_utilization    = 60
@@ -84,9 +86,9 @@ web_log_retention_days        = 30
 
 # FITS
 fits_image                       = "<ecr_repository_url>:<TAG>-fits"
-fits_desired_count               = 2
-fits_min_capacity                = 2
-fits_max_capacity                = 8
+fits_desired_count               = 1
+fits_min_capacity                = 1
+fits_max_capacity                = 3
 fits_task_cpu                    = 1024
 fits_task_memory                 = 2048
 fits_target_cpu_utilization      = 70
@@ -99,7 +101,7 @@ fits_service_discovery_namespace = "internal"
 memcached_image                     = "bitnami/memcached"
 memcached_desired_count             = 1
 memcached_min_capacity              = 1
-memcached_max_capacity              = 2
+memcached_max_capacity              = 1
 memcached_task_cpu                  = 256
 memcached_task_memory               = 512
 memcached_target_cpu_utilization    = 70

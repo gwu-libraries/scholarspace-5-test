@@ -16,6 +16,7 @@ locals {
       max_capacity                     = var.sidekiq_default_max_capacity
       cpu                              = var.sidekiq_task_cpu
       memory                           = var.sidekiq_task_memory
+      ephemeral_storage_gib            = var.sidekiq_ephemeral_storage_gib
     }
     whisper = {
       image                            = local.sidekiq_whisper_image_uri
@@ -29,6 +30,7 @@ locals {
       max_capacity                     = var.sidekiq_whisper_max_capacity
       cpu                              = var.sidekiq_whisper_task_cpu
       memory                           = var.sidekiq_whisper_task_memory
+      ephemeral_storage_gib            = var.sidekiq_whisper_ephemeral_storage_gib
     }
     ocr_text = {
       image                            = local.sidekiq_ocr_text_image_uri
@@ -42,6 +44,7 @@ locals {
       max_capacity                     = var.sidekiq_ocr_text_max_capacity
       cpu                              = var.sidekiq_ocr_text_task_cpu
       memory                           = var.sidekiq_ocr_text_task_memory
+      ephemeral_storage_gib            = var.sidekiq_ocr_text_ephemeral_storage_gib
     }
     images = {
       image                            = local.sidekiq_default_image_uri
@@ -55,6 +58,7 @@ locals {
       max_capacity                     = var.sidekiq_derivatives_max_capacity
       cpu                              = var.sidekiq_derivatives_task_cpu
       memory                           = var.sidekiq_derivatives_task_memory
+      ephemeral_storage_gib            = var.sidekiq_derivatives_ephemeral_storage_gib
     }
     thumbnail = {
       image                            = local.sidekiq_default_image_uri
@@ -62,12 +66,13 @@ locals {
       sidekiq_only_ocr_text_extraction = "false"
       sidekiq_only_derivatives         = "false"
       sidekiq_only_thumbnail           = "true"
-      concurrency                      = "2"
+      concurrency                      = "1"
       desired_count                    = var.sidekiq_thumbnail_desired_count
       min_capacity                     = var.sidekiq_thumbnail_min_capacity
       max_capacity                     = var.sidekiq_thumbnail_max_capacity
       cpu                              = var.sidekiq_thumbnail_task_cpu
       memory                           = var.sidekiq_thumbnail_task_memory
+      ephemeral_storage_gib            = var.sidekiq_thumbnail_ephemeral_storage_gib
     }
   }
 
@@ -108,6 +113,14 @@ resource "aws_ecs_task_definition" "sidekiq" {
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
+
+  dynamic "ephemeral_storage" {
+    for_each = each.value.ephemeral_storage_gib == null ? [] : [each.value.ephemeral_storage_gib]
+
+    content {
+      size_in_gib = ephemeral_storage.value
+    }
+  }
 
   container_definitions = jsonencode([
     {

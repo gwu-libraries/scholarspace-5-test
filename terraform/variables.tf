@@ -120,6 +120,12 @@ variable "sidekiq_task_memory" {
   default     = 2048
 }
 
+variable "sidekiq_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for standard Sidekiq ECS tasks"
+  type        = number
+  default     = null
+}
+
 variable "sidekiq_container_stop_timeout_seconds" {
   description = "ECS container stop timeout in seconds for Sidekiq tasks (Fargate max is 120)"
   type        = number
@@ -144,6 +150,12 @@ variable "sidekiq_whisper_task_memory" {
   default     = 4096
 }
 
+variable "sidekiq_whisper_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for whisper Sidekiq ECS tasks"
+  type        = number
+  default     = null
+}
+
 variable "sidekiq_ocr_text_task_cpu" {
   description = "CPU units for OCR text extraction Sidekiq ECS tasks"
   type        = number
@@ -154,6 +166,12 @@ variable "sidekiq_ocr_text_task_memory" {
   description = "Memory (MiB) for OCR text extraction Sidekiq ECS tasks"
   type        = number
   default     = 2048
+}
+
+variable "sidekiq_ocr_text_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for OCR text extraction Sidekiq ECS tasks"
+  type        = number
+  default     = null
 }
 
 variable "sidekiq_derivatives_task_cpu" {
@@ -168,6 +186,12 @@ variable "sidekiq_derivatives_task_memory" {
   default     = 4096
 }
 
+variable "sidekiq_derivatives_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for derivatives-only Sidekiq ECS tasks"
+  type        = number
+  default     = null
+}
+
 variable "sidekiq_thumbnail_task_cpu" {
   description = "CPU units for thumbnail-only Sidekiq ECS tasks"
   type        = number
@@ -178,6 +202,12 @@ variable "sidekiq_thumbnail_task_memory" {
   description = "Memory (MiB) for thumbnail-only Sidekiq ECS tasks"
   type        = number
   default     = 2048
+}
+
+variable "sidekiq_thumbnail_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for thumbnail-only Sidekiq ECS tasks"
+  type        = number
+  default     = null
 }
 
 variable "sidekiq_default_desired_count" {
