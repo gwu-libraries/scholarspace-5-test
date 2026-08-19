@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import FilePanelGroup from './FilePanelGroup';
 import FilePanelTable from './FilePanelTable';
-import { isAudioVisualMember, isImageMember } from '../utils';
+import { isAvMember, isImageMember } from '../utils';
 import * as styles from './FilePanel.module.css';
 
 const normalizeLabel = (value) => {
@@ -15,24 +15,18 @@ const byLabel = (a, b) => normalizeLabel(a?.label).localeCompare(normalizeLabel(
 
 const originalTypeLabel = (member) => {
   if (!member) return 'Other';
-  if (isAudioVisualMember(member)) return 'Audio / Video';
+  if (isAvMember(member)) return 'Audio / Video';
   if (member.isPdf) return 'PDFs';
   if (isImageMember(member)) return 'Images';
   return 'Other';
 };
 
+const typeSortOrder = ['Audio / Video', 'PDFs', 'Images', 'Other'];
 const READING_MODE_GROUP_ID = '__reading_mode_pdf__';
-const READING_MODE_FILENAME_PREFIX = 'reading_mode_pdf';
-const REPRESENTATIVE_THUMBNAIL_FILENAME_FRAGMENT = 'representative_thumbnail';
 
 const readingModeMember = (member) => {
   const label = (member?.label || '').toLowerCase();
-  return label.startsWith(READING_MODE_FILENAME_PREFIX);
-};
-
-const representativeThumbnailMember = (member) => {
-  const label = (member?.label || '').toLowerCase();
-  return Boolean(member?.isRepresentativeThumbnail) || label.includes(REPRESENTATIVE_THUMBNAIL_FILENAME_FRAGMENT);
+  return label.startsWith('reading_mode_pdf') || label.startsWith('reading_mode_hocr');
 };
 
 const hocrSiblingForPdf = (pdfMember, members) => {
@@ -48,8 +42,8 @@ const hocrSiblingForPdf = (pdfMember, members) => {
 const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) => {
   if (members.length === 0) return <p>No service files are attached to this work.</p>;
 
-  const representativeThumbnailMembers = members.filter((member) => representativeThumbnailMember(member));
-  const nonRepresentativeMembers = members.filter((member) => !representativeThumbnailMember(member));
+  const representativeThumbnailMembers = members.filter((member) => Boolean(member?.isRepresentativeThumbnail));
+  const nonRepresentativeMembers = members.filter((member) => !member?.isRepresentativeThumbnail);
   const readingModePdfMember = nonRepresentativeMembers.find((member) => member.isReadingModePdf);
   const readingModeHocrMember = hocrSiblingForPdf(readingModePdfMember, nonRepresentativeMembers);
   const standaloneMemberIds = new Set([
@@ -59,7 +53,7 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
   ].filter(Boolean));
 
   const groupedCandidates = members.filter((member) => !standaloneMemberIds.has(member.id));
-  const readingModeFilenameMembers = groupedCandidates.filter((member) => readingModeMember(member)).sort(byLabel);
+  const readingModeMembersFromFilename = groupedCandidates.filter((member) => readingModeMember(member)).sort(byLabel);
   const nonReadingModeGroupedCandidates = groupedCandidates.filter((member) => !readingModeMember(member));
 
   const originalById = new Map(
@@ -91,41 +85,60 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
         members: [...serviceSiblings].sort(byLabel),
       };
     })
-    .sort((a, b) => (
-      a.sourceLabel.localeCompare(b.sourceLabel) || a.typeLabel.localeCompare(b.typeLabel)
-    ));
+    .sort((a, b) => a.sourceLabel.localeCompare(b.sourceLabel));
+
+  const groupedByType = sourceGroups.reduce((map, group) => {
+    if (!map.has(group.typeLabel)) map.set(group.typeLabel, []);
+    map.get(group.typeLabel).push(group);
+    return map;
+  }, new Map());
 
   const readingModeMembers = [
     readingModePdfMember,
     readingModeHocrMember,
-    ...readingModeFilenameMembers,
+    ...readingModeMembersFromFilename,
   ].filter(Boolean);
 
   const uniqueReadingModeMembers = Array.from(
     new Map(readingModeMembers.map((member) => [member.id, member])).values(),
   ).sort(byLabel);
 
-  const workLevelGroups = [
-    representativeThumbnailMembers.length > 0 && {
-      sourceId: 'representative-thumbnail',
-      sourceLabel: 'Representative Thumbnail',
-      members: representativeThumbnailMembers.sort(byLabel),
-    },
-    uniqueReadingModeMembers.length > 0 && {
+  if (uniqueReadingModeMembers.length > 0) {
+    if (!groupedByType.has('Images')) groupedByType.set('Images', []);
+
+    groupedByType.get('Images').unshift({
       sourceId: READING_MODE_GROUP_ID,
       sourceLabel: 'Reading Mode PDF',
+      typeLabel: 'Images',
       members: uniqueReadingModeMembers,
-    },
-  ].filter(Boolean);
+    });
+  }
+
+  const typeGroups = Array.from(groupedByType.entries())
+    .map(([typeLabel, sourceFileGroups]) => ({
+      typeLabel,
+      sourceFileGroups,
+      groupCount: sourceFileGroups.length,
+    }))
+    .sort((a, b) => typeSortOrder.indexOf(a.typeLabel) - typeSortOrder.indexOf(b.typeLabel));
+
   const sortedUnlinkedMembers = [...unlinkedMembers].sort(byLabel);
-  const filesetLevelCount = sourceGroups.reduce((sum, group) => sum + group.members.length, 0) + sortedUnlinkedMembers.length;
-  const workLevelCount = workLevelGroups.reduce((sum, group) => sum + group.members.length, 0);
 
   return (
     <>
-      {workLevelGroups.length > 0 && (
-        <FilePanelGroup label="Work Level Service Files" count={workLevelCount} defaultOpen={false}>
-          {workLevelGroups.map((sourceGroup) => (
+      {representativeThumbnailMembers.length > 0 && (
+        <FilePanelGroup label="Representative Thumbnail" count={representativeThumbnailMembers.length} defaultOpen={false}>
+          <FilePanelTable showViewColumn={false} members={representativeThumbnailMembers} />
+        </FilePanelGroup>
+      )}
+      {typeGroups.map((typeGroup) => (
+        <FilePanelGroup
+          key={typeGroup.typeLabel}
+          label={typeGroup.typeLabel}
+          count={typeGroup.groupCount}
+          defaultOpen={false}
+        >
+          {typeGroup.sourceFileGroups.map((sourceGroup) => (
             <FilePanelGroup
               key={sourceGroup.sourceId}
               label={sourceGroup.sourceLabel}
@@ -147,24 +160,10 @@ const FilePanelServiceTab = ({ members, originalMembers, onViewReadingMode }) =>
             </FilePanelGroup>
           ))}
         </FilePanelGroup>
-      )}
-      {filesetLevelCount > 0 && (
-        <FilePanelGroup label="Fileset Level Service Files" count={filesetLevelCount} defaultOpen={false}>
-          {sourceGroups.map((sourceGroup) => (
-            <FilePanelGroup
-              key={sourceGroup.sourceId}
-              label={sourceGroup.sourceLabel}
-              count={sourceGroup.members.length}
-              defaultOpen={false}
-            >
-              <FilePanelTable showViewColumn={false} members={sourceGroup.members} />
-            </FilePanelGroup>
-          ))}
-          {sortedUnlinkedMembers.length > 0 && (
-            <FilePanelGroup label="Unlinked Service Files" count={sortedUnlinkedMembers.length} defaultOpen={false}>
-              <FilePanelTable showViewColumn={false} members={sortedUnlinkedMembers} />
-            </FilePanelGroup>
-          )}
+      ))}
+      {sortedUnlinkedMembers.length > 0 && (
+        <FilePanelGroup label="Unlinked Service Files" count={sortedUnlinkedMembers.length} defaultOpen={false}>
+          <FilePanelTable showViewColumn={false} members={sortedUnlinkedMembers} />
         </FilePanelGroup>
       )}
     </>

@@ -1,10 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { memberViewerType } from '../utils';
 import * as styles from './FilePanel.module.css';
 
+const ICON_CLASS_BY_VIEWER = {
+  ramp: 'glyphicon-play',
+  pdf: 'glyphicon-file',
+  images: 'glyphicon-picture',
+};
+
 const FilePanelRow = ({ member, onViewMember, showViewColumn }) => {
-  const hasInlineAction = Boolean(onViewMember);
+  const viewerType = memberViewerType(member);
+  const hasInlineAction = Boolean(viewerType && onViewMember);
+  const iconClass = ICON_CLASS_BY_VIEWER[viewerType] || 'glyphicon-eye-open';
   const rowThumbnailUrl = member.rowThumbnailUrl || member.thumbnailUrl || (member.isImage ? member.downloadUrl : null);
 
   return (
@@ -24,7 +33,7 @@ const FilePanelRow = ({ member, onViewMember, showViewColumn }) => {
               title={`View ${member.label}`}
               aria-label={`View ${member.label}`}
             >
-              <span className="glyphicon glyphicon-eye-open" aria-hidden="true" />
+              <span className={`glyphicon ${iconClass}`} aria-hidden="true" />
               {' '}
               View
             </button>
@@ -64,7 +73,7 @@ FilePanelRow.propTypes = {
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     dateUploaded: PropTypes.string,
-    isAudioVisual: PropTypes.bool,
+    isAv: PropTypes.bool,
     isPdf: PropTypes.bool,
     isImage: PropTypes.bool,
     canvasId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
