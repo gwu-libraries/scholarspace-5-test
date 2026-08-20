@@ -17,10 +17,10 @@ module Derivatives
         end
 
         def generate_to_cache(source_file_set_id:)
-          return unless depositor
+          raise 'Thumbnail depositor not found' unless depositor
 
           source_file_set = source_file_set_for(source_file_set_id)
-          return unless source_file_set
+          raise "Thumbnail source file set not found: #{source_file_set_id}" unless source_file_set
           return unless thumbnail_supported?(source_file_set)
 
           Dir.mktmpdir("thumbnail_derivative_source_#{@work.id}_") do |dir|
@@ -56,10 +56,10 @@ module Derivatives
         end
 
         def persist_from_cache(source_file_set_id:, cache_file_identifier:, cache_filename:)
-          return unless depositor
+          raise 'Thumbnail depositor not found' unless depositor
 
           source_file_set = source_file_set_for(source_file_set_id)
-          return unless source_file_set
+          raise "Thumbnail source file set not found: #{source_file_set_id}" unless source_file_set
           return unless thumbnail_supported?(source_file_set)
 
           Dir.mktmpdir("thumbnail_persist_#{@work.id}_") do |dir|
@@ -68,7 +68,7 @@ module Derivatives
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
-            return unless cached_io
+            raise "Thumbnail cache missing: #{cache_file_identifier}" unless cached_io
 
             output_path = File.join(@working_dir, cache_filename)
             File.open(output_path, 'wb') { |io| IO.copy_stream(cached_io, io) }

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'nokogiri'
+require 'open3'
+require 'tempfile'
 
 module FullTextIndexable
   extend ActiveSupport::Concern
@@ -50,9 +52,25 @@ module FullTextIndexable
   def extract_file_text(file:, content:)
     filename = normalize_filename(file.original_filename)
 
-    if filename.end_with?('.hocr')
-      extract_hocr_plain_text(content)
+    return extract_hocr_plain_text(content) if filename.end_with?('.hocr')
+    return extract_pdf_plain_text(content) if filename.end_with?('.pdf')
+
+    nil
+  end
+
+  def extract_pdf_plain_text(content)
+    Tempfile.create(['scholarspace-index', '.pdf']) do |pdf_file|
+      pdf_file.binmode
+      pdf_file.write(content)
+      pdf_file.flush
+
+      stdout, _stderr, status = Open3.capture3('pdftotext', '-q', pdf_file.path, '-')
+      return nil unless status.success?
+
+      normalize_plain_text(stdout)
     end
+  rescue StandardError
+    nil
   end
 
   def extract_extracted_text_content(member)
