@@ -16,7 +16,7 @@ class DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesGenerateJob
       payload = Derivatives::WorkLevel::ReadingModePdfGeneration::FromImages.new(work).generate_to_cache(
         source_image_file_sets: Derivatives::FileSetLevel::TextExtraction::FromImages.new(work).source_image_file_sets
       )
-      next unless payload
+      raise "Reading-mode PDF generation returned no payload for work=#{work.id}" unless payload
 
       DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesPersistJob.perform_later(
         work_id: work.id.to_s,

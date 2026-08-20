@@ -14,7 +14,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromImagesGenerateJob < Appl
                 .new(work)
                 .generate_to_cache(source_file_set_id: source_file_set_id)
 
-      next unless payload
+      raise "Image OCR generation returned no payload for work=#{work.id} source=#{source_file_set_id}" unless payload
 
       DerivativeJobs::FileSetLevel::TextExtraction::FromImagesPersistJob.perform_later(
         work_id: work.id.to_s,

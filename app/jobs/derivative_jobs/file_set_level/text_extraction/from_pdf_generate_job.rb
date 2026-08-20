@@ -19,7 +19,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromPdfGenerateJob < Applica
                 .new(work)
                 .generate_to_cache(pdf_file_set_id: target_pdf_file_set_id)
 
-      next unless payload
+      raise "PDF text extraction returned no payload for work=#{work.id} source=#{pdf_file_set_id}" unless payload
 
       DerivativeJobs::FileSetLevel::TextExtraction::FromPdfPersistJob.perform_later(
         work_id: work.id.to_s,
