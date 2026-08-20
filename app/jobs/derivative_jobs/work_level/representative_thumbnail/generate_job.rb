@@ -9,7 +9,7 @@ class DerivativeJobs::WorkLevel::RepresentativeThumbnail::GenerateJob < Applicat
   def perform(work_id:)
     with_work(work_id: work_id) do |work|
       payload = Derivatives::WorkLevel::RepresentativeThumbnail::FromSourceFileSet.new(work).generate_to_cache
-      next unless payload
+      raise "Representative thumbnail generation returned no payload for work=#{work.id}" unless payload
 
       DerivativeJobs::WorkLevel::RepresentativeThumbnail::PersistJob.perform_later(
         work_id: work.id.to_s,
