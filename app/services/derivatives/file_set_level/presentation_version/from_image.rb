@@ -31,8 +31,8 @@ module Derivatives
 
         def generate_to_cache(source_file_set_id:)
           source_file_set = source_file_set_for(source_file_set_id)
-          return unless source_file_set
-          return unless depositor
+          raise "Image presentation source file set not found: #{source_file_set_id}" unless source_file_set
+          raise 'Image presentation depositor not found' unless depositor
 
           Dir.mktmpdir("presentation_image_#{@work.id}_") do |dir|
             source_path = copy_source_to_path(source_file_set, dir: dir)
@@ -48,15 +48,15 @@ module Derivatives
 
         def persist_from_cache(source_file_set_id:, cache_file_identifier:, cache_filename:)
           source_file_set = source_file_set_for(source_file_set_id)
-          return unless source_file_set
-          return unless depositor
+          raise "Image presentation source file set not found: #{source_file_set_id}" unless source_file_set
+          raise 'Image presentation depositor not found' unless depositor
 
           Dir.mktmpdir("presentation_persist_#{@work.id}_") do |dir|
             cached_io = DerivativeCacheService.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
-            return unless cached_io
+            raise "Image presentation cache missing: #{cache_file_identifier}" unless cached_io
 
             output_path = File.join(dir, cache_filename)
             File.open(output_path, 'wb') { |io| IO.copy_stream(cached_io, io) }

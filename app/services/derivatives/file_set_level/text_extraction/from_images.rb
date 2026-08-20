@@ -27,10 +27,10 @@ module Derivatives
         end
 
         def generate_to_cache(source_file_set_id:)
-          return unless depositor
+          raise 'Image OCR depositor not found' unless depositor
 
           source_file_set = source_image_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
-          return unless source_file_set
+          raise "Image OCR source file set not found: #{source_file_set_id}" unless source_file_set
 
           Dir.mktmpdir("images_to_pdf_page_#{@work.id}_") do |dir|
             @working_dir = dir
@@ -68,10 +68,10 @@ module Derivatives
         end
 
         def persist_from_cache(source_file_set_id:, cache_file_identifier:, cache_filename:)
-          return unless depositor
+          raise 'Image OCR depositor not found' unless depositor
 
           source_file_set = source_image_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
-          return unless source_file_set
+          raise "Image OCR source file set not found: #{source_file_set_id}" unless source_file_set
           return if file_set_attached_with_name?(cache_filename)
 
           Dir.mktmpdir("images_to_pdf_persist_#{@work.id}_") do |dir|
@@ -79,7 +79,7 @@ module Derivatives
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
-            return unless cached_io
+            raise "Image OCR cache missing: #{cache_file_identifier}" unless cached_io
 
             hocr_path = File.join(dir, cache_filename)
             File.open(hocr_path, 'wb') { |io| IO.copy_stream(cached_io, io) }
