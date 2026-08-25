@@ -1,19 +1,36 @@
 <section class="homepage-browse-cards">
   <div class="homepage-browse-cards-grid">
     <%= link_to main_app.search_catalog_path(f: { resource_type_sim: ['Article'] }), class: "browse-card" do %>
-      <span class="browse-card-title">Articles</span>
+      <h2 class="browse-card-title">Articles</h2>
+      <div class="browse-card-desc">
+        <%= image_tag 'articles.png', alt: 'Article', class: 'browse-card-img' %>
+        <p class="browse-card-text">Explanation of the concept of an article and what will happen when this button is pressed</p>
+      </div>
     <% end %>
 
     <%= link_to main_app.search_catalog_path(f: { resource_type_sim: ['Journal'] }), class: "browse-card" do %>
-      <span class="browse-card-title">Journals</span>
+      <h2 class="browse-card-title">Journals</h2>
+      <div class="browse-card-desc">
+        <%= image_tag 'journals.png', alt: 'Journal', class: 'browse-card-img  journal' %>
+        <p class="browse-card-text">Explanation of the concept of a journal and what will happen when this button is pressed</p>
+      </div>
     <% end %>
 
     <%= link_to main_app.search_catalog_path(f: { has_model_ssim: ['GwEtd'] }), class: "browse-card" do %>
-      <span class="browse-card-title">ETDs</span>
+      <h2 class="browse-card-title">ETDs</h2>
+      <div class="browse-card-desc">
+        <%= image_tag "etds.png", alt: "ETD", class: "browse-card-img" %>
+        <p class="browse-card-text">Explanation of the concept of an ETD and what will happen when this button is pressed</p>
+      </div>
     <% end %>
 
-    <%= link_to "https://library.gwu.edu", class: "browse-card", target: "_blank", rel: "noopener" do %>
-      <span class="browse-card-title">Support</span>
-    <% end %>
+    <div class="browse-card-wrap">
+      <%= link_to "https://library.gwu.edu", class: "browse-card browse-card-small", target: "_blank", rel: "noopener" do %>
+        <h2 class="browse-card-title">How to Submit Your Scholarly Work</h2>
+      <% end %>
+      <%= link_to "https://library.gwu.edu", class: "browse-card browse-card-small", target: "_blank", rel: "noopener" do %>
+        <h2 class="browse-card-title">Support for Open Access</h2>
+      <% end %>
+    </div>
   </div>
 </section>
