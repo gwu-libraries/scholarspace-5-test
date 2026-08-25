@@ -1,0 +1,279 @@
+/*
+ * GWU custom styles.
+ *
+ * Plain CSS. Loaded after hyrax.css (Bootstrap/Hyrax/Blacklight
+ * defaults), so rules here take priority given equal selector specificity.
+ */
+
+/* fonts */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/Figtree.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/Figtree-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-4-v14-latin-regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-4-v14-latin-italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* variables */
+:root {
+  --gw-font-body: 'Figtree', sans-serif;
+  --gw-font-heading: 'Source Serif 4', serif;
+  --gw-white: #ffffff;
+  --gw-dark-grey: #444444;
+  --gw-blue: #033C5A;
+  --gw-buff: #D6BF91;
+  --gw-buff-light: #DAC8A3;
+  --gw-buff-lighter: #E8DDC6;
+  --gw-buff-lightest: #F6F1E8;
+  --potomac: #0075C8;
+  --potomac-light: #3391D3;
+  --potomac-lighter: #7FBAE3;
+  --potomac-lightest: #CCE3F4;
+  --navy-yard: #00223E;
+  --row-house: #EF4343;
+  --blossom: #D1A0B9;
+  --parchment: #FFEFAE;
+  --blue-fog: #52C9E8;
+  --patina: #ADCAB8;
+}
+
+/* basics */
+body,
+html {
+  background-color: var(--gw-white);
+  font-family: var(--gw-font-body);
+}
+
+p,
+span,
+b,
+h5,
+h6,
+h7,
+h8 {
+  color: var(--gw-dark-grey);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--gw-blue);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--gw-font-heading);
+}
+
+html {
+	min-height: 100%;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	margin-bottom: 0;
+}
+
+#content-wrapper {
+  display: flex;
+}
+
+#masthead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 1rem;
+
+	.branding {
+		display: flex;
+		align-items: center;
+	}
+
+	.searchBar {
+		flex: 1 1 auto;
+		max-width: 480px;
+		margin-left: auto;
+
+		.form-group.row {
+			margin: 0;
+			align-items: center;
+			flex-wrap: nowrap;
+		}
+
+		.browse-everything-btn {
+			white-space: nowrap;
+			display: flex;
+			align-items: center;
+		}
+	}
+
+	@media (max-width: 767px) {
+		flex-direction: column;
+		align-items: stretch;
+
+		.searchBar {
+			max-width: none;
+			margin-left: 0;
+		}
+	}
+}
+
+/* Homepage */
+
+.homepage-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.homepage-hero {
+  flex: 1;
+	/* Structural hook for a future background image, e.g.:
+	   background-image: url('...'); background-size: cover; background-position: center; */
+	background-color: #f0f0f0;
+	padding: 4rem 1rem;
+	text-align: center;
+
+	.homepage-hero-content {
+		max-width: 640px;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+
+		.homepage-hero-title {
+			margin: 0;
+		}
+
+		.homepage-hero-description {
+			margin: 0;
+		}
+
+		.hero-search-form {
+			width: 100%;
+
+			.input-group {
+				width: 100%;
+			}
+		}
+	}
+}
+
+.homepage-browse-cards {
+
+	.homepage-browse-cards-grid {
+		width: 100%;
+		margin: 0;
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1.5rem;
+
+		@media (max-width: 767px) {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		@media (max-width: 480px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.browse-card {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2.5rem 1rem;
+		background: #fff;
+		border: 1px solid #dde2e8;
+		border-radius: 6px;
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow 0.15s ease;
+
+		&:hover,
+		&:focus {
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			text-decoration: none;
+			color: inherit;
+		}
+
+		.browse-card-title {
+			font-size: 1.15rem;
+			font-weight: 600;
+		}
+	}
+}
+
+/* Footer */
+
+#content-wrapper {
+	flex: 1 0 auto;
+}
+
+.site-footer {
+	position: static;
+	height: auto;
+	flex-shrink: 0;
+	width: 100%;
+  margin-top: 0;
+
+	.footer-content {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem;
+
+		@media (max-width: 767px) {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+
+	.footer-left {
+		display: flex;
+		align-items: center;
+	}
+
+	.footer-right {
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+	}
+
+	.footer-text {
+		margin: 0;
+	}
+}

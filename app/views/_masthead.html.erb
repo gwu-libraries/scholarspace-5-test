@@ -1,0 +1,11 @@
+<header aria-label="header" class="top-header">
+  <nav id="masthead" class="navbar navbar-dark bg-dark <%= placement_class %>" role="navigation" aria-label="masthead">
+    <h1 class="sr-only navbar-text"><%= application_name %></h1>
+    <div class="branding">
+      <%= render '/logo' %>
+    </div>
+    <div class="searchBar">
+      <%= render partial: 'catalog/search_form' %>
+    </div>
+  </nav>
+</header>

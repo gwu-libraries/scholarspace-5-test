@@ -1,17 +1,5 @@
-<%
-  provide :page_title, application_name
-  add_page_js_pack('homepage-bundler')
-%>
-
-<% content_for(:head) do %>
-  <%= render_page_pack_tags %>
-<% end %>
-
-<div class="row home-content">
-  <%= react_component(
-    'Homepage',
-    props: @homepage_props,
-    prerender: false,
-    html_options: { data: { turbo_cache: false } }
-  ) %>
+<% provide :page_title, application_name %>
+<div class="homepage-wrapper">
+  <%= render 'hyrax/homepage/hero' %>
+  <%= render 'hyrax/homepage/browse_cards' %>
 </div>

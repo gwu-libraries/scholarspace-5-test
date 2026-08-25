@@ -1,0 +1,14 @@
+<%= form_tag search_form_action, method: :get, class: "search-form hero-search-form", id: "search-form-hero", role: "search" do %>
+  <%= render Blacklight::HiddenSearchStateComponent.new(params: search_state.params_for_search.except(:q, :search_field, :qt, :page, :utf8)) %>
+  <%= hidden_field_tag :search_field, 'all_fields' %>
+
+  <div class="input-group">
+    <%= text_field_tag :q, current_search_parameters, 'aria-label': 'Search', class: "q form-control", id: "search-field-hero", placeholder: t("hyrax.search.form.q.placeholder") %>
+
+    <div class="input-group-append">
+      <button type="submit" class="btn btn-primary" id="search-submit-hero">
+        <%= t('hyrax.search.button.html') %>
+      </button>
+    </div>
+  </div>
+<% end %>

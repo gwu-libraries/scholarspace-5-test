@@ -1,0 +1,19 @@
+<section class="homepage-browse-cards">
+  <div class="homepage-browse-cards-grid">
+    <%= link_to main_app.search_catalog_path(f: { resource_type_sim: ['Article'] }), class: "browse-card" do %>
+      <span class="browse-card-title">Articles</span>
+    <% end %>
+
+    <%= link_to main_app.search_catalog_path(f: { resource_type_sim: ['Journal'] }), class: "browse-card" do %>
+      <span class="browse-card-title">Journals</span>
+    <% end %>
+
+    <%= link_to main_app.search_catalog_path(f: { has_model_ssim: ['GwEtd'] }), class: "browse-card" do %>
+      <span class="browse-card-title">ETDs</span>
+    <% end %>
+
+    <%= link_to "https://library.gwu.edu", class: "browse-card", target: "_blank", rel: "noopener" do %>
+      <span class="browse-card-title">Support</span>
+    <% end %>
+  </div>
+</section>
