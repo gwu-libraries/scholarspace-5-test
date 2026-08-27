@@ -13,7 +13,17 @@ docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   run --rm --no-deps -T app-volumes-init
 
-exec docker compose \
+if [ ! -f "$RAILS_ROOT/docker-compose-dev-local.yml"  ]; then
+
+    exec docker compose \
+    -f "$RAILS_ROOT/docker-compose.yml" \
+    -f "$RAILS_ROOT/docker-compose-dev.yml" \
+    up --build "$@"
+fi
+echo "Local configuration found"
+
+  exec docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-dev.yml" \
+  -f "$RAILS_ROOT/docker-compose-dev-local.yml" \
   up --build "$@"
