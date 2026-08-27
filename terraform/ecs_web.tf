@@ -135,13 +135,13 @@ resource "aws_ecs_task_definition" "web" {
 }
 
 resource "aws_ecs_service" "web" {
-  name                   = "${var.site_prefix}-web"
-  cluster                = aws_ecs_cluster.sidekiq.id
-  task_definition        = aws_ecs_task_definition.web.arn
-  desired_count          = var.web_desired_count
-  launch_type            = "FARGATE"
-  enable_execute_command = true
-
+  name                               = "${var.site_prefix}-web"
+  cluster                            = aws_ecs_cluster.sidekiq.id
+  task_definition                    = aws_ecs_task_definition.web.arn
+  desired_count                      = var.web_desired_count
+  launch_type                        = "FARGATE"
+  enable_execute_command             = true
+  force_new_deployment               = true
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
   health_check_grace_period_seconds  = 120
