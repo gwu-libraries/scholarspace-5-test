@@ -4,7 +4,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromImagesPersistJob < Appli
   include JobDistributedLock
   include LockRetryProfiles::ShortBackoff
 
-  queue_as :derivatives_text_extraction_from_images_persist
+  queue_as :derivatives_persist
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     Rails.logger.info(

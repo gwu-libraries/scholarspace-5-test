@@ -4,7 +4,7 @@ class DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesPersistJob 
   include JobDistributedLock
   include LockRetryProfiles::LongRunningShortBackoff
 
-  queue_as :derivatives_reading_mode_pdf_generation_from_images_persist
+  queue_as :derivatives_persist
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     Rails.logger.info(

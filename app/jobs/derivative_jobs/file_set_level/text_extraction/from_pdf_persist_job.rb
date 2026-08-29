@@ -4,7 +4,7 @@ class DerivativeJobs::FileSetLevel::TextExtraction::FromPdfPersistJob < Applicat
   include JobDistributedLock
   include LockRetryProfiles::ShortBackoff
 
-  queue_as :derivatives_text_extraction_from_pdf_persist
+  queue_as :derivatives_persist
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier_hocr:, cache_filename_hocr:, cache_file_identifier_pdf:, cache_filename_pdf:)
     Rails.logger.info(

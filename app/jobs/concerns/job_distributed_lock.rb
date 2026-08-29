@@ -45,19 +45,25 @@ module JobDistributedLock
     arguments
   end
 
+  # Redlock gets its own pool rather than a connection borrowed from Sidekiq's:
+  # `Sidekiq.redis { |r| r }` returns the connection *outside* the block, so it is
+  # checked back in while still in use and two job threads can interleave commands
+  # on one socket, leaving a thread blocked on a reply that never arrives.
+  def redlock_client
+    Redlock::Client.new([RedisConnectionSettings.pool])
+  end
+
   def with_distributed_lock(lock_key, timeout_seconds)
     # Convert seconds to milliseconds for Redlock
     timeout_ms = timeout_seconds * 1000
     retry_count = ENV.fetch('DISTRIBUTED_LOCK_RETRY_COUNT', DEFAULT_LOCK_RETRY_COUNT).to_i
     retry_delay_ms = ENV.fetch('DISTRIBUTED_LOCK_RETRY_DELAY_MS', DEFAULT_LOCK_RETRY_DELAY_MS).to_i
     retry_jitter_ms = ENV.fetch('DISTRIBUTED_LOCK_RETRY_JITTER_MS', DEFAULT_LOCK_RETRY_JITTER_MS).to_i
-    
-    # Get Redis connection from Sidekiq
-    redis_connection = Sidekiq.redis { |r| r }
-    redlock_client = Redlock::Client.new([redis_connection])
-    
+
+    client = redlock_client
+
     # Try to acquire lock with a short bounded retry window to reduce contention churn.
-    lock_info = redlock_client.lock(
+    lock_info = client.lock(
       lock_key,
       timeout_ms,
       retry_count: retry_count,
@@ -78,7 +84,7 @@ module JobDistributedLock
     begin
       yield
     ensure
-      redlock_client.unlock(lock_info)
+      client.unlock(lock_info)
       Rails.logger.info("lock_released key=#{lock_key}")
     end
   end
