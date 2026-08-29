@@ -82,7 +82,7 @@ module ApplicationJobRetryPolicy
   def configured_retry_wait_seconds_for(error)
     return lock_retry_wait_seconds if lock_contention_error?(error)
 
-    [2**executions, retry_policy_max_wait_seconds].min
+    [2**executions, retry_policy_max_wait_seconds].min + rand(0..2)
   end
 
   def lock_retry_wait_seconds

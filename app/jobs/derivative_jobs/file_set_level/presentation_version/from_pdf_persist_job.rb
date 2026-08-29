@@ -4,7 +4,7 @@ class DerivativeJobs::FileSetLevel::PresentationVersion::FromPdfPersistJob < App
   include JobDistributedLock
   include LockRetryProfiles::ShortBackoff
 
-  queue_as :derivatives_presentation_version_from_pdf_persist
+  queue_as :derivatives_persist
 
   def perform(work_id:, source_file_set_id:, cache_file_identifier:, cache_filename:)
     with_work(work_id: work_id) do |work|
