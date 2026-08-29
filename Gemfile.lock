@@ -1354,6 +1354,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord-nulldb-adapter (~> 1.1)
   awesome_print
+  aws-sdk-s3 (~> 1.219)
   better_errors
   binding_of_caller
   blacklight-access_controls
