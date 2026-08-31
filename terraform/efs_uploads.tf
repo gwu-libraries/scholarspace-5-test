@@ -1,6 +1,7 @@
 resource "aws_efs_file_system" "uploads" {
-  creation_token = "${var.site_prefix}-uploads"
-  encrypted      = true
+  creation_token  = "${var.site_prefix}-uploads"
+  encrypted       = true
+  throughput_mode = "elastic"
 
   lifecycle {
     prevent_destroy = true
