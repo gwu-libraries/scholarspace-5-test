@@ -36,3 +36,20 @@ resource "aws_s3_bucket_public_access_block" "app_bucket_public_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+resource "aws_s3_bucket_lifecycle_configuration" "app_bucket_lifecycle" {
+  bucket = aws_s3_bucket.app_bucket.id
+
+  rule {
+    id     = "expire-derivative-cache"
+    status = "Enabled"
+
+    filter {
+      prefix = "${var.s3_prefix}/derivatives-cache/"
+    }
+
+    expiration {
+      days = 7
+    }
+  }
+}
