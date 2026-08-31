@@ -132,8 +132,8 @@ resource "aws_ecs_service" "fedora" {
   launch_type            = "FARGATE"
   enable_execute_command = true
 
-  deployment_minimum_healthy_percent = 50
-  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
 
   deployment_circuit_breaker {
     enable   = true
