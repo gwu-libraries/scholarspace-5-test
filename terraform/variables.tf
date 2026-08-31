@@ -300,6 +300,42 @@ variable "sidekiq_thumbnail_max_capacity" {
   default     = 4
 }
 
+variable "sidekiq_persist_desired_count" {
+  description = "Desired task count for shared derivative persist Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_persist_min_capacity" {
+  description = "Minimum autoscaling capacity for shared derivative persist Sidekiq service"
+  type        = number
+  default     = 0
+}
+
+variable "sidekiq_persist_max_capacity" {
+  description = "Maximum autoscaling capacity for shared derivative persist Sidekiq service"
+  type        = number
+  default     = 4
+}
+
+variable "sidekiq_persist_task_cpu" {
+  description = "CPU units for shared derivative persist Sidekiq tasks"
+  type        = number
+  default     = 2048
+}
+
+variable "sidekiq_persist_task_memory" {
+  description = "Memory (MiB) for shared derivative persist Sidekiq tasks"
+  type        = number
+  default     = 4096
+}
+
+variable "sidekiq_persist_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for shared derivative persist Sidekiq tasks"
+  type        = number
+  default     = null
+}
+
 variable "sidekiq_target_cpu_utilization" {
   description = "Target average CPU utilization percent for Sidekiq autoscaling"
   type        = number
