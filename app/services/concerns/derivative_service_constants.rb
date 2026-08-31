@@ -1,22 +1,24 @@
 # frozen_string_literal: true
 
 module Constants
+  # Fixed identifiers persisted into Solr tags, filenames, and stored metadata --
+  # not environment-tunable settings, so these are plain constants rather than yml-driven.
   module DerivativeTypeConstants
-    DERIVATIVE_TYPE_DEFAULT = DerivativeServiceSettings.fetch(:derivative_types, :default)
-    DERIVATIVE_TYPE_HOCR = DerivativeServiceSettings.fetch(:derivative_types, :hocr)
-    DERIVATIVE_TYPE_TRANSCRIPT = DerivativeServiceSettings.fetch(:derivative_types, :transcript)
-    DERIVATIVE_TYPE_THUMBNAIL = DerivativeServiceSettings.fetch(:derivative_types, :thumbnail)
-    DERIVATIVE_TYPE_PDF = DerivativeServiceSettings.fetch(:derivative_types, :pdf)
-    DERIVATIVE_TYPE_PDF_DERIVATIVE = DerivativeServiceSettings.fetch(:derivative_types, :pdf_derivative)
-    DERIVATIVE_TYPE_PRESENTATION_VERSION = DerivativeServiceSettings.fetch(:derivative_types, :presentation_version)
-    PRESENTATION_VERSION_FILENAME_STEM = DerivativeServiceSettings.fetch(:derivative_filenames, :presentation_version_stem).freeze
+    DERIVATIVE_TYPE_DEFAULT = 'derivative'
+    DERIVATIVE_TYPE_HOCR = 'hocr'
+    DERIVATIVE_TYPE_TRANSCRIPT = 'transcript'
+    DERIVATIVE_TYPE_THUMBNAIL = 'thumbnail'
+    DERIVATIVE_TYPE_PDF = 'pdf'
+    DERIVATIVE_TYPE_PDF_DERIVATIVE = 'pdf_derivative'
+    DERIVATIVE_TYPE_PRESENTATION_VERSION = 'presentation_version'
+    PRESENTATION_VERSION_FILENAME_STEM = '_presentation_version'
     PRESENTATION_VERSION_FILENAME_FRAGMENT = "#{PRESENTATION_VERSION_FILENAME_STEM}.".freeze
   end
 
   module DerivativeFilenameConstants
-    READING_MODE_PDF_FILENAME = DerivativeServiceSettings.fetch(:derivative_filenames, :reading_mode_pdf)
-    READING_MODE_HOCR_FILENAME = DerivativeServiceSettings.fetch(:derivative_filenames, :reading_mode_hocr)
-    PDF_PRESENTATION_VERSION_SUFFIX = DerivativeServiceSettings.fetch(:derivative_filenames, :pdf_presentation_version_suffix)
+    READING_MODE_PDF_FILENAME = 'reading_mode_pdf.pdf'
+    READING_MODE_HOCR_FILENAME = 'reading_mode_pdf_HOCR.hocr'
+    PDF_PRESENTATION_VERSION_SUFFIX = '_presentation_version.pdf'
   end
 
   module FileExtensionConstants
@@ -41,16 +43,16 @@ module Constants
   end
 
   module ThumbnailFilenameConstants
-    REPRESENTATIVE_THUMBNAIL_FILENAME = DerivativeServiceSettings.fetch(:thumbnail_filenames, :representative)
-    GENERATED_THUMBNAIL_SUFFIX = DerivativeServiceSettings.fetch(:thumbnail_filenames, :generated_suffix)
+    REPRESENTATIVE_THUMBNAIL_FILENAME = 'REPRESENTATIVE_THUMBNAIL.jpg'
+    GENERATED_THUMBNAIL_SUFFIX = '_THUMBNAIL.jpg'
   end
 
   module ThumbnailTagConstants
-    THUMBNAIL_DERIVATIVE_TAG = DerivativeServiceSettings.fetch(:thumbnail_tags, :derivative_tag)
-    THUMBNAIL_DERIVATIVE_PREFIX = DerivativeServiceSettings.fetch(:thumbnail_tags, :derivative_prefix)
-    REPRESENTATIVE_THUMBNAIL_TAG_PREFIX = DerivativeServiceSettings.fetch(:thumbnail_tags, :representative_prefix)
-    SOURCE_FILE_SET_ID_PREFIX = DerivativeServiceSettings.fetch(:thumbnail_tags, :source_file_set_id_prefix)
-    THUMBNAIL_FILENAME_FRAGMENT = DerivativeServiceSettings.fetch(:thumbnail_tags, :filename_fragment)
+    THUMBNAIL_DERIVATIVE_TAG = 'derivative_type:thumbnail'
+    THUMBNAIL_DERIVATIVE_PREFIX = 'derivative_type:'
+    REPRESENTATIVE_THUMBNAIL_TAG_PREFIX = 'representative_thumbnail_for_work:'
+    SOURCE_FILE_SET_ID_PREFIX = 'source_file_set_id:'
+    THUMBNAIL_FILENAME_FRAGMENT = '_thumbnail.'
   end
 end
 
