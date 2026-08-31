@@ -9,7 +9,7 @@ module FullTextIndexable
   include MemberQueries
   include StringNormalization
 
-  MAX_INDEX_VALUE_CHARS = 3000
+  MAX_INDEX_VALUE_CHARS = DerivativeServiceSettings.fetch(:indexing, :max_index_value_chars)
 
   def to_solr
     super.tap do |index_document|
