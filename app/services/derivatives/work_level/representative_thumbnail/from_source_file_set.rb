@@ -155,6 +155,7 @@ module Derivatives
 
         def find_or_create_thumbnail_for(source_file_set)
           thumbnail_filename = thumbnail_filename_for(source_file_set)
+          refresh_work!
           existing = find_service_file_set_by_filename(thumbnail_filename)
           return existing if existing
 
@@ -216,18 +217,6 @@ module Derivatives
 
         def thumbnail_supported?(file_set)
           self.class.thumbnail_supported_file_set?(file_set)
-        end
-
-        def find_service_file_set_by_filename(filename)
-          return nil if filename.blank?
-
-          @work.member_file_sets.find do |file_set|
-            next false unless file_set.respond_to?(:service_file) && file_set.service_file
-
-            attached_name = file_set.original_file&.original_filename.to_s
-            attached_title = file_set.title.to_a.join(' ')
-            attached_name == filename || attached_title == filename
-          end
         end
 
         def build_representative_thumbnail(derivative_candidates:)

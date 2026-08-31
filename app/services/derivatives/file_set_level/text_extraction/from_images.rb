@@ -29,7 +29,7 @@ module Derivatives
         def generate_to_cache(source_file_set_id:)
           raise 'Image OCR depositor not found' unless depositor
 
-          source_file_set = source_image_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
+          source_file_set = source_image_file_set_for(source_file_set_id)
           raise "Image OCR source file set not found: #{source_file_set_id}" unless source_file_set
 
           Dir.mktmpdir("images_to_pdf_page_#{@work.id}_") do |dir|
@@ -70,8 +70,9 @@ module Derivatives
         def persist_from_cache(source_file_set_id:, cache_file_identifier:, cache_filename:)
           raise 'Image OCR depositor not found' unless depositor
 
-          source_file_set = source_image_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
+          source_file_set = source_image_file_set_for(source_file_set_id)
           raise "Image OCR source file set not found: #{source_file_set_id}" unless source_file_set
+          refresh_work!
           return if file_set_attached_with_name?(cache_filename)
 
           Dir.mktmpdir("images_to_pdf_persist_#{@work.id}_") do |dir|
@@ -127,6 +128,14 @@ module Derivatives
           end.sort_by do |file_set|
             normalize_filename(file_set.original_file&.original_filename)
           end
+        end
+
+        def source_image_file_set_for(source_file_set_id)
+          file_set = member_file_set_by_id(source_file_set_id)
+          return nil unless file_set && !file_set.service_file
+          return nil unless file_set.original_file&.mime_type.to_s.start_with?(IMAGE_MIME_PREFIX)
+
+          file_set
         end
 
         private
@@ -209,6 +218,7 @@ module Derivatives
           return unless joined_hocr_path && File.exist?(joined_hocr_path) && depositor
 
           filename = File.basename(joined_hocr_path)
+          refresh_work!
           existing = find_service_file_set_by_filename(filename)
           if existing
             ensure_hocr_linked_to_source_pdf(existing, source_pdf_file_set)
@@ -298,19 +308,6 @@ module Derivatives
             attached_title = file_set.title.to_a.join(' ')
             attached_name == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME ||
               attached_title == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
-          end
-        end
-
-        def find_service_file_set_by_filename(filename)
-          return nil if filename.blank?
-          return nil unless @work.respond_to?(:member_file_sets)
-
-          @work.member_file_sets.find do |file_set|
-            next false unless file_set.respond_to?(:service_file) && file_set.service_file
-
-            attached_name = file_set.original_file&.original_filename.to_s
-            attached_title = file_set.title.to_a.join(' ')
-            attached_name == filename || attached_title == filename
           end
         end
 

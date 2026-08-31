@@ -9,10 +9,10 @@ module Derivatives
     module TextExtraction
       # Entry point for extracting searchable text from source PDFs.
       class FromPdf
-        EMBEDDED_TEXT_SAMPLE_PAGES = 5
-        EMBEDDED_TEXT_MIN_WORDS = 8
-        EMBEDDED_TEXT_MIN_ALPHA_CHARS = 40
-        EMBEDDED_TEXT_MIN_ALPHA_RATIO = 0.2
+        EMBEDDED_TEXT_SAMPLE_PAGES = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_sample_pages)
+        EMBEDDED_TEXT_MIN_WORDS = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_words)
+        EMBEDDED_TEXT_MIN_ALPHA_CHARS = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_alpha_chars)
+        EMBEDDED_TEXT_MIN_ALPHA_RATIO = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_alpha_ratio)
 
         include Concerns::FileSetAttachable
         include Concerns::TextExtraction::HocrGeneratable
@@ -411,6 +411,7 @@ module Derivatives
           return unless user
 
           filename = File.basename(hocr_path)
+          refresh_work!
           if file_set_attached_with_name?(filename)
             existing_file_set = member_file_sets.find do |member_file_set|
               member_file_set.original_file&.original_filename.to_s == filename
@@ -446,8 +447,8 @@ module Derivatives
         end
 
         def reindex_work_and_file_set(file_set)
-          @work = save_and_index(@work)
           index_resources([file_set])
+          schedule_work_reindex(@work.id)
         end
 
         def extraction_target_pdf_file_set?(file_set)
