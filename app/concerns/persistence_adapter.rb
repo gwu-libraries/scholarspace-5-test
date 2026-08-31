@@ -15,4 +15,8 @@ module PersistenceAdapter
   def index_resources(resources)
     Array(resources).each { |resource| Hyrax.index_adapter.save(resource: resource) }
   end
+
+  def schedule_work_reindex(work_id)
+    DerivativeJobs::WorkLevel::ReindexJob.schedule(work_id: work_id)
+  end
 end
