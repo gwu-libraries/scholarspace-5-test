@@ -54,6 +54,7 @@ module Derivatives
             output_path = File.join(dir, cache_filename)
             File.open(output_path, 'wb') { |io| IO.copy_stream(cached_io, io) }
 
+            refresh_work!
             existing = linked_presentation_file_set(source_file_set: source_file_set, filename: cache_filename)
             persisted_file_set = if existing
               replace_file_set_file(file_set: existing, file_path: output_path, user: depositor)
@@ -82,7 +83,10 @@ module Derivatives
         end
 
         def source_file_set_for(source_file_set_id)
-          source_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
+          file_set = member_file_set_by_id(source_file_set_id)
+          return nil unless file_set && !file_set.service_file && source_audio_visual_file_set?(file_set)
+
+          file_set
         end
 
         def copy_source_to_path(source_file_set, dir:)
@@ -131,23 +135,16 @@ module Derivatives
         end
 
         def reindex_work_and_file_set(file_set)
-          @work = save_and_index(@work)
           index_resources([file_set])
+          schedule_work_reindex(@work.id)
         end
 
         def linked_presentation_file_set(source_file_set:, filename:)
-          @work.member_file_sets.find do |file_set|
-            next false unless file_set.service_file
-
-            attached_name = file_set.original_file&.original_filename.to_s
-            next false unless attached_name == filename
-            next false unless DerivativeLinkResolver.source_file_set_id_for(file_set) == source_file_set.id.to_s
-
-            related_values = DerivativeLinkResolver.related_url_values_for(file_set)
-            related_values.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
-          end
-        rescue StandardError
-          false
+          linked_derivative_file_set(
+            source_file_set: source_file_set,
+            filename: filename,
+            derivative_type: DERIVATIVE_TYPE_PRESENTATION_VERSION
+          )
         end
 
         def cache_payload(source_file_set:, output_path:, filename:)

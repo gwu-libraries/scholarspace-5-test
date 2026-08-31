@@ -73,6 +73,7 @@ module Derivatives
             output_path = File.join(@working_dir, cache_filename)
             File.open(output_path, 'wb') { |io| IO.copy_stream(cached_io, io) }
 
+            refresh_work!
             existing = find_service_file_set_by_filename(cache_filename)
             if existing
               update_file_set_file(existing, output_path)
@@ -102,7 +103,10 @@ module Derivatives
         end
 
         def source_file_set_for(source_file_set_id)
-          source_file_sets.find { |file_set| file_set.id.to_s == source_file_set_id.to_s }
+          file_set = member_file_set_by_id(source_file_set_id)
+          return nil unless file_set && !file_set.service_file
+
+          file_set
         end
 
         def source_file_sets
@@ -134,18 +138,6 @@ module Derivatives
 
         def thumbnail_supported?(file_set)
           self.class.thumbnail_supported_file_set?(file_set)
-        end
-
-        def find_service_file_set_by_filename(filename)
-          return nil if filename.blank?
-
-          @work.member_file_sets.find do |file_set|
-            next false unless file_set.respond_to?(:service_file) && file_set.service_file
-
-            attached_name = file_set.original_file&.original_filename.to_s
-            attached_title = file_set.title.to_a.join(' ')
-            attached_name == filename || attached_title == filename
-          end
         end
 
         def update_file_set_file(file_set, new_file_path)

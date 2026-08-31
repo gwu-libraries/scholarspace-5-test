@@ -136,6 +136,7 @@ module Derivatives
           return unless File.exist?(vtt_path) && depositor
 
           filename = File.basename(vtt_path)
+          refresh_work!
           existing = transcript_file_set(filename, source_file_set: source_file_set)
           if existing
             refreshed_file_set = replace_file_set_file(file_set: existing, file_path: vtt_path, user: depositor)

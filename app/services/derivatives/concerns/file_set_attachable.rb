@@ -9,12 +9,72 @@ module Derivatives
       include WorkLockable
       include DerivativeCacheWriter
       include PersistenceAdapter
-      def file_set_attached_with_name?(filename)
-        @work.member_file_sets.any? do |file_set|
-          attached_name = file_set.original_file&.original_filename.to_s
-          attached_title = file_set.title.to_a.join(' ')
-          attached_name == filename || attached_title == filename
+
+      def refresh_work!
+        refreshed = reload_work
+        @work = refreshed if refreshed
+      rescue Valkyrie::Persistence::ObjectNotFoundError
+        @work
+      end
+
+      def member_file_set_by_id(file_set_id)
+        return nil if file_set_id.blank?
+        return nil unless Array(@work.member_ids).map(&:to_s).include?(file_set_id.to_s)
+
+        @work.find_member_file_set(file_set_id)
+      end
+
+      def member_solr_documents
+        ids = Array(@work.member_ids).map(&:to_s)
+        return [] if ids.empty?
+        return @member_solr_documents_cache[:docs] if @member_solr_documents_cache &&
+                                                      @member_solr_documents_cache[:ids] == ids
+        response = Hyrax::SolrService.post(
+          "{!terms f=id}#{ids.join(',')}",
+          rows: ids.size,
+          fl: 'id,service_file_bsi,related_url_tesim,title_tesim'
+        )
+        docs = response.dig('response', 'docs') || []
+        @member_solr_documents_cache = { ids: ids, docs: docs }
+        docs
+      end
+
+      def service_file_document_named(filename)
+        return nil if filename.blank?
+
+        member_solr_documents.find do |doc|
+          doc['service_file_bsi'] && Array(doc['title_tesim']).include?(filename)
         end
+      end
+
+      # Derivatives are created with title == filename, so title_tesim is the
+      # indexed stand-in for the (unindexed) original filename.
+      def file_set_attached_with_name?(filename)
+        return false if filename.blank?
+
+        member_solr_documents.any? { |doc| Array(doc['title_tesim']).include?(filename) }
+      end
+
+      def find_service_file_set_by_filename(filename)
+        doc = service_file_document_named(filename)
+        return nil unless doc
+
+        member_file_set_by_id(doc['id'])
+      end
+
+      def linked_derivative_file_set(source_file_set:, filename:, derivative_type:)
+        doc = member_solr_documents.find do |candidate|
+          next false unless candidate['service_file_bsi']
+          next false unless Array(candidate['title_tesim']).include?(filename)
+
+          related = Array(candidate['related_url_tesim'])
+          next false unless related.include?("#{SOURCE_FILE_SET_ID_PREFIX}#{source_file_set.id}")
+
+          related.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{derivative_type}")
+        end
+        return nil unless doc
+
+        member_file_set_by_id(doc['id'])
       end
 
       def attach_single_file_to_work(file_path:, user:, service_file: false, source_file_set: nil,
@@ -146,15 +206,22 @@ module Derivatives
       end
 
       def attach_file_set_to_work(file_set)
+        return unless file_set
+
         with_work_lock do
           work = reload_work
-          return unless work
-
           existing_member_ids = Array(work.member_ids).map(&:to_s)
-          work.member_ids += [file_set.id] unless existing_member_ids.include?(file_set.id.to_s)
-          work.representative_id = file_set.id if work.respond_to?(:representative_id) && work.representative_id.blank?
-          work.thumbnail_id = file_set.id if work.respond_to?(:thumbnail_id) && work.thumbnail_id.blank?
-          @work = Hyrax.persister.save(resource: work)
+          changed = false
+          unless existing_member_ids.include?(file_set.id.to_s)
+            work.member_ids += [file_set.id]
+            work.representative_id = file_set.id if work.respond_to?(:representative_id) && work.representative_id.blank?
+            work.thumbnail_id = file_set.id if work.respond_to?(:thumbnail_id) && work.thumbnail_id.blank?
+            work = Hyrax.persister.save(resource: work)
+            changed = true
+          end
+
+          @work = work
+          schedule_work_reindex(work.id) if changed
         end
       end
 
