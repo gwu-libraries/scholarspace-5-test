@@ -70,11 +70,6 @@ resource "aws_ecs_task_definition" "web" {
           sourceVolume  = "ocr-cache"
           containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
           readOnly      = false
-        },
-        {
-          sourceVolume  = "derivatives-cache"
-          containerPath = "/app/scholarspace/tmp/cache/derivatives"
-          readOnly      = false
         }
       ]
       logConfiguration = {
@@ -118,20 +113,6 @@ resource "aws_ecs_task_definition" "web" {
     }
   }
 
-  volume {
-    name = "derivatives-cache"
-
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.uploads.id
-      root_directory     = "/"
-      transit_encryption = "ENABLED"
-
-      authorization_config {
-        access_point_id = aws_efs_access_point.derivatives_cache.id
-        iam             = "DISABLED"
-      }
-    }
-  }
 }
 
 resource "aws_ecs_service" "web" {
