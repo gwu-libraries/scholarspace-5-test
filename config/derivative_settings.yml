@@ -1,0 +1,110 @@
+shared:
+  jobs:
+  # These are all configurations for 
+    retry_policy:
+      default_max_wait_seconds: 300
+      default_error_attempts: 10
+      no_method_error_attempts: 0
+
+    distributed_lock:
+      default_timeout_seconds: 3600
+      retry_count: 3
+      retry_delay_ms: 200
+      retry_jitter_ms: 50
+
+    work_advisory_lock:
+      timeout_seconds: 15
+
+    pdf_optimization:
+    # I have been encountering an issue where every once in a while, the process
+    # running the PDF presentation version generation just hangs indefinitely and
+    # blocks a queue. This setting is pretty much at what point do we assume
+    # the process is hanging and we retry it. May need to be increased for larger
+    # PDFs. 
+      timeout_seconds: 120
+
+    lock_profiles:
+    # what behavior do we want for locking for a particular type of derivative?
+    # See lock_retry_profiles
+      default_backoff:
+        retry_attempts: 30
+        retry_max_wait_seconds: 20
+        retry_jitter_seconds: 2
+      short_backoff:
+        timeout_seconds: 1800
+        retry_attempts: 1200
+        retry_max_wait_seconds: 3
+        retry_jitter_seconds: 1
+      long_running_short_backoff:
+        timeout_seconds: 28800
+
+    waits:
+      work_reindex_debounce_seconds: 300
+      hyrax_listener:
+        orchestrate_debounce_seconds: 300
+        orchestrate_enqueue_wait_seconds: 120
+      work_level_orchestrate:
+        readiness_retry_max: 10
+        readiness_retry_step_seconds: 60
+        readiness_retry_max_wait_seconds: 600
+        representative_thumbnail_seconds: 1800
+      reading_mode_pdf_generation:
+        from_images_generate_seconds: 1800
+        assemble_hocr_seconds: 2700
+
+  services:
+    file_extensions:
+    # For explicitly categorizing file types by extension name.
+    # FITS characterization will run on most files, but it is having a hard time
+    # in the deployed environment with processing large files - probably fixable with more ephemeral storage or installing FITS on sidekiq nodes? - but for now we're just bypassing characterization of large files and going by file type. 
+
+    # This will need to be fixed prior to a mediated deposit workflow if we allow users to
+    # deposit their own files above the threshold where we make this assumption
+    # TODO extract the threshold file size to a settable value
+      audio_visual:
+        - mp3
+        - wav
+        - m4a
+        - aac
+        - flac
+        - ogg
+        - oga
+        - mp4
+        - m4v
+        - mov
+        - avi
+        - mkv
+        - webm
+        - mpeg
+        - mpg
+      image:
+        - jpg
+        - jpeg
+        - png
+        - gif
+        - tif
+        - tiff
+        - webp
+        - jp2
+
+    mime_types:
+      pdf: application/pdf
+      hocr: text/vnd.hocr+html
+      vtt: text/vtt
+
+    mime_prefixes:
+      audio: audio/
+      video: video/
+      image: image/
+
+    text_extraction:
+    # this is pretty much how we decide if a pdf does or does not have embedded text,
+    # which determines whether or not we generate an HOCR file with Tesseract and then
+    # embed the text from that file into 
+      embedded_text_sample_pages: 5
+      embedded_text_min_words: 8
+      embedded_text_min_alpha_chars: 40
+      embedded_text_min_alpha_ratio: 0.2
+
+    indexing:
+      max_index_value_chars: 3000

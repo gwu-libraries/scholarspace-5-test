@@ -17,6 +17,6 @@ module PersistenceAdapter
   end
 
   def schedule_work_reindex(work_id)
-    DerivativeJobs::WorkLevel::ReindexJob.schedule(work_id: work_id)
+    DerivativeJobs::WorkLevel::ReindexJob.schedule(work_id: work_id.to_s)
   end
 end

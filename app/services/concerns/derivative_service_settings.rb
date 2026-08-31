@@ -4,7 +4,7 @@ module DerivativeServiceSettings
   module_function
 
   def config
-    @config ||= Rails.application.config_for(:derivative_services).deep_symbolize_keys
+    @config ||= Rails.application.config_for(:derivative_settings).deep_symbolize_keys.fetch(:services)
   end
 
   def fetch(*keys)
