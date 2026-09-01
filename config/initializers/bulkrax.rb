@@ -39,14 +39,14 @@ Rails.application.config.to_prepare do
        # so it MUST be present in the CSV row for EVERY item (regardless of type, so this includes FileSets as well)
        #
        # from Hyrax::BasicMetadata
-       'label' => { from: ['label'], split: true },
-       'relative_path' => { from: ['relative_path'], split: true },
-       'import_url' => { from: ['import_url'], split: '\|' },
+       #'label' => { from: ['label'], split: true },
+       #'relative_path' => { from: ['relative_path'], split: true },
+       #'import_url' => { from: ['import_url'], split: '\|' },
        'resource_type' => {from: ['resource_type'], split: true },
        'creator' => { from: ['creator'], split: true },
        'contributor' => { from: ['contributor'], split: true },
-       'description' => { from: ['description'], split: true },
-       'abstract' => { from: ['abstract'], split: true },
+       'description' => { from: ['description'], split: '\|' },
+       'abstract' => { from: ['abstract'], split: '\|' },
        'keyword' => { from: ['keyword'], split: true },
        'license' => { from: ['license'], split: '\|' },
        'rights_notes' => { from: ['rights_notes'], split: true },
@@ -62,12 +62,12 @@ Rails.application.config.to_prepare do
        'bibliographic_citation' => { from: ['bibliographic_citation'], split: '\|' },
        'source' => {from: ['source'], split: '\|' },
        # from Hyrax::CoreMetadata
-       'title' => { from: ['title'], split: true },
-       'depositor' => { from: ['depositor'], split: true },
-       'date_uploaded' => { from: ['date_uploaded'], split: true },
-       'date_modified' => { from: ['date_modified'], split: true },
+       'title' => { from: ['title'], split: '\|' },
+       #'depositor' => { from: ['depositor'], split: true },
+       #'date_uploaded' => { from: ['date_uploaded'], split: true },
+       #'date_modified' => { from: ['date_modified'], split: true },
        # from Hyrax::AdminSet
-       'alternative_title' => { from: ['alternative_title'], split: true },
+       'alternative_title' => { from: ['alternative_title'], split: '\|' },
        # from GwWork
        'bulkrax_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
        'gw_affiliation' => { from: ['gw_affiliation'], split: true },

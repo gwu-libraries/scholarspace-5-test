@@ -402,7 +402,7 @@
  -->
 
   <!-- BEGIN Blacklight IIIF Search autocomplete config -->
-  <copyField source="all_text_tsimv" dest="iiif_suggest"/>
+  <copyField source="all_text_tsimv" dest="iiif_suggest" maxChars="3000"/>
   <!-- END Blacklight IIIF Search autocomplete config -->
 
 </schema>

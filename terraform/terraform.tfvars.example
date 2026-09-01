@@ -1,0 +1,165 @@
+# Infrastructure
+aws_region                      = "us-west-2"
+aws_availability_zone           = "us-west-2a"
+aws_availability_zone_secondary = "us-west-2b"
+site_prefix                     = ""
+ssl_certificate_arn             = ""
+ssm_env_parameter_name          = ""
+ssm_env_file_path               = "../prod.env"
+s3_bucket_name                  = ""
+s3_prefix                       = ""
+vpc_cidr                        = "10.0.0.0/16"
+subnet_cidr                     = "10.0.1.0/24"
+subnet_cidr_secondary           = "10.0.2.0/24"
+subnet_private_cidr             = "10.0.11.0/24"
+subnet_private_cidr_secondary   = "10.0.12.0/24"
+
+# Sidekiq Shared Settings (apply to all Sidekiq services: default/whisper/ocr_text/derivatives/thumbnail)
+sidekiq_container_stop_timeout_seconds     = 120
+sidekiq_shutdown_timeout_seconds           = 110
+sidekiq_target_cpu_utilization             = 70
+sidekiq_target_memory_utilization          = 80
+sidekiq_scale_in_cooldown_seconds          = 7200
+sidekiq_assign_public_ip                   = false
+sidekiq_log_retention_days                 = 30
+sidekiq_enable_log_based_autoscaling       = true
+sidekiq_log_autoscaling_pattern            = "\"queue_latency_high\""
+sidekiq_log_autoscaling_depth_pattern      = "\"queue_depth_high\""
+sidekiq_log_autoscaling_period_seconds     = 60
+sidekiq_log_autoscaling_evaluation_periods = 2
+sidekiq_log_autoscaling_threshold          = 5
+sidekiq_log_autoscaling_depth_threshold    = 5
+sidekiq_log_scale_out_adjustment           = 1
+sidekiq_log_scale_out_cooldown_seconds     = 120
+
+# Sidekiq Default Queue
+sidekiq_default_image         = "<ecr_repository_url>:<TAG>-sidekiq-default"
+sidekiq_default_desired_count = 2
+sidekiq_default_min_capacity  = 2
+sidekiq_default_max_capacity  = 4
+sidekiq_task_cpu              = 2048
+sidekiq_task_memory           = 4096
+
+# Sidekiq Whisper
+sidekiq_whisper_image                 = "<ecr_repository_url>:<TAG>-sidekiq-whisper"
+sidekiq_whisper_desired_count         = 1
+sidekiq_whisper_min_capacity          = 1
+sidekiq_whisper_max_capacity          = 3
+sidekiq_whisper_task_cpu              = 4096
+sidekiq_whisper_task_memory           = 16384
+sidekiq_whisper_ephemeral_storage_gib = 200
+
+# Sidekiq OCR Text
+sidekiq_ocr_text_image                 = "<ecr_repository_url>:<TAG>-sidekiq-ocr-text"
+sidekiq_ocr_text_desired_count         = 2
+sidekiq_ocr_text_min_capacity          = 2
+sidekiq_ocr_text_max_capacity          = 8
+sidekiq_ocr_text_task_cpu              = 1024
+sidekiq_ocr_text_task_memory           = 2048
+
+# Derivatives (Sidekiq)
+sidekiq_derivatives_desired_count         = 2
+sidekiq_derivatives_min_capacity          = 2
+sidekiq_derivatives_max_capacity          = 6
+sidekiq_derivatives_task_cpu              = 2048
+sidekiq_derivatives_task_memory           = 4096
+
+# Thumbnail (Sidekiq)
+sidekiq_thumbnail_desired_count         = 1
+sidekiq_thumbnail_min_capacity          = 1
+sidekiq_thumbnail_max_capacity          = 4
+sidekiq_thumbnail_task_cpu              = 2048
+sidekiq_thumbnail_task_memory           = 8192
+sidekiq_thumbnail_ephemeral_storage_gib = 200
+
+# Rails Web
+web_image                     = "<ecr_repository_url>:<TAG>-web"
+web_desired_count             = 1
+web_min_capacity              = 1
+web_max_capacity              = 3
+web_task_cpu                  = 2048
+web_task_memory               = 4096
+web_target_cpu_utilization    = 60
+web_target_memory_utilization = 75
+web_assign_public_ip          = false
+web_log_retention_days        = 30
+
+# FITS
+fits_image                       = "<ecr_repository_url>:<TAG>-fits"
+fits_desired_count               = 1
+fits_min_capacity                = 1
+fits_max_capacity                = 3
+fits_task_cpu                    = 1024
+fits_task_memory                 = 2048
+fits_target_cpu_utilization      = 70
+fits_target_memory_utilization   = 80
+fits_assign_public_ip            = false
+fits_log_retention_days          = 30
+fits_service_discovery_namespace = "internal"
+
+# Memcached
+memcached_image                     = "bitnami/memcached"
+memcached_desired_count             = 1
+memcached_min_capacity              = 1
+memcached_max_capacity              = 1
+memcached_task_cpu                  = 256
+memcached_task_memory               = 512
+memcached_target_cpu_utilization    = 70
+memcached_target_memory_utilization = 80
+memcached_assign_public_ip          = false
+memcached_log_retention_days        = 30
+
+# Fedora
+fedora_image                              = "fcrepo/fcrepo:6.5.2-tomcat9"
+fedora_desired_count                      = 1
+fedora_min_capacity                       = 1
+fedora_max_capacity                       = 1 # KEEP THIS AT 1
+fedora_task_cpu                           = 1024
+fedora_task_memory                        = 8192
+fedora_ephemeral_storage_gib              = 100
+fedora_jvm_xms_mb                         = 1024
+fedora_jvm_xmx_mb                         = 6144
+fedora_db_connection_checkout_timeout_ms  = 120000
+fedora_session_timeout_ms                 = 1800000
+fedora_ocfl_s3_connection_timeout_seconds = 300
+fedora_ocfl_s3_read_timeout_seconds       = 300
+fedora_ocfl_s3_write_timeout_seconds      = 900
+fedora_target_cpu_utilization             = 70
+fedora_target_memory_utilization          = 80
+fedora_assign_public_ip                   = false
+fedora_log_retention_days                 = 30
+
+# Solr
+solr_image                     = "<ecr_repository_url>:<TAG>-solr"
+solr_heap                      = "1g"
+solr_desired_count             = 1
+solr_min_capacity              = 1
+solr_max_capacity              = 1 # KEEP THIS AT 1
+solr_task_cpu                  = 1024
+solr_task_memory               = 2048
+solr_target_cpu_utilization    = 70
+solr_target_memory_utilization = 80
+solr_assign_public_ip          = false
+solr_log_retention_days        = 30
+
+# Aurora PostgreSQL settings
+aurora_engine_version        = "16.9"
+aurora_database_name         = "scholarspacetftestab"
+aurora_master_username       = "scholarspace"
+aurora_master_password       = "changeme-set-in-tfvars" # sensitive - do not commit
+aurora_instance_class        = "db.t4g.medium"
+aurora_instance_count        = 1
+aurora_backup_retention_days = 7
+aurora_skip_final_snapshot   = false
+aurora_deletion_protection   = true
+
+# ElastiCache Redis settings
+elasticache_node_type                    = "cache.t4g.micro"
+elasticache_num_cache_clusters           = 1
+elasticache_parameter_group_family       = "redis7"
+elasticache_maxmemory_policy             = "noeviction"
+elasticache_alarm_period_seconds         = 60
+elasticache_alarm_evaluation_periods     = 5
+elasticache_evictions_alarm_threshold    = 1
+elasticache_memory_usage_alarm_threshold = 80
+elasticache_alarm_actions                = []
