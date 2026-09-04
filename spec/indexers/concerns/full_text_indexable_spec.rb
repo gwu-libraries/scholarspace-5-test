@@ -32,28 +32,28 @@ RSpec.describe FullTextIndexable do
     allow(resource).to receive(:member_ids).and_return([])
   end
 
-  it 'indexes text embedded in attached PDF files' do
-    file = double('file', original_filename: 'source.pdf', file_identifier: 'fid-pdf')
-    member = instance_double('Member', original_file: file)
-    stored_file = instance_double('StoredFile', stream: StringIO.new('%PDF embedded text'))
-    success_status = instance_double(Process::Status, success?: true)
-
-    allow(resource).to receive(:member_ids).and_return(['member-1'])
-    allow(Hyrax).to receive(:query_service).and_return(instance_double('QueryService', find_by: member))
-    allow(Hyrax).to receive(:storage_adapter).and_return(instance_double('StorageAdapter', find_by: stored_file))
-    allow(Open3).to receive(:capture3).and_return(['This PDF contains QGIS searchable text.', '', success_status])
+  it 'aggregates text already indexed on attached FileSets' do
+    allow(resource).to receive(:member_ids).and_return(['member-1', 'member-2'])
+    allow(Hyrax::SolrService).to receive(:post).and_return(
+      { 'response' => { 'docs' => [
+        { 'id' => 'member-1', 'all_text_tsimv' => ['This PDF contains QGIS searchable text.'] },
+        { 'id' => 'member-2', 'all_text_tsimv' => ['Transcript includes cowboy.'] }
+      ] } }
+    )
 
     indexed_values = indexer.to_solr[:all_text_tsimv]
 
-    expect(indexed_values.join(' ')).to include('QGIS searchable text')
-    expect(Open3).to have_received(:capture3).with('pdftotext', '-q', kind_of(String), '-')
+    expect(indexed_values.join(' ')).to include('QGIS searchable text', 'cowboy')
+    expect(Hyrax::SolrService).to have_received(:post).with(
+      '{!terms f=id}member-1,member-2', rows: 2, fl: 'id,all_text_tsimv'
+    )
   end
 
   it 'indexes trailing full-text content beyond the former aggregate limit' do
     trailing_token = 'tailtokensearchable'
     full_text = "#{Array.new(30) { |page| "page#{page} #{'indexed ' * 600}" }.join(' ')} #{trailing_token}"
 
-    allow(indexer).to receive(:extract_full_text_content).and_return(full_text)
+    allow(indexer).to receive(:member_solr_documents).and_return([{ 'all_text_tsimv' => [full_text] }])
 
     indexed_values = indexer.to_solr[:all_text_tsimv]
 
@@ -64,7 +64,7 @@ RSpec.describe FullTextIndexable do
   it 'splits oversized tokens into Solr-safe indexed values without dropping text' do
     long_token = 'x' * (described_class::MAX_INDEX_VALUE_CHARS * 2 + 100)
 
-    allow(indexer).to receive(:extract_full_text_content).and_return(long_token)
+    allow(indexer).to receive(:member_solr_documents).and_return([{ 'all_text_tsimv' => [long_token] }])
 
     indexed_values = indexer.to_solr[:all_text_tsimv]
 
@@ -77,7 +77,7 @@ RSpec.describe FullTextIndexable do
     appended_token = 'appendedsearchable'
     index_document[:all_text_tsimv] = [existing_token]
 
-    allow(indexer).to receive(:extract_full_text_content).and_return(appended_token)
+    allow(indexer).to receive(:member_solr_documents).and_return([{ 'all_text_tsimv' => [appended_token] }])
 
     expect(indexer.to_solr[:all_text_tsimv].join(' ')).to include(existing_token, appended_token)
   end

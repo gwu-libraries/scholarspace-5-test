@@ -103,7 +103,7 @@ class HyraxListener
 
   def derivatives_enqueue_debounced?(work_id)
     cache_key = "derivatives:orchestration:scheduled:#{work_id}"
-    already_scheduled = Sidekiq.redis { |r| r.set(cache_key, 1, nx: true, ex: DERIVATIVES_ENQUEUE_DEBOUNCE.to_i) }
+    already_scheduled = Sidekiq.redis { |r| r.set(cache_key, 1, nx: true, ex: self.class.derivatives_enqueue_debounce.to_i) }
     !already_scheduled
   end
 end
