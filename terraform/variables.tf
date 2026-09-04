@@ -70,9 +70,15 @@ variable "s3_bucket_name" {
   type = string
 }
 
-variable "s3_prefix" {
-  type    = string
-  default = ""
+variable "s3_derivative_cache_bucket_name" {
+  description = "Bucket holding in-progress derivative cache objects. Separate from the OCFL bucket because its contents expire."
+  type        = string
+}
+
+variable "ocfl_s3_prefix" {
+  description = "Prefix within the app bucket for Fedora OCFL storage. Empty places it at the bucket root."
+  type        = string
+  default     = ""
 }
 
 variable "sidekiq_default_image" {
@@ -174,20 +180,20 @@ variable "sidekiq_ocr_text_ephemeral_storage_gib" {
   default     = null
 }
 
-variable "sidekiq_derivatives_task_cpu" {
-  description = "CPU units for derivatives-only Sidekiq ECS tasks"
+variable "sidekiq_images_task_cpu" {
+  description = "CPU units for image-derivative Sidekiq ECS tasks"
   type        = number
   default     = 2048
 }
 
-variable "sidekiq_derivatives_task_memory" {
-  description = "Memory (MiB) for derivatives-only Sidekiq ECS tasks"
+variable "sidekiq_images_task_memory" {
+  description = "Memory (MiB) for image-derivative Sidekiq ECS tasks"
   type        = number
   default     = 4096
 }
 
-variable "sidekiq_derivatives_ephemeral_storage_gib" {
-  description = "Ephemeral storage (GiB) for derivatives-only Sidekiq ECS tasks"
+variable "sidekiq_images_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for image-derivative Sidekiq ECS tasks"
   type        = number
   default     = null
 }
@@ -264,20 +270,20 @@ variable "sidekiq_ocr_text_max_capacity" {
   default     = 4
 }
 
-variable "sidekiq_derivatives_desired_count" {
-  description = "Desired task count for derivatives Sidekiq service"
+variable "sidekiq_images_desired_count" {
+  description = "Desired task count for the image-derivative Sidekiq service"
   type        = number
   default     = 0
 }
 
-variable "sidekiq_derivatives_min_capacity" {
-  description = "Minimum autoscaling capacity for derivatives Sidekiq service"
+variable "sidekiq_images_min_capacity" {
+  description = "Minimum autoscaling capacity for the image-derivative Sidekiq service"
   type        = number
   default     = 0
 }
 
-variable "sidekiq_derivatives_max_capacity" {
-  description = "Maximum autoscaling capacity for derivatives Sidekiq service"
+variable "sidekiq_images_max_capacity" {
+  description = "Maximum autoscaling capacity for the image-derivative Sidekiq service"
   type        = number
   default     = 4
 }
@@ -421,9 +427,13 @@ variable "sidekiq_log_scale_out_cooldown_seconds" {
 }
 
 variable "web_image" {
-  description = "Full image URI used by ECS web tasks. Defaults to the Terraform-managed ECR repository with :latest tag."
+  description = "Full image URI used by ECS web tasks. Must be explicitly set."
   type        = string
-  default     = ""
+
+  validation {
+    condition     = length(trimspace(var.web_image)) > 0
+    error_message = "web_image must be set to a non-empty image URI."
+  }
 }
 
 variable "web_task_cpu" {
@@ -481,9 +491,13 @@ variable "web_log_retention_days" {
 }
 
 variable "fits_image" {
-  description = "Full image URI used by ECS FITS tasks. Defaults to the Terraform-managed ECR repository with :latest tag."
+  description = "Full image URI used by ECS FITS tasks. Must be explicitly set."
   type        = string
-  default     = ""
+
+  validation {
+    condition     = length(trimspace(var.fits_image)) > 0
+    error_message = "fits_image must be set to a non-empty image URI."
+  }
 }
 
 variable "fits_task_cpu" {
@@ -547,9 +561,13 @@ variable "fits_service_discovery_namespace" {
 }
 
 variable "memcached_image" {
-  description = "Container image URI used by ECS Memcached tasks"
+  description = "Container image URI used by ECS Memcached tasks. Must be explicitly set."
   type        = string
-  default     = "bitnami/memcached"
+
+  validation {
+    condition     = length(trimspace(var.memcached_image)) > 0
+    error_message = "memcached_image must be set to a non-empty image URI."
+  }
 }
 
 variable "memcached_task_cpu" {
@@ -607,9 +625,23 @@ variable "memcached_log_retention_days" {
 }
 
 variable "fedora_image" {
-  description = "Container image URI used by ECS Fedora tasks"
+  description = "Container image URI used by ECS Fedora tasks. Must be explicitly set."
   type        = string
-  default     = "fcrepo/fcrepo:6.5.1-tomcat9"
+
+  validation {
+    condition     = length(trimspace(var.fedora_image)) > 0
+    error_message = "fedora_image must be set to a non-empty image URI."
+  }
+}
+
+variable "fedora_database_name" {
+  description = "Dedicated database on the Aurora cluster for Fedora's index. Created by the task's init container if absent."
+  type        = string
+
+  validation {
+    condition     = length(trimspace(var.fedora_database_name)) > 0
+    error_message = "fedora_database_name must be set to a non-empty value."
+  }
 }
 
 variable "fedora_task_cpu" {
@@ -677,51 +709,6 @@ variable "fedora_ocfl_s3_write_timeout_seconds" {
   default     = 900
 }
 
-variable "fedora_desired_count" {
-  description = "Desired task count for Fedora ECS service"
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.fedora_desired_count <= 1
-    error_message = "fedora_desired_count must be <= 1 (Fedora is pinned to a single instance)."
-  }
-}
-
-variable "fedora_min_capacity" {
-  description = "Minimum autoscaling capacity for Fedora ECS service"
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.fedora_min_capacity <= 1
-    error_message = "fedora_min_capacity must be <= 1 (Fedora is pinned to a single instance)."
-  }
-}
-
-variable "fedora_max_capacity" {
-  description = "Maximum autoscaling capacity for Fedora ECS service"
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.fedora_max_capacity <= 1
-    error_message = "fedora_max_capacity must be <= 1 (Fedora is pinned to a single instance)."
-  }
-}
-
-variable "fedora_target_cpu_utilization" {
-  description = "Target average CPU utilization percent for Fedora autoscaling"
-  type        = number
-  default     = 70
-}
-
-variable "fedora_target_memory_utilization" {
-  description = "Target average memory utilization percent for Fedora autoscaling"
-  type        = number
-  default     = 80
-}
-
 variable "fedora_assign_public_ip" {
   description = "Assign public IPs to Fedora tasks. Keep false when using private subnets with NAT."
   type        = bool
@@ -735,57 +722,41 @@ variable "fedora_log_retention_days" {
 }
 
 variable "solr_image" {
-  description = "Container image URI used by ECS Solr tasks. Should be built from Dockerfile-solr so /opt/solr/server/configsets/hyraxconf exists."
+  description = "Full image URI used by ECS Solr tasks. Must be built from Dockerfile-solr so the hyraxconf configset and OCR highlighting plugin are present."
   type        = string
-  default     = "solr:8.11"
+
+  validation {
+    condition     = length(trimspace(var.solr_image)) > 0
+    error_message = "solr_image must be set to a non-empty image URI."
+  }
 }
 
-variable "solr_heap" {
-  description = "Heap value passed to SOLR_HEAP for Solr JVM"
+variable "solr_core_name" {
+  description = "Solr core backing the production index. Used to precreate the core and to build SOLR_PROD_URL."
   type        = string
-  default     = "1g"
+
+  validation {
+    condition     = length(trimspace(var.solr_core_name)) > 0
+    error_message = "solr_core_name must be set to a non-empty value."
+  }
+}
+
+variable "solr_heap_mb" {
+  description = "Heap size in MiB passed to SOLR_HEAP for the Solr JVM"
+  type        = number
+  default     = 4096
 }
 
 variable "solr_task_cpu" {
   description = "CPU units for Solr ECS tasks"
   type        = number
-  default     = 1024
+  default     = 2048
 }
 
 variable "solr_task_memory" {
   description = "Memory (MiB) for Solr ECS tasks"
   type        = number
-  default     = 2048
-}
-
-variable "solr_desired_count" {
-  description = "Desired task count for Solr ECS service"
-  type        = number
-  default     = 1
-}
-
-variable "solr_min_capacity" {
-  description = "Minimum autoscaling capacity for Solr ECS service"
-  type        = number
-  default     = 1
-}
-
-variable "solr_max_capacity" {
-  description = "Maximum autoscaling capacity for Solr ECS service"
-  type        = number
-  default     = 1
-}
-
-variable "solr_target_cpu_utilization" {
-  description = "Target average CPU utilization percent for Solr autoscaling"
-  type        = number
-  default     = 70
-}
-
-variable "solr_target_memory_utilization" {
-  description = "Target average memory utilization percent for Solr autoscaling"
-  type        = number
-  default     = 80
+  default     = 8192
 }
 
 variable "solr_assign_public_ip" {
@@ -819,13 +790,11 @@ variable "aurora_database_name" {
 variable "aurora_master_username" {
   description = "Master username for the Aurora cluster"
   type        = string
-  default     = "scholarspace"
-}
 
-variable "aurora_master_password" {
-  description = "Master password for the Aurora cluster. Must match DB_PASSWORD in your SSM env blob."
-  type        = string
-  sensitive   = true
+  validation {
+    condition     = length(trimspace(var.aurora_master_username)) > 0
+    error_message = "aurora_master_username must be set to a non-empty value."
+  }
 }
 
 variable "aurora_instance_class" {

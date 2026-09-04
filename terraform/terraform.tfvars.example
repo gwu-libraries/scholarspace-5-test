@@ -7,7 +7,8 @@ ssl_certificate_arn             = ""
 ssm_env_parameter_name          = ""
 ssm_env_file_path               = "../prod.env"
 s3_bucket_name                  = ""
-s3_prefix                       = ""
+s3_derivative_cache_bucket_name = ""
+ocfl_s3_prefix                  = ""
 vpc_cidr                        = "10.0.0.0/16"
 subnet_cidr                     = "10.0.1.0/24"
 subnet_cidr_secondary           = "10.0.2.0/24"
@@ -57,12 +58,12 @@ sidekiq_ocr_text_max_capacity          = 8
 sidekiq_ocr_text_task_cpu              = 1024
 sidekiq_ocr_text_task_memory           = 2048
 
-# Derivatives (Sidekiq)
-sidekiq_derivatives_desired_count         = 2
-sidekiq_derivatives_min_capacity          = 2
-sidekiq_derivatives_max_capacity          = 6
-sidekiq_derivatives_task_cpu              = 2048
-sidekiq_derivatives_task_memory           = 4096
+# Image derivatives (Sidekiq)
+sidekiq_images_desired_count = 2
+sidekiq_images_min_capacity  = 2
+sidekiq_images_max_capacity  = 6
+sidekiq_images_task_cpu      = 2048
+sidekiq_images_task_memory   = 4096
 
 # Thumbnail (Sidekiq)
 sidekiq_thumbnail_desired_count         = 1
@@ -70,7 +71,7 @@ sidekiq_thumbnail_min_capacity          = 1
 sidekiq_thumbnail_max_capacity          = 4
 sidekiq_thumbnail_task_cpu              = 2048
 sidekiq_thumbnail_task_memory           = 8192
-sidekiq_thumbnail_ephemeral_storage_gib = 200
+sidekiq_thumbnail_ephemeral_storage_gib = 30
 
 # Rails Web
 web_image                     = "<ecr_repository_url>:<TAG>-web"
@@ -111,9 +112,7 @@ memcached_log_retention_days        = 30
 
 # Fedora
 fedora_image                              = "fcrepo/fcrepo:6.5.2-tomcat9"
-fedora_desired_count                      = 1
-fedora_min_capacity                       = 1
-fedora_max_capacity                       = 1 # KEEP THIS AT 1
+fedora_database_name                      = "fcrepo"
 fedora_task_cpu                           = 1024
 fedora_task_memory                        = 8192
 fedora_ephemeral_storage_gib              = 100
@@ -124,29 +123,23 @@ fedora_session_timeout_ms                 = 1800000
 fedora_ocfl_s3_connection_timeout_seconds = 300
 fedora_ocfl_s3_read_timeout_seconds       = 300
 fedora_ocfl_s3_write_timeout_seconds      = 900
-fedora_target_cpu_utilization             = 70
-fedora_target_memory_utilization          = 80
 fedora_assign_public_ip                   = false
 fedora_log_retention_days                 = 30
 
 # Solr
-solr_image                     = "<ecr_repository_url>:<TAG>-solr"
-solr_heap                      = "1g"
-solr_desired_count             = 1
-solr_min_capacity              = 1
-solr_max_capacity              = 1 # KEEP THIS AT 1
-solr_task_cpu                  = 1024
-solr_task_memory               = 2048
-solr_target_cpu_utilization    = 70
-solr_target_memory_utilization = 80
-solr_assign_public_ip          = false
-solr_log_retention_days        = 30
+solr_image              = "<ecr_repository_url>:<TAG>-solr"
+solr_core_name          = "scholarspace_prod"
+solr_heap_mb            = 4096
+solr_task_cpu           = 2048
+solr_task_memory        = 8192
+solr_assign_public_ip   = false
+solr_log_retention_days = 30
 
 # Aurora PostgreSQL settings
 aurora_engine_version        = "16.9"
 aurora_database_name         = "scholarspacetftestab"
 aurora_master_username       = "scholarspace"
-aurora_master_password       = "changeme-set-in-tfvars" # sensitive - do not commit
+# Master password comes from DB_PASSWORD in ssm_env_file_path, not from tfvars.
 aurora_instance_class        = "db.t4g.medium"
 aurora_instance_count        = 1
 aurora_backup_retention_days = 7
