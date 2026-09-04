@@ -36,8 +36,7 @@ RUN setfacl -d -m o::rwx /usr/local/bundle && \
 
 USER app
 
-RUN mkdir -p /app/scholarspace \
-  /app/scholarspace/tmp/cache/solr-ocr-index-cache
+RUN mkdir -p /app/scholarspace
 WORKDIR /app/scholarspace
 
 # lets just set the adapters here so its explicitly the same in each environment
@@ -131,8 +130,7 @@ RUN apk --no-cache upgrade && \
 
 USER app
 
-RUN mkdir -p /app/scholarspace \
-  /app/scholarspace/tmp/cache/solr-ocr-index-cache
+RUN mkdir -p /app/scholarspace
 WORKDIR /app/scholarspace
 
 ENV PATH="/app/scholarspace:$PATH" \
@@ -180,7 +178,6 @@ RUN apk --no-cache upgrade && \
 USER app
 
 RUN mkdir -p /app/scholarspace \
-  /app/scholarspace/tmp/cache/solr-ocr-index-cache \
   /app/scholarspace/tmp/derivatives-work-locks
 WORKDIR /app/scholarspace
 
