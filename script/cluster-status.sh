@@ -44,6 +44,7 @@ SERVICES=(
   "${SITE_PREFIX}-sidekiq-ocr_text"
   "${SITE_PREFIX}-sidekiq-derivatives"
   "${SITE_PREFIX}-sidekiq-thumbnail"
+  "${SITE_PREFIX}-sidekiq-persist"
 )
 
 aws ecs describe-services \
