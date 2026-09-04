@@ -14,7 +14,8 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
       'Work',
       id: 'work-1',
       depositor: 'depositor@example.edu',
-      member_file_sets: member_file_sets
+      member_file_sets: member_file_sets,
+      member_ids: member_file_sets.map(&:id)
     )
   end
   let(:member_file_sets) { [image_file_set, service_image_file_set, pdf_file_set, audio_file_set, video_file_set] }
@@ -41,6 +42,22 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
   let(:pdf_file_set) { build_file_set(id: 'pdf-1', filename: 'source.pdf', mime_type: 'application/pdf') }
   let(:audio_file_set) { build_file_set(id: 'audio-1', filename: 'lecture.mp3', mime_type: 'audio/mpeg') }
   let(:video_file_set) { build_file_set(id: 'video-1', filename: 'lecture.mp4', mime_type: 'application/octet-stream') }
+
+  before do
+    allow(work).to receive(:find_member_file_set) { |id| member_file_sets.find { |fs| fs.id.to_s == id.to_s } }
+    # Derivatives are indexed with title == filename, so mirror that shape here.
+    allow(Hyrax::SolrService).to receive(:post) do
+      docs = member_file_sets.map do |fs|
+        {
+          'id' => fs.id,
+          'service_file_bsi' => fs.service_file,
+          'related_url_tesim' => Array(fs.related_url),
+          'title_tesim' => [fs.original_file&.original_filename].compact
+        }
+      end
+      { 'response' => { 'docs' => docs } }
+    end
+  end
 
   describe 'source file set id helpers' do
     it 'returns supported non-service sources by derivative type' do
