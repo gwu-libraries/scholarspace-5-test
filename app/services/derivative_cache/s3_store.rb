@@ -5,9 +5,9 @@ require 'stringio'
 
 module DerivativeCache
   class S3Store
-    def initialize(bucket:, prefix:, client: Aws::S3::Client.new)
+    def initialize(bucket:, prefix: '', client: Aws::S3::Client.new)
       @bucket = bucket
-      @prefix = prefix
+      @prefix = prefix.to_s.sub(%r{/\z}, '')
       @client = client
     end
 
@@ -47,10 +47,13 @@ module DerivativeCache
     private
 
     def key_for(file_identifier, original_filename)
-      File.join(
-        @prefix,
-        CacheKey.relative_path(file_identifier: file_identifier, original_filename: original_filename)
+      relative_path = CacheKey.relative_path(
+        file_identifier: file_identifier,
+        original_filename: original_filename
       )
+      return relative_path if @prefix.empty?
+
+      File.join(@prefix, relative_path)
     end
   end
 end

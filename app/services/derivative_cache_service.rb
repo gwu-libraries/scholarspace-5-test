@@ -54,13 +54,10 @@ class DerivativeCacheService
   private
 
   def build_store
-    bucket = ENV['S3_BUCKET_NAME'].presence
+    bucket = ENV['S3_DERIVATIVE_CACHE_BUCKET'].presence
     return DerivativeCache::FilesystemStore.new(cache_root: @cache_root) unless bucket
 
-    DerivativeCache::S3Store.new(
-      bucket: bucket,
-      prefix: ENV.fetch('S3_DERIVATIVE_CACHE_PREFIX', 'derivatives-cache').sub(%r{/\z}, '')
-    )
+    DerivativeCache::S3Store.new(bucket: bucket)
   end
 
   def cache_location(file_identifier, original_filename)
