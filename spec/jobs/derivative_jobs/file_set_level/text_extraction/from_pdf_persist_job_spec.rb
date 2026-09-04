@@ -6,8 +6,8 @@ RSpec.describe DerivativeJobs::FileSetLevel::TextExtraction::FromPdfPersistJob d
   subject(:job) { described_class.new }
 
   describe 'queue configuration' do
-    it 'uses the PDF text persist queue' do
-      expect(described_class.queue_name).to eq('derivatives_text_extraction_from_pdf_persist')
+    it 'uses the shared derivative persist queue' do
+      expect(described_class.queue_name).to eq('derivatives_persist')
     end
   end
 

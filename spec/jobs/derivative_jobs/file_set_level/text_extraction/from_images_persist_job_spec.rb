@@ -4,8 +4,8 @@ require 'rails_helper'
 
 RSpec.describe DerivativeJobs::FileSetLevel::TextExtraction::FromImagesPersistJob do
   describe 'queue configuration' do
-    it 'uses the image OCR persist queue' do
-      expect(described_class.queue_name).to eq('derivatives_text_extraction_from_images_persist')
+    it 'uses the shared derivative persist queue' do
+      expect(described_class.queue_name).to eq('derivatives_persist')
     end
   end
 
