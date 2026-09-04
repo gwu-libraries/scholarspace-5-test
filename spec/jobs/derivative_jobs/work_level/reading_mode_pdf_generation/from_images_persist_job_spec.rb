@@ -11,8 +11,8 @@ RSpec.describe DerivativeJobs::WorkLevel::ReadingModePdfGeneration::FromImagesPe
   end
 
   describe 'queue configuration' do
-    it 'uses the image PDF persist queue' do
-      expect(described_class.queue_name).to eq('derivatives_reading_mode_pdf_generation_from_images_persist')
+    it 'uses the shared derivative persist queue' do
+      expect(described_class.queue_name).to eq('derivatives_persist')
     end
   end
 
