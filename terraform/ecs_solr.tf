@@ -1,5 +1,13 @@
 locals {
-  solr_image_uri = length(trimspace(var.solr_image)) > 0 ? var.solr_image : "solr:9.6"
+  solr_command = <<-EOT
+    set -e
+    test -d /opt/solr/server/configsets/hyraxconf || {
+      echo 'Missing hyraxconf configset. Build and set solr_image from Dockerfile-solr.'
+      exit 1
+    }
+    mkdir -p /var/solr/data
+    exec solr-precreate ${var.solr_core_name} /opt/solr/server/configsets/hyraxconf
+  EOT
 }
 
 resource "aws_cloudwatch_log_group" "solr" {
@@ -75,15 +83,15 @@ resource "aws_ecs_task_definition" "solr" {
   container_definitions = jsonencode([
     {
       name      = "solr"
-      image     = local.solr_image_uri
+      image     = var.solr_image
       essential = true
       command = [
         "sh",
         "-lc",
-        "test -d /opt/solr/server/configsets/hyraxconf || { echo 'Missing hyraxconf configset. Build and set solr_image from Dockerfile-solr.'; exit 1; } && mkdir -p /var/solr/data && precreate-core scholarspace_test /opt/solr/server/configsets/hyraxconf && exec solr-precreate scholarspace_prod /opt/solr/server/configsets/hyraxconf"
+        local.solr_command
       ]
       environment = [
-        { name = "SOLR_HEAP", value = var.solr_heap }
+        { name = "SOLR_HEAP", value = "${var.solr_heap_mb}m" }
       ]
       portMappings = [
         {
@@ -97,11 +105,6 @@ resource "aws_ecs_task_definition" "solr" {
           sourceVolume  = "solr-data"
           containerPath = "/var/solr"
           readOnly      = false
-        },
-        {
-          sourceVolume  = "ocr-cache"
-          containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
-          readOnly      = true
         }
       ]
       healthCheck = {
@@ -137,27 +140,20 @@ resource "aws_ecs_task_definition" "solr" {
     }
   }
 
-  volume {
-    name = "ocr-cache"
-
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.uploads.id
-      root_directory     = "/"
-      transit_encryption = "ENABLED"
-
-      authorization_config {
-        access_point_id = aws_efs_access_point.ocr_cache.id
-        iam             = "DISABLED"
-      }
+  lifecycle {
+    precondition {
+      condition     = var.solr_heap_mb <= var.solr_task_memory * 0.75
+      error_message = "solr_heap_mb must leave at least 25% of solr_task_memory for JVM overhead and OS page cache."
     }
   }
 }
 
 resource "aws_ecs_service" "solr" {
-  name                   = "${var.site_prefix}-solr"
-  cluster                = aws_ecs_cluster.sidekiq.id
-  task_definition        = aws_ecs_task_definition.solr.arn
-  desired_count          = var.solr_desired_count
+  name            = "${var.site_prefix}-solr"
+  cluster         = aws_ecs_cluster.sidekiq.id
+  task_definition = aws_ecs_task_definition.solr.arn
+  # Pinned: a second task would write the same Lucene index directory.
+  desired_count          = 1
   launch_type            = "FARGATE"
   enable_execute_command = true
 
@@ -179,58 +175,5 @@ resource "aws_ecs_service" "solr" {
 
   service_registries {
     registry_arn = aws_service_discovery_service.solr.arn
-  }
-
-  lifecycle {
-    precondition {
-      condition = (
-        var.solr_desired_count <= 1 &&
-        var.solr_min_capacity <= 1 &&
-        var.solr_max_capacity <= 1
-      )
-      error_message = "Standalone Solr on shared EFS must run as a single instance."
-    }
-  }
-}
-
-resource "aws_appautoscaling_target" "solr" {
-  max_capacity       = var.solr_max_capacity
-  min_capacity       = var.solr_min_capacity
-  resource_id        = "service/${aws_ecs_cluster.sidekiq.name}/${aws_ecs_service.solr.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
-}
-
-resource "aws_appautoscaling_policy" "solr_cpu" {
-  name               = "${var.site_prefix}-solr-cpu"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.solr.resource_id
-  scalable_dimension = aws_appautoscaling_target.solr.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.solr.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
-    }
-    target_value       = var.solr_target_cpu_utilization
-    scale_in_cooldown  = 120
-    scale_out_cooldown = 120
-  }
-}
-
-resource "aws_appautoscaling_policy" "solr_memory" {
-  name               = "${var.site_prefix}-solr-memory"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.solr.resource_id
-  scalable_dimension = aws_appautoscaling_target.solr.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.solr.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
-    }
-    target_value       = var.solr_target_memory_utilization
-    scale_in_cooldown  = 120
-    scale_out_cooldown = 120
   }
 }
