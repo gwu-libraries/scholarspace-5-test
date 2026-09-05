@@ -1,5 +1,9 @@
 locals {
-  web_image_uri = length(trimspace(var.web_image)) > 0 ? var.web_image : "${aws_ecr_repository.app.repository_url}:latest-web"
+  web_command = <<-EOT
+    set -e
+    bundle exec rails db:migrate
+    exec ./bin/rails server -p 3000 -b 0.0.0.0
+  EOT
 }
 
 resource "aws_cloudwatch_log_group" "web" {
@@ -48,12 +52,12 @@ resource "aws_ecs_task_definition" "web" {
   container_definitions = jsonencode([
     {
       name      = "web"
-      image     = local.web_image_uri
+      image     = var.web_image
       essential = true
       command = [
         "sh",
         "-lc",
-        "bundle exec rails db:migrate && exec ./bin/rails server -p 3000 -b 0.0.0.0"
+        local.web_command
       ]
       environment = local.ecs_common_container_environment
       secrets     = local.ecs_common_container_secrets
@@ -65,12 +69,7 @@ resource "aws_ecs_task_definition" "web" {
         }
       ]
       mountPoints = [
-        local.ecs_uploads_mount_point,
-        {
-          sourceVolume  = "ocr-cache"
-          containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
-          readOnly      = false
-        }
+        local.ecs_uploads_mount_point
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -93,21 +92,6 @@ resource "aws_ecs_task_definition" "web" {
 
       authorization_config {
         access_point_id = aws_efs_access_point.uploads.id
-        iam             = "DISABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "ocr-cache"
-
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.uploads.id
-      root_directory     = "/"
-      transit_encryption = "ENABLED"
-
-      authorization_config {
-        access_point_id = aws_efs_access_point.ocr_cache.id
         iam             = "DISABLED"
       }
     }
