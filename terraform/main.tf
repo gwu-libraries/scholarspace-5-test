@@ -58,6 +58,7 @@ locals {
   }
 
   ecs_managed_env = {
+    APP_NAME         = var.site_prefix
     RAILS_ENV        = "production"
     PUMA_ENV         = "production"
     DB_HOST          = aws_rds_cluster.aurora.endpoint
@@ -69,9 +70,12 @@ locals {
     REDIS_PASSWORD   = ""
     REDIS_URL        = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379/0"
     MEMCACHED_HOST   = "${aws_service_discovery_service.memcached.name}.${aws_service_discovery_private_dns_namespace.internal.name}:11211"
-    SOLR_PROD_URL    = "http://${aws_service_discovery_service.solr.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8983/solr/scholarspace_prod"
-    FEDORA_URL       = "http://${lookup(local.ssm_env_values, "FEDORA_USER", "fedoraAdmin")}:${lookup(local.ssm_env_values, "FEDORA_PASSWORD", "fedoraAdmin")}@${aws_service_discovery_service.fedora.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fcrepo/rest"
+    SOLR_PROD_URL    = "http://${aws_service_discovery_service.solr.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8983/solr/${var.solr_core_name}"
+    FEDORA_URL       = "http://${local.ssm_env_values["FEDORA_USER"]}:${local.ssm_env_values["FEDORA_PASSWORD"]}@${aws_service_discovery_service.fedora.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fcrepo/rest"
     FITS_SERVLET_URL = "http://${aws_service_discovery_service.fits.name}.${aws_service_discovery_private_dns_namespace.internal.name}:8080/fits"
+
+    S3_BUCKET_NAME             = aws_s3_bucket.app_bucket.bucket
+    S3_DERIVATIVE_CACHE_BUCKET = aws_s3_bucket.derivative_cache_bucket.bucket
   }
 
   ecs_common_container_environment = [
@@ -124,6 +128,6 @@ resource "aws_ssm_parameter" "app_env_var" {
 
   name      = "${trimsuffix(var.ssm_env_parameter_name, "/")}/${each.key}"
   type      = "SecureString"
-  value     = each.key == "DB_PASSWORD" ? var.aurora_master_password : each.value
+  value     = each.value
   overwrite = true
 }
