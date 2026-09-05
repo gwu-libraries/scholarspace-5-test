@@ -9,6 +9,8 @@ class DerivativeJobs::FileSetLevel::Thumbnail::GenerateJob < ApplicationJob
                 .new(work)
                 .generate_to_cache(source_file_set_id: source_file_set_id)
 
+      next if payload == Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail::SKIPPED
+
       raise "Thumbnail generation returned no payload for work=#{work.id} source=#{source_file_set_id}" unless payload
 
       DerivativeJobs::FileSetLevel::Thumbnail::PersistJob.perform_later(
