@@ -1,7 +1,3 @@
-locals {
-  fits_image_uri = length(trimspace(var.fits_image)) > 0 ? var.fits_image : "${aws_ecr_repository.app.repository_url}:latest-fits"
-}
-
 resource "aws_cloudwatch_log_group" "fits" {
   name              = local.ecs_log_groups.fits.name
   retention_in_days = local.ecs_log_groups.fits.retention_in_days
@@ -84,7 +80,7 @@ resource "aws_ecs_task_definition" "fits" {
   container_definitions = jsonencode([
     {
       name      = "fits"
-      image     = local.fits_image_uri
+      image     = var.fits_image
       essential = true
       portMappings = [
         {
