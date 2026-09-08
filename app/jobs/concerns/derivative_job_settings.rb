@@ -8,7 +8,7 @@ module DerivativeJobSettings
   end
 
   def config
-    @config ||= Rails.application.config_for(:derivative_jobs).deep_symbolize_keys
+    @config ||= Rails.application.config_for(:derivative_settings).deep_symbolize_keys.fetch(:jobs)
   end
 
   def fetch(*keys)
