@@ -22,6 +22,11 @@ Rails.application.config.to_prepare do
             file_set = Hyrax.persister.save(resource: file_set)
             append_to_work(file_set)
 
+            Rails.logger.info(
+              "valkyrie_ingest_pending uploaded_file_id=#{file.id} file_set_id=#{file_set.id} " \
+              "work_id=#{work.id} filename=#{file.file}"
+            )
+
             { file_set: file_set, user: file.user, job: ValkyrieIngestJob.new(file) }
           end
 
