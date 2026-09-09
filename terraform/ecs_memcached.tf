@@ -1,7 +1,3 @@
-locals {
-  memcached_image_uri = length(trimspace(var.memcached_image)) > 0 ? var.memcached_image : "bitnami/memcached"
-}
-
 resource "aws_cloudwatch_log_group" "memcached" {
   name              = "/ecs/${var.site_prefix}/memcached"
   retention_in_days = var.memcached_log_retention_days
@@ -75,7 +71,7 @@ resource "aws_ecs_task_definition" "memcached" {
   container_definitions = jsonencode([
     {
       name      = "memcached"
-      image     = local.memcached_image_uri
+      image     = var.memcached_image
       essential = true
       portMappings = [
         {
