@@ -51,6 +51,16 @@ resource "aws_security_group_rule" "aurora_from_sidekiq_tasks" {
   description              = "Allow Sidekiq ECS tasks to reach Aurora"
 }
 
+resource "aws_security_group_rule" "aurora_from_fedora_tasks" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.aurora.id
+  source_security_group_id = aws_security_group.fedora_tasks.id
+  description              = "Allow Fedora ECS tasks to reach Aurora for its index database"
+}
+
 resource "aws_rds_cluster_parameter_group" "aurora" {
   name        = "${var.site_prefix}-aurora-pg16"
   family      = "aurora-postgresql16"
@@ -67,7 +77,7 @@ resource "aws_rds_cluster" "aurora" {
   engine_version                  = var.aurora_engine_version
   database_name                   = var.aurora_database_name
   master_username                 = var.aurora_master_username
-  master_password                 = var.aurora_master_password
+  master_password                 = sensitive(local.ssm_env_values["DB_PASSWORD"])
   db_subnet_group_name            = aws_db_subnet_group.aurora.name
   vpc_security_group_ids          = [aws_security_group.aurora.id]
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora.name
@@ -84,12 +94,8 @@ resource "aws_rds_cluster" "aurora" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
 
-    precondition {
-      condition     = length(var.aurora_master_password) > 0
-      error_message = "Set aurora_master_password and keep it in sync with DB_PASSWORD in ssm_env_file_path."
-    }
   }
 }
 
@@ -103,7 +109,7 @@ resource "aws_rds_cluster_instance" "aurora" {
   engine_version     = aws_rds_cluster.aurora.engine_version
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 
   tags = {
