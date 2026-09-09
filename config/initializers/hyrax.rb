@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
 require 'hyrax/file_set_derivatives_service'
+require 'carrierwave'
+
+hyrax_upload_path = Pathname.new(
+  ENV.fetch('HYRAX_UPLOAD_PATH', Rails.root.join('tmp', 'uploads').to_s)
+)
+hyrax_cache_path = Pathname.new(
+  ENV.fetch('HYRAX_CACHE_PATH', hyrax_upload_path.join('cache').to_s)
+)
+
+CarrierWave.configure do |config|
+  config.cache_dir = hyrax_cache_path.to_s
+end
 
 Hyrax.config do |config|
   # Injected via `rails g hyrax:work_resource ArchivalDocument`
@@ -54,12 +66,11 @@ Hyrax.config do |config|
   config.max_days_between_fixity_checks = 7
 
   # Options to control the file uploader
-  # config.uploader = {
-  #   limitConcurrentUploads: 6,
-  #   maxNumberOfFiles: 100,
-  #   maxFileSize: 500.megabytes
-  # }
-
+  config.uploader = {
+    limitConcurrentUploads: 20,
+    maxNumberOfFiles: 500,
+    maxFileSize: 16.gigabytes
+  }
   # Date you wish to start collecting Google Analytic statistics for
   # Leaving it blank will set the start date to when ever the file was uploaded by
   # NOTE: if you have always sent analytics to GA for downloads and page views leave this commented out
@@ -126,7 +137,7 @@ Hyrax.config do |config|
   # Should work creation require file upload, or can a work be created first
   # and a file added at a later time?
   # The default is true.
-  config.work_requires_files = true
+  config.work_requires_files = false
 
   # How many rows of items should appear on the work show view?
   # The default is 10
@@ -197,8 +208,8 @@ Hyrax.config do |config|
 
   # Temporary paths to hold uploads before they are ingested into FCrepo
   # These must be lambdas that return a Pathname. Can be configured separately
-  # config.upload_path = ->() { ENV.fetch('UPLOADS_PATH', Rails.root + 'tmp' + 'uploads') }
-  # config.cache_path = ->() { ENV.fetch('CACHE_PATH', Rails.root + 'tmp' + 'uploads' + 'cache') }
+  config.upload_path = -> { hyrax_upload_path }
+  config.cache_path = -> { hyrax_cache_path }
 
   # Location on local file system where derivatives will be stored
   # If you use a multi-server architecture, this MUST be a shared volume
@@ -213,8 +224,8 @@ Hyrax.config do |config|
 
   # Location on local file system where uploaded files will be staged
   # prior to being ingested into the repository or having derivatives generated.
-  # If you use a multi-server architecture, this MUST be a shared volume.
-  # config.working_path = ENV.fetch('UPLOADS_PATH', Rails.root.join('tmp', 'uploads'))
+# If you use a multi-server architecture, this MUST be a shared volume.
+  config.working_path = hyrax_upload_path.to_s
 
   # Should the media display partial render a download link?
   # config.display_media_download_link = true
@@ -271,6 +282,9 @@ Hyrax.config do |config|
   # config.admin_set_model = "AdminSetResource"
   config.admin_set_model = 'Hyrax::AdministrativeSet'
   config.file_set_model = 'Hyrax::FileSet'
+  Rails.application.config.to_prepare do
+    config.file_set_indexer = FileSetIndexer
+  end
   # Identify the model class name that will be used for Admin Sets in your app
   # (i.e. AdminSet for ActiveFedora, Hyrax::AdministrativeSet for Valkyrie)
   # config.admin_set_model = "AdminSet"
@@ -355,7 +369,6 @@ Rails.application.reloader.to_prepare do
     Hyrax::CustomQueries::FindCountBy,
     Hyrax::CustomQueries::FindByDateRange,
     Hyrax::CustomQueries::FindByModelAndPropertyValue,
-    Hyrax::CustomQueries::FindByOcrTextAndParentDocumentId,
     Hyrax::CustomQueries::FindByPropertyValue
 
   ]

@@ -6,20 +6,23 @@ If you're working on a PR for this project, create a feature branch off of `main
 
 ## Production Environment
 
-- Update environment variables:
-  - RAILS_ENV=production
-  - METADATA_DATABASE_NAME=scholarspace_metadata_production (todo: fix this)
-  - PUMA_ENV=production (todo: fix this)
-- Update `docker-compose.yml` to include `docker-compose-prod.yml` and not `docker-compose-dev.yml`
-- Once all containers are healthy, run `docker exec rails /bin/sh -lc "bundle exec rails db:seed"` to create default collection types, admin set, and an admin user (email and password set in `.env`)
+Production does not run with Docker Compose. Runtime images are built from the
+explicit production targets in `Dockerfile`, pushed to ECR, and deployed by the
+Terraform ECS task definitions in `terraform/`.
+
+- Build and push production images with `script/rebuild-and-push-all-images.sh`.
+- Pass image URIs to Terraform through `terraform/terraform.tfvars` or run the
+  image push script with `--update-tfvars`.
 
 ## Development Environment
 
-- Update environment variables:
-- RAILS_ENV=development
-- METADATA_DATABASE_NAME=scholarspace_metadata_development (todo: fix this)
-- PUMA_ENV=development (todo: fix this)
-- Update `docker-compose.yml` to include `docker-compose-dev.yml` and not `docker-compose-prod.yml`
+- Local development uses `docker-compose.yml` plus `docker-compose-dev.yml`.
+- Copy `example.dev.env` to `dev.env` and adjust local values as needed.
+- Start the stack with `docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build`.
+- The `rails`, `worker`, and specialized `worker_*` services all build the
+  `scholarspace-default` Dockerfile target with `BUILD_ENV=dev`. The worker
+  variants use the same image and are separated by their `SIDEKIQ_ONLY_*`
+  environment flags.
 
 ## Tests
 

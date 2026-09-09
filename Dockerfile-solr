@@ -1,0 +1,12 @@
+FROM solr:8.11
+
+USER root
+
+# Package ScholarSpace Solr configset and plugins into the image so ECS
+# can initialize cores with the expected Hyrax schema.
+COPY solr/conf /opt/solr/server/configsets/hyraxconf
+COPY solr/plugins /opt/solr/contrib/plugins
+
+RUN chown -R solr:solr /opt/solr/server/configsets/hyraxconf /opt/solr/contrib/plugins
+
+USER solr
