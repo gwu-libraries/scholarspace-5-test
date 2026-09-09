@@ -1,5 +1,39 @@
 locals {
-  fedora_image_uri = length(trimspace(var.fedora_image)) > 0 ? var.fedora_image : "fcrepo/fcrepo:6.5.1-tomcat9"
+  fedora_catalina_opts = join(" ", [
+    "-server",
+    "-Xms${var.fedora_jvm_xms_mb}m",
+    "-Xmx${var.fedora_jvm_xmx_mb}m",
+    "-XX:NewSize=256m",
+    "-XX:MaxNewSize=1G",
+    "-XX:+HeapDumpOnOutOfMemoryError",
+    "-XX:HeapDumpPath=/data/mem",
+    "-Djava.awt.headless=true",
+    "-Dfile.encoding=UTF-8",
+    "-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true",
+    "-Dfcrepo.home=/fcrepo-home",
+    "-Dfcrepo.pid.minter.length=2",
+    "-Dfcrepo.pid.minter.count=4",
+    "-Dfcrepo.jms.enabled=false",
+    "-Dfcrepo.metrics.enable=true",
+    "-Dfcrepo.session.timeout=${var.fedora_session_timeout_ms}",
+    "-Dfcrepo.storage=ocfl-s3",
+    "-Dfcrepo.aws.region=${var.aws_region}",
+    "-Dfcrepo.ocfl.s3.bucket=${aws_s3_bucket.app_bucket.bucket}",
+    "-Dfcrepo.ocfl.s3.prefix=${var.ocfl_s3_prefix}",
+    "-Dfcrepo.ocfl.s3.connection.timeout=${var.fedora_ocfl_s3_connection_timeout_seconds}",
+    "-Dfcrepo.ocfl.s3.read.timeout=${var.fedora_ocfl_s3_read_timeout_seconds}",
+    "-Dfcrepo.ocfl.s3.write.timeout=${var.fedora_ocfl_s3_write_timeout_seconds}",
+    "-Dfcrepo.db.url=jdbc:postgresql://${aws_rds_cluster.aurora.endpoint}:5432/${var.fedora_database_name}",
+    "-Dfcrepo.db.user=${var.aurora_master_username}",
+    "-Dfcrepo.db.password=${local.ssm_env_values["DB_PASSWORD"]}",
+    "-Dfcrepo.db.connection.checkout.timeout=${var.fedora_db_connection_checkout_timeout_ms}",
+  ])
+
+  # createdb exits non-zero if the database already exists, which would block the
+  # Fedora container, so check first.
+  fedora_db_init_command = <<-EOT
+    psql -tAc "SELECT 1 FROM pg_database WHERE datname='${var.fedora_database_name}'" | grep -q 1 || createdb ${var.fedora_database_name}
+  EOT
 }
 
 resource "aws_cloudwatch_log_group" "fedora" {
@@ -76,14 +110,51 @@ resource "aws_ecs_task_definition" "fedora" {
   task_role_arn      = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([
+    # Aurora only creates one database at cluster creation, and that one belongs to
+    # Rails. Fedora's is created here so it exists before Fedora opens a connection.
+    {
+      name      = "fedora-db-init"
+      image     = "postgres:16-alpine"
+      essential = false
+      command = [
+        "sh",
+        "-c",
+        local.fedora_db_init_command
+      ]
+      environment = [
+        { name = "PGHOST", value = aws_rds_cluster.aurora.endpoint },
+        { name = "PGPORT", value = "5432" },
+        { name = "PGUSER", value = var.aurora_master_username },
+        { name = "PGDATABASE", value = var.aurora_database_name }
+      ]
+      secrets = [
+        { name = "PGPASSWORD", valueFrom = aws_ssm_parameter.app_env_var["DB_PASSWORD"].arn }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.fedora.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "fedora-db-init"
+        }
+      }
+    },
     {
       name      = "fedora"
-      image     = local.fedora_image_uri
+      image     = var.fedora_image
       essential = true
+
+      dependsOn = [
+        {
+          containerName = "fedora-db-init"
+          condition     = "SUCCESS"
+        }
+      ]
+
       environment = [
         {
           name  = "CATALINA_OPTS"
-          value = "-Dfcrepo.home=/fcrepo-home -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms${var.fedora_jvm_xms_mb}m -Xmx${var.fedora_jvm_xmx_mb}m -XX:NewSize=256m -XX:MaxNewSize=1G -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data/mem -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dfcrepo.pid.minter.length=2 -Dfcrepo.pid.minter.count=4 -Dfcrepo.jms.enabled=false -Dfcrepo.metrics.enable=true -Dfcrepo.storage=ocfl-s3 -Dfcrepo.aws.region=${var.aws_region} -Dfcrepo.ocfl.s3.bucket=${aws_s3_bucket.app_bucket.bucket} -Dfcrepo.ocfl.s3.prefix=${var.s3_prefix} -Dfcrepo.db.connection.checkout.timeout=${var.fedora_db_connection_checkout_timeout_ms} -Dfcrepo.session.timeout=${var.fedora_session_timeout_ms} -Dfcrepo.ocfl.s3.connection.timeout=${var.fedora_ocfl_s3_connection_timeout_seconds} -Dfcrepo.ocfl.s3.read.timeout=${var.fedora_ocfl_s3_read_timeout_seconds} -Dfcrepo.ocfl.s3.write.timeout=${var.fedora_ocfl_s3_write_timeout_seconds}"
+          value = local.fedora_catalina_opts
         },
         {
           name  = "JAVA_OPTS"
@@ -91,11 +162,11 @@ resource "aws_ecs_task_definition" "fedora" {
         },
         {
           name  = "FEDORA_USER"
-          value = lookup(local.ssm_env_values, "FEDORA_USER", "fedoraAdmin")
+          value = local.ssm_env_values["FEDORA_USER"]
         },
         {
           name  = "FEDORA_PASSWORD"
-          value = lookup(local.ssm_env_values, "FEDORA_PASSWORD", "fedoraAdmin")
+          value = local.ssm_env_values["FEDORA_PASSWORD"]
         }
       ]
       portMappings = [
@@ -122,13 +193,25 @@ resource "aws_ecs_task_definition" "fedora" {
       }
     }
   ])
+
+  lifecycle {
+    precondition {
+      condition     = var.fedora_jvm_xmx_mb <= var.fedora_task_memory * 0.75
+      error_message = "fedora_jvm_xmx_mb must leave at least 25% of fedora_task_memory for JVM overhead."
+    }
+
+    precondition {
+      condition     = var.fedora_jvm_xms_mb <= var.fedora_jvm_xmx_mb
+      error_message = "fedora_jvm_xms_mb must not exceed fedora_jvm_xmx_mb."
+    }
+  }
 }
 
 resource "aws_ecs_service" "fedora" {
   name                   = "${var.site_prefix}-fedora"
   cluster                = aws_ecs_cluster.sidekiq.id
   task_definition        = aws_ecs_task_definition.fedora.arn
-  desired_count          = var.fedora_desired_count
+  desired_count          = 1
   launch_type            = "FARGATE"
   enable_execute_command = true
 
@@ -149,46 +232,9 @@ resource "aws_ecs_service" "fedora" {
   service_registries {
     registry_arn = aws_service_discovery_service.fedora.arn
   }
-}
 
-resource "aws_appautoscaling_target" "fedora" {
-  max_capacity       = var.fedora_max_capacity
-  min_capacity       = var.fedora_min_capacity
-  resource_id        = "service/${aws_ecs_cluster.sidekiq.name}/${aws_ecs_service.fedora.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
-}
-
-resource "aws_appautoscaling_policy" "fedora_cpu" {
-  name               = "${var.site_prefix}-fedora-cpu"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.fedora.resource_id
-  scalable_dimension = aws_appautoscaling_target.fedora.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.fedora.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
-    }
-    target_value       = var.fedora_target_cpu_utilization
-    scale_in_cooldown  = 120
-    scale_out_cooldown = 120
-  }
-}
-
-resource "aws_appautoscaling_policy" "fedora_memory" {
-  name               = "${var.site_prefix}-fedora-memory"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.fedora.resource_id
-  scalable_dimension = aws_appautoscaling_target.fedora.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.fedora.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
-    }
-    target_value       = var.fedora_target_memory_utilization
-    scale_in_cooldown  = 120
-    scale_out_cooldown = 120
-  }
+  depends_on = [
+    aws_security_group_rule.aurora_from_fedora_tasks,
+    aws_rds_cluster_instance.aurora,
+  ]
 }
