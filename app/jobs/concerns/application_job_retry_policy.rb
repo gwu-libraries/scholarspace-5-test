@@ -6,13 +6,15 @@ module ApplicationJobRetryPolicy
   DEFAULT_MAX_RETRY_WAIT_SECONDS = DerivativeJobSettings.seconds(:retry_policy, :default_max_wait_seconds)
   DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT = DerivativeJobSettings.seconds(:retry_policy, :default_error_attempts)
   NO_METHOD_ERROR_RETRY_ATTEMPTS = DerivativeJobSettings.seconds(:retry_policy, :no_method_error_attempts)
+  LDP_CONFLICT_RETRY_ATTEMPTS_COUNT = DerivativeJobSettings.seconds(:retry_policy, :ldp_conflict_attempts)
+  LDP_CONFLICT_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:retry_policy, :ldp_conflict_max_wait_seconds)
   DEFAULT_ERROR_RETRY_ATTEMPTS = {
     NoMethodError => NO_METHOD_ERROR_RETRY_ATTEMPTS,
     RuntimeError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::StorageAdapter::FileNotFound => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::ObjectNotFoundError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::StaleObjectError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
-    **(defined?(::Ldp::Conflict) ? { ::Ldp::Conflict => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT } : {}),
+    **(defined?(::Ldp::Conflict) ? { ::Ldp::Conflict => LDP_CONFLICT_RETRY_ATTEMPTS_COUNT } : {}),
     **(defined?(::Ldp::HttpError) ? { ::Ldp::HttpError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT } : {})
   }.freeze
 
@@ -81,6 +83,7 @@ module ApplicationJobRetryPolicy
 
   def configured_retry_wait_seconds_for(error)
     return lock_retry_wait_seconds if lock_contention_error?(error)
+    return ldp_conflict_wait_seconds if ldp_conflict_error?(error)
 
     [2**executions, retry_policy_max_wait_seconds].min + rand(0..2)
   end
@@ -90,8 +93,16 @@ module ApplicationJobRetryPolicy
     base_wait + rand(0..lock_retry_jitter_seconds)
   end
 
+  def ldp_conflict_wait_seconds
+    [2**executions, LDP_CONFLICT_MAX_WAIT_SECONDS].min + rand(0..2)
+  end
+
   def lock_contention_error?(error)
     error.class.name == 'JobDistributedLock::LockUnavailableError'
+  end
+
+  def ldp_conflict_error?(error)
+    defined?(::Ldp::Conflict) && error.is_a?(::Ldp::Conflict)
   end
 
   def retry_log_message(error:, attempts:, wait_seconds:)
