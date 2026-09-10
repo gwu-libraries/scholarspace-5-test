@@ -12,7 +12,7 @@ locals {
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "false"
       sidekiq_only_ingest              = "true"
-      concurrency                      = "1"
+      concurrency                      = "2"
       desired_count                    = var.sidekiq_ingest_desired_count
       min_capacity                     = var.sidekiq_ingest_min_capacity
       max_capacity                     = var.sidekiq_ingest_max_capacity
