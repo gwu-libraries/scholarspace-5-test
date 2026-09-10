@@ -57,11 +57,18 @@ class DerivativeJobs::WorkLevel::OrchestrateJob < ApplicationJob
 
   def schedule_derivatives_jobs(work_id:, retries:)
     unless files_ready_for_derivatives?
+      Rails.logger.warn(
+        "derivative_orchestration_waiting_for_characterization work_id=#{work_id} retries=#{retries} " \
+        "incomplete_file_set_ids=#{incomplete_file_set_ids.join(',')}"
+      )
       reschedule_for_readiness(work_id: work_id, retries: retries)
       return
     end
 
-    return unless has_supported_derivative_source_files?
+    unless has_supported_derivative_source_files?
+      Rails.logger.warn("derivative_orchestration_skipped reason=no_supported_sources work_id=#{work_id} mime_types=#{file_types.join(',')}")
+      return
+    end
 
     ensure_default_representative_selection
 
@@ -128,12 +135,19 @@ class DerivativeJobs::WorkLevel::OrchestrateJob < ApplicationJob
       max_seconds: READINESS_RETRY_MAX_WAIT_SECONDS
     )
 
-    reschedule_with_retry(
+    scheduled = reschedule_with_retry(
       job_class: self.class,
       args: { work_id: work_id },
       retries: retries,
       retry_max: READINESS_RETRY_MAX,
       wait_seconds: wait_seconds
+    )
+
+    return if scheduled
+
+    Rails.logger.error(
+      "derivative_orchestration_abandoned reason=characterization_never_completed work_id=#{work_id} " \
+      "retries=#{retries} incomplete_file_set_ids=#{incomplete_file_set_ids.join(',')}"
     )
   end
 
@@ -145,6 +159,12 @@ class DerivativeJobs::WorkLevel::OrchestrateJob < ApplicationJob
     @thumbnail_source_file_set_ids ||= Array(@work.original_member_file_sets)
                                      .select { |file_set| Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail.thumbnail_supported_file_set?(file_set) }
                                      .map { |file_set| file_set.id.to_s }
+  end
+
+  def incomplete_file_set_ids
+    @work.original_member_file_sets.filter_map do |file_set|
+      file_set.id.to_s unless file_set.original_file&.mime_type.present?
+    end
   end
 
   def supported_derivative_source_file_type?(mime_type)

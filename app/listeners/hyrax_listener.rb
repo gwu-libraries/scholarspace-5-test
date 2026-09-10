@@ -21,7 +21,14 @@
 # @see https://www.rubydoc.info/gems/hyrax/Hyrax/Publisher
 # @see https://dry-rb.org/gems/dry-events
 class HyraxListener
-  DERIVATIVES_ENQUEUE_DEBOUNCE = 5.minutes
+
+  def self.derivatives_enqueue_debounce
+    @derivatives_enqueue_debounce ||= DerivativeJobSettings.seconds(:waits, :hyrax_listener, :orchestrate_debounce_seconds).seconds
+  end
+
+  def self.orchestrate_enqueue_wait
+    @orchestrate_enqueue_wait ||= DerivativeJobSettings.seconds(:waits, :hyrax_listener, :orchestrate_enqueue_wait_seconds).seconds
+  end
 
   # def on_batch_created
   # end
@@ -37,23 +44,42 @@ class HyraxListener
 
   def on_file_characterized(event)
     file_set = event[:file_set]
-    return unless file_set
+    unless file_set
+      Rails.logger.warn('derivative_orchestration_skipped reason=missing_file_set')
+      return
+    end
 
     # get the parent work
     work = Hyrax.custom_queries.find_parent_work(resource: file_set)
-    return unless work
+    unless work
+      Rails.logger.warn("derivative_orchestration_skipped reason=missing_parent_work file_set_id=#{file_set.id}")
+      return
+    end
 
     # bail if it is a service file to avoid 
     # recursive derivative generation. 
-    return if file_set.service_file
+    if file_set.service_file
+      Rails.logger.info("derivative_orchestration_skipped reason=service_file work_id=#{work.id} file_set_id=#{file_set.id}")
+      return
+    end
 
-    return if derivatives_enqueue_debounced?(work.id.to_s)
+    if derivatives_enqueue_debounced?(work.id.to_s)
+      Rails.logger.info("derivative_orchestration_skipped reason=debounced work_id=#{work.id} file_set_id=#{file_set.id}")
+      return
+    end
 
-    DerivativeJobs::WorkLevel::OrchestrateJob.set(wait: 2.minutes).perform_later(
+    job = DerivativeJobs::WorkLevel::OrchestrateJob.set(wait: self.class.orchestrate_enqueue_wait).perform_later(
       work_id: work.id.to_s
     )
-  rescue StandardError
-    # if something breaks in custom derivative process, let others process
+    Rails.logger.info(
+      "derivative_orchestration_enqueued work_id=#{work.id} file_set_id=#{file_set.id} " \
+      "job_id=#{job.job_id} queue=#{job.queue_name}"
+    )
+  rescue StandardError => error
+    Rails.logger.error(
+      "derivative_orchestration_enqueue_failed work_id=#{work&.id} file_set_id=#{file_set&.id} " \
+      "error_class=#{error.class} error_message=#{error.message}"
+    )
     nil
   end
 
