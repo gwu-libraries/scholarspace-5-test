@@ -4,7 +4,7 @@
 <%
 only_audio_transcript = ENV['SIDEKIQ_ONLY_AUDIO_TRANSCRIPT'] == 'true'
 only_ocr_text_extraction = ENV['SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION'] == 'true' || ENV['SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION'] == 'true'
-only_derivatives = ENV['SIDEKIQ_ONLY_DERIVATIVES'] == 'true'
+only_images = ENV['SIDEKIQ_ONLY_IMAGES'] == 'true'
 only_thumbnail = ENV['SIDEKIQ_ONLY_THUMBNAIL'] == 'true'
 only_persist = ENV['SIDEKIQ_ONLY_PERSIST'] == 'true'
 %>
@@ -22,7 +22,7 @@ only_persist = ENV['SIDEKIQ_ONLY_PERSIST'] == 'true'
 <% elsif only_thumbnail %>
   - [derivatives_thumbnail_generate, 1]
   - [derivatives_representative_thumbnail_generate, 1]
-<% elsif only_derivatives %>
+<% elsif only_images %>
   - [derivatives_reading_mode_pdf_generation_orchestrate, 1]
   - [derivatives_reading_mode_pdf_generation_from_images_generate, 1]
   - [derivatives_reading_mode_pdf_generation_assemble_hocr, 1]
