@@ -7,6 +7,11 @@ module Derivatives
       class Thumbnail
         include ::Constants::DerivativeTypeConstants
         include Concerns::FileSetAttachable
+        include Concerns::ThumbnailCreation::ThumbnailGeneratable
+
+        # Returned when no thumbnail can be derived. The work-level representative
+        # thumbnail falls back to a placeholder, so nothing is lost here.
+        SKIPPED = :skipped
 
         def self.thumbnail_supported_file_set?(file_set)
           generator_class_for(file_set).present?
@@ -21,7 +26,7 @@ module Derivatives
 
           source_file_set = source_file_set_for(source_file_set_id)
           raise "Thumbnail source file set not found: #{source_file_set_id}" unless source_file_set
-          return unless thumbnail_supported?(source_file_set)
+          return SKIPPED unless thumbnail_supported?(source_file_set)
 
           Dir.mktmpdir("thumbnail_derivative_source_#{@work.id}_") do |dir|
             @working_dir = dir

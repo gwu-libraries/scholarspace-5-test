@@ -221,8 +221,13 @@ module Derivatives
           end
 
           @work = work
+          reindex_file_set(file_set) if changed
           schedule_work_reindex(work.id) if changed
         end
+      end
+
+      def reindex_file_set(file_set)
+        Hyrax.index_adapter.save(resource: file_set)
       end
 
       def reload_work

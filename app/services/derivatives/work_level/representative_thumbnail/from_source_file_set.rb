@@ -9,6 +9,7 @@ module Derivatives
         include Concerns::FileSetAttachable
         include ::FileSetDerivativeMetadata
         include StringNormalization
+        include Derivatives::Concerns::ThumbnailCreation::ThumbnailGeneratable
 
         include ::Constants::DerivativeTypeConstants
         include ::Constants::ThumbnailFilenameConstants
@@ -128,15 +129,40 @@ module Derivatives
 
         def ensure_best_thumbnail_is_representative
           derivative_candidates = derivative_thumbnail_candidates
-          return if derivative_candidates.empty?
-
-          thumbnail_file_set = build_representative_thumbnail(derivative_candidates: derivative_candidates)
+          thumbnail_file_set = if derivative_candidates.empty?
+                                 build_placeholder_representative_thumbnail
+                               else
+                                 build_representative_thumbnail(derivative_candidates: derivative_candidates)
+                               end
           return unless thumbnail_file_set
 
           current_thumbnail_id = @work.thumbnail_id.to_s
           return if current_thumbnail_id == thumbnail_file_set.id.to_s
 
           set_work_thumbnail(representative_thumbnail_id: thumbnail_file_set.id)
+        end
+
+        # Nothing could be derived, but the work still needs a representative
+        # thumbnail file set for the user to replace manually.
+        def build_placeholder_representative_thumbnail
+          existing_representative = representative_thumbnail_file_set_by_metadata
+          return existing_representative if existing_representative
+
+          source_file_set = best_source_file_for_thumbnail
+          return nil unless source_file_set
+
+          output_path = generate_placeholder_thumbnail_file(
+            output_thumbnail_path: File.join(@working_dir, REPRESENTATIVE_THUMBNAIL_FILENAME)
+          )
+
+          representative_thumbnail = attach_single_file_to_work(
+            file_path: output_path,
+            user: depositor,
+            service_file: true,
+            source_file_set: source_file_set
+          )
+
+          tag_as_representative_thumbnail(representative_thumbnail)
         end
 
         def derivative_thumbnail_candidates
