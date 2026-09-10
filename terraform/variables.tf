@@ -548,6 +548,12 @@ variable "fits_task_memory" {
   default     = 2048
 }
 
+variable "fits_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for FITS ECS tasks"
+  type        = number
+  default     = null
+}
+
 variable "fits_desired_count" {
   description = "Desired task count for FITS ECS service"
   type        = number
