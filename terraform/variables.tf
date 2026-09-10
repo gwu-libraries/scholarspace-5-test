@@ -132,6 +132,42 @@ variable "sidekiq_ephemeral_storage_gib" {
   default     = null
 }
 
+variable "sidekiq_ingest_task_cpu" {
+  description = "CPU units for the dedicated Sidekiq ingest task"
+  type        = number
+  default     = 4096
+}
+
+variable "sidekiq_ingest_task_memory" {
+  description = "Memory (MiB) for the dedicated Sidekiq ingest task"
+  type        = number
+  default     = 16384
+}
+
+variable "sidekiq_ingest_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for the dedicated Sidekiq ingest task"
+  type        = number
+  default     = null
+}
+
+variable "sidekiq_ingest_desired_count" {
+  description = "Desired task count for the dedicated Sidekiq ingest service"
+  type        = number
+  default     = 1
+}
+
+variable "sidekiq_ingest_min_capacity" {
+  description = "Minimum autoscaling capacity for the dedicated Sidekiq ingest service"
+  type        = number
+  default     = 1
+}
+
+variable "sidekiq_ingest_max_capacity" {
+  description = "Maximum autoscaling capacity for the dedicated Sidekiq ingest service"
+  type        = number
+  default     = 1
+}
+
 variable "sidekiq_container_stop_timeout_seconds" {
   description = "ECS container stop timeout in seconds for Sidekiq tasks (Fargate max is 120)"
   type        = number
