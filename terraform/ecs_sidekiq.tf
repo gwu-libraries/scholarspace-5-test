@@ -8,7 +8,7 @@ locals {
       image                            = local.sidekiq_default_image_uri
       sidekiq_only_audio_transcript    = "false"
       sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_derivatives         = "false"
+      sidekiq_only_images              = "false"
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "false"
       concurrency                      = "4"
@@ -23,7 +23,7 @@ locals {
       image                            = local.sidekiq_whisper_image_uri
       sidekiq_only_audio_transcript    = "true"
       sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_derivatives         = "false"
+      sidekiq_only_images              = "false"
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "false"
       concurrency                      = "1"
@@ -38,7 +38,7 @@ locals {
       image                            = local.sidekiq_ocr_text_image_uri
       sidekiq_only_audio_transcript    = "false"
       sidekiq_only_ocr_text_extraction = "true"
-      sidekiq_only_derivatives         = "false"
+      sidekiq_only_images              = "false"
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "false"
       concurrency                      = "1"
@@ -53,22 +53,22 @@ locals {
       image                            = local.sidekiq_default_image_uri
       sidekiq_only_audio_transcript    = "false"
       sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_derivatives         = "true"
+      sidekiq_only_images              = "true"
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "false"
       concurrency                      = "2"
-      desired_count                    = var.sidekiq_derivatives_desired_count
-      min_capacity                     = var.sidekiq_derivatives_min_capacity
-      max_capacity                     = var.sidekiq_derivatives_max_capacity
-      cpu                              = var.sidekiq_derivatives_task_cpu
-      memory                           = var.sidekiq_derivatives_task_memory
-      ephemeral_storage_gib            = var.sidekiq_derivatives_ephemeral_storage_gib
+      desired_count                    = var.sidekiq_images_desired_count
+      min_capacity                     = var.sidekiq_images_min_capacity
+      max_capacity                     = var.sidekiq_images_max_capacity
+      cpu                              = var.sidekiq_images_task_cpu
+      memory                           = var.sidekiq_images_task_memory
+      ephemeral_storage_gib            = var.sidekiq_images_ephemeral_storage_gib
     }
     thumbnail = {
       image                            = local.sidekiq_default_image_uri
       sidekiq_only_audio_transcript    = "false"
       sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_derivatives         = "false"
+      sidekiq_only_images              = "false"
       sidekiq_only_thumbnail           = "true"
       sidekiq_only_persist             = "false"
       concurrency                      = "1"
@@ -83,7 +83,7 @@ locals {
       image                            = local.sidekiq_default_image_uri
       sidekiq_only_audio_transcript    = "false"
       sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_derivatives         = "false"
+      sidekiq_only_images              = "false"
       sidekiq_only_thumbnail           = "false"
       sidekiq_only_persist             = "true"
       concurrency                      = "4"
@@ -156,18 +156,13 @@ resource "aws_ecs_task_definition" "sidekiq" {
       environment = concat(local.ecs_common_container_environment, [
         { name = "SIDEKIQ_ONLY_AUDIO_TRANSCRIPT", value = each.value.sidekiq_only_audio_transcript },
         { name = "SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION", value = each.value.sidekiq_only_ocr_text_extraction },
-        { name = "SIDEKIQ_ONLY_DERIVATIVES", value = each.value.sidekiq_only_derivatives },
+        { name = "SIDEKIQ_ONLY_IMAGES", value = each.value.sidekiq_only_images },
         { name = "SIDEKIQ_ONLY_THUMBNAIL", value = each.value.sidekiq_only_thumbnail },
         { name = "SIDEKIQ_ONLY_PERSIST", value = each.value.sidekiq_only_persist }
       ])
       secrets = local.ecs_common_container_secrets
       mountPoints = [
-        local.ecs_uploads_mount_point,
-        {
-          sourceVolume  = "ocr-cache"
-          containerPath = "/app/scholarspace/tmp/cache/solr-ocr-index-cache"
-          readOnly      = false
-        }
+        local.ecs_uploads_mount_point
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -190,21 +185,6 @@ resource "aws_ecs_task_definition" "sidekiq" {
 
       authorization_config {
         access_point_id = aws_efs_access_point.uploads.id
-        iam             = "DISABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "ocr-cache"
-
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.uploads.id
-      root_directory     = "/"
-      transit_encryption = "ENABLED"
-
-      authorization_config {
-        access_point_id = aws_efs_access_point.ocr_cache.id
         iam             = "DISABLED"
       }
     }
