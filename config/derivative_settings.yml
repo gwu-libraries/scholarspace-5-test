@@ -5,6 +5,8 @@ shared:
       default_max_wait_seconds: 300
       default_error_attempts: 10
       no_method_error_attempts: 0
+      ldp_conflict_attempts: 30
+      ldp_conflict_max_wait_seconds: 20
 
     distributed_lock:
       default_timeout_seconds: 3600
@@ -14,6 +16,9 @@ shared:
 
     work_advisory_lock:
       timeout_seconds: 15
+
+    thumbnail_generation:
+      timeout_seconds: 900
 
     pdf_optimization:
     # I have been encountering an issue where every once in a while, the process
@@ -53,14 +58,16 @@ shared:
         assemble_hocr_seconds: 2700
 
   services:
+    thumbnails:
+    # Used when a source file has no thumbnail-generatable derivative (e.g. unsupported
+    # type, generation failure) so the work still has something to display.
+      placeholder_geometry: 400x400
+      placeholder_color: 'xc:#e8e8e8'
+
     file_extensions:
     # For explicitly categorizing file types by extension name.
-    # FITS characterization will run on most files, but it is having a hard time
-    # in the deployed environment with processing large files - probably fixable with more ephemeral storage or installing FITS on sidekiq nodes? - but for now we're just bypassing characterization of large files and going by file type. 
-
-    # This will need to be fixed prior to a mediated deposit workflow if we allow users to
-    # deposit their own files above the threshold where we make this assumption
-    # TODO extract the threshold file size to a settable value
+    # Used as a fallback when FITS characterization returns a blank or generic
+    # mime type (e.g. application/octet-stream), independent of file size.
       audio_visual:
         - mp3
         - wav

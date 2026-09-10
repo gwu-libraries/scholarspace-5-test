@@ -41,8 +41,11 @@ Sidekiq.configure_server do |config|
     only_ocr_text_extraction = ENV['SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION'] == 'true' || ENV['SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION'] == 'true'
     only_images = ENV['SIDEKIQ_ONLY_IMAGES'] == 'true'
     only_thumbnail = ENV['SIDEKIQ_ONLY_THUMBNAIL'] == 'true'
+    only_ingest = ENV['SIDEKIQ_ONLY_INGEST'] == 'true'
 
-    profile = if only_audio_transcript
+    profile = if only_ingest
+                'ingest'
+              elsif only_audio_transcript
                 'audio_transcript'
               elsif only_ocr_text_extraction
                 'pdf_text_derivatives'
@@ -60,7 +63,7 @@ Sidekiq.configure_server do |config|
       "sidekiq_profile_start profile=#{profile} queues=#{queue_names.join(',')} " \
       "only_audio_transcript=#{only_audio_transcript} " \
       "only_ocr_text_extraction=#{only_ocr_text_extraction} " \
-      "only_images=#{only_images} only_thumbnail=#{only_thumbnail}"
+      "only_images=#{only_images} only_thumbnail=#{only_thumbnail} only_ingest=#{only_ingest}"
     )
 
     Thread.new do
