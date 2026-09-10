@@ -8,6 +8,7 @@ module Derivatives
       class FromImage
         include FileOperations
         include ::Constants::ThumbnailFilenameConstants
+        include Concerns::ThumbnailCreation::ThumbnailGeneratable
 
         def self.supported_file_set?(file_set)
           if file_set.respond_to?(:image?)
@@ -55,16 +56,6 @@ module Derivatives
         end
 
         private
-
-        def generate_thumbnail_file(source_path:, output_thumbnail_path:, error_message:)
-          _stdout, stderr, status = Open3.capture3(*thumbnail_command(
-            source_path: source_path,
-            output_thumbnail_path: output_thumbnail_path
-          ))
-          raise "#{error_message}: #{stderr}" unless status.success?
-
-          output_thumbnail_path
-        end
 
         def thumbnail_command(source_path:, output_thumbnail_path:)
           [
