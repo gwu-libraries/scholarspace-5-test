@@ -47,9 +47,16 @@ SERVICES=(
   "${SITE_PREFIX}-sidekiq-persist"
 )
 
-aws ecs describe-services \
-  --region "${AWS_REGION}" \
-  --cluster "$CLUSTER" \
-  --services "${SERVICES[@]}" \
-  --query 'services[].{Service:serviceName,Running:runningCount,Desired:desiredCount,Status:status,PrimaryRolloutState:deployments[?status==`PRIMARY`]|[0].rolloutState,PrimaryRolloutReason:deployments[?status==`PRIMARY`]|[0].rolloutStateReason,PrimaryTaskDef:deployments[?status==`PRIMARY`]|[0].taskDefinition}' \
-  --output table
+QUERY='services[].{Service:serviceName,Running:runningCount,Desired:desiredCount,Status:status,PrimaryRolloutState:deployments[?status==`PRIMARY`]|[0].rolloutState,PrimaryRolloutReason:deployments[?status==`PRIMARY`]|[0].rolloutStateReason,PrimaryTaskDef:deployments[?status==`PRIMARY`]|[0].taskDefinition}'
+
+
+# AWS accepts at most ten service names per DescribeServices request.
+for ((start_index = 0; start_index < ${#SERVICES[@]}; start_index += 10)); do
+  service_batch=("${SERVICES[@]:start_index:10}")
+  aws ecs describe-services \
+    --region "${AWS_REGION}" \
+    --cluster "$CLUSTER" \
+    --services "${service_batch[@]}" \
+    --query "$QUERY" \
+    --output table
+done
