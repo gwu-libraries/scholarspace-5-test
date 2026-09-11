@@ -5,6 +5,7 @@ shared:
       default_max_wait_seconds: 300
       default_error_attempts: 10
       no_method_error_attempts: 0
+      frozen_error_attempts: 3
       ldp_conflict_attempts: 30
       ldp_conflict_max_wait_seconds: 20
 

@@ -6,11 +6,13 @@ module ApplicationJobRetryPolicy
   DEFAULT_MAX_RETRY_WAIT_SECONDS = DerivativeJobSettings.seconds(:retry_policy, :default_max_wait_seconds)
   DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT = DerivativeJobSettings.seconds(:retry_policy, :default_error_attempts)
   NO_METHOD_ERROR_RETRY_ATTEMPTS = DerivativeJobSettings.seconds(:retry_policy, :no_method_error_attempts)
+  FROZEN_ERROR_RETRY_ATTEMPTS = DerivativeJobSettings.seconds(:retry_policy, :frozen_error_attempts)
   LDP_CONFLICT_RETRY_ATTEMPTS_COUNT = DerivativeJobSettings.seconds(:retry_policy, :ldp_conflict_attempts)
   LDP_CONFLICT_MAX_WAIT_SECONDS = DerivativeJobSettings.seconds(:retry_policy, :ldp_conflict_max_wait_seconds)
   DEFAULT_ERROR_RETRY_ATTEMPTS = {
     NoMethodError => NO_METHOD_ERROR_RETRY_ATTEMPTS,
     RuntimeError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
+    FrozenError => FROZEN_ERROR_RETRY_ATTEMPTS,
     Valkyrie::StorageAdapter::FileNotFound => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::ObjectNotFoundError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::StaleObjectError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
