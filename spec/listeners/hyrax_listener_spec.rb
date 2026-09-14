@@ -6,7 +6,7 @@ RSpec.describe HyraxListener do
   subject(:listener) { described_class.new }
 
   describe '#on_file_characterized' do
-    let(:file_set) { instance_double('FileSet', service_file: false) }
+    let(:file_set) { instance_double('FileSet', id: 'file-set-1', service_file: false) }
     let(:work) { instance_double('Work', id: 'work-1') }
     let(:custom_queries) { double('HyraxCustomQueries') }
     let(:delayed_job) { double('WorkLevelOrchestrateDelayedJob', perform_later: true) }
@@ -25,7 +25,7 @@ RSpec.describe HyraxListener do
     end
 
     it 'does not schedule derivative orchestration for service file sets' do
-      service_file_set = instance_double('FileSet', service_file: true)
+      service_file_set = instance_double('FileSet', id: 'service-file-set-1', service_file: true)
       allow(custom_queries).to receive(:find_parent_work).with(resource: service_file_set).and_return(work)
 
       listener.on_file_characterized(file_set: service_file_set)
@@ -54,7 +54,7 @@ RSpec.describe HyraxListener do
         'derivatives:orchestration:scheduled:work-1',
         1,
         nx: true,
-        ex: described_class::DERIVATIVES_ENQUEUE_DEBOUNCE.to_i
+        ex: described_class.derivatives_enqueue_debounce.to_i
       )
       expect(result).to eq(false)
     end

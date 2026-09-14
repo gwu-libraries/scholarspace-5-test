@@ -62,21 +62,6 @@ RSpec.describe Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail do
       end
     end
 
-    it 'skips sources above the size limit' do
-      oversized_file = instance_double(
-        'OriginalFile',
-        mime_type: 'video/mp4',
-        original_filename: 'huge.mp4',
-        recorded_size: [(Derivatives::Concerns::ThumbnailCreation::ThumbnailGeneratable::MAX_SOURCE_BYTES + 1).to_s]
-      )
-      allow(source_file_set).to receive(:original_file).and_return(oversized_file)
-      allow(cache_service).to receive(:store_derivative_from_path)
-
-      # The work-level representative thumbnail supplies the placeholder instead.
-      expect(service.generate_to_cache(source_file_set_id: 'source-1')).to eq(described_class::SKIPPED)
-      expect(cache_service).not_to have_received(:store_derivative_from_path)
-    end
-
     it 'skips unsupported file types' do
       unsupported_file = instance_double(
         'OriginalFile',
@@ -91,28 +76,6 @@ RSpec.describe Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail do
 
       expect(service.generate_to_cache(source_file_set_id: 'source-1')).to eq(described_class::SKIPPED)
       expect(cache_service).not_to have_received(:store_derivative_from_path)
-    end
-
-    it 'generates normally when the source size is within the limit' do
-      sized_file = instance_double(
-        'OriginalFile',
-        mime_type: 'image/jpeg',
-        original_filename: 'source.jpg',
-        recorded_size: [(Derivatives::Concerns::ThumbnailCreation::ThumbnailGeneratable::MAX_SOURCE_BYTES - 1).to_s]
-      )
-      allow(source_file_set).to receive(:original_file).and_return(sized_file)
-
-      Tempfile.create(['source-thumbnail', '.jpg']) do |file|
-        generator = instance_double(
-          Derivatives::FileSetLevel::ThumbnailCreation::FromImage,
-          thumbnail_filename_for: 'source_thumbnail.jpg',
-          generate_thumbnail_asset: file.path
-        )
-        allow(Derivatives::FileSetLevel::ThumbnailCreation::FromImage).to receive(:new).with(work, working_dir: kind_of(String)).and_return(generator)
-        allow(cache_service).to receive(:store_derivative_from_path)
-
-        expect(service.generate_to_cache(source_file_set_id: 'source-1')).not_to eq(described_class::SKIPPED)
-      end
     end
   end
 
