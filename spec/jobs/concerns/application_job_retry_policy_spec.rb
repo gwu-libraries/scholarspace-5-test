@@ -11,7 +11,7 @@ RSpec.describe ApplicationJobRetryPolicy do
 
       policy = ApplicationJobRetryPolicy::DEFAULT_ERROR_RETRY_ATTEMPTS
       expect(policy.keys).to include(::Ldp::Conflict)
-      expect(policy[::Ldp::Conflict]).to eq(ApplicationJobRetryPolicy::DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT)
+      expect(policy[::Ldp::Conflict]).to eq(ApplicationJobRetryPolicy::LDP_CONFLICT_RETRY_ATTEMPTS_COUNT)
     end
 
     it 'does not retry unknown standard errors' do
@@ -37,6 +37,12 @@ RSpec.describe ApplicationJobRetryPolicy do
       error = Valkyrie::Persistence::StaleObjectError.new('concurrent update detected')
 
       expect(job.send(:configured_retry_attempts_for, error)).to eq(ApplicationJobRetryPolicy::DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT)
+    end
+
+    it 'retries FrozenError with its own limited attempt count' do
+      error = FrozenError.new("can't modify frozen RDF::URI")
+
+      expect(job.send(:configured_retry_attempts_for, error)).to eq(ApplicationJobRetryPolicy::FROZEN_ERROR_RETRY_ATTEMPTS)
     end
 
     it 'uses lock-specific retry attempts for lock contention errors' do
