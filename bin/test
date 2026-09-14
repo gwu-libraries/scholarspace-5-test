@@ -5,6 +5,7 @@ RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 APP_UID="${APP_UID:-1001}"
 APP_GID="${APP_GID:-101}"
 COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
+SIDEKIQ_SERVICES=(worker worker_ingest worker_whisper worker_ocr_text worker_images worker_thumbnail worker_persist)
 
 export APP_UID APP_GID COMPOSE_ENV_FILE
 
@@ -18,13 +19,19 @@ docker compose \
 docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-test.yml" \
-  build rspec worker
+  build rspec "${SIDEKIQ_SERVICES[@]}"
+
+# install gems into the shared bundle volume before workers start
+docker compose \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-test.yml" \
+  run --rm --no-deps rspec sh -lc 'bundle check || bundle install'
 
 # boot dependencies in detached mode
 docker compose \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-test.yml" \
-  up -d postgres redis solr fedora fits memcached worker
+  up -d postgres redis solr fedora fits memcached "${SIDEKIQ_SERVICES[@]}"
 
 # run tests in rails test container
 set +e
