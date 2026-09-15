@@ -79,4 +79,3 @@ group :development, :test do
   gem 'vcr'
   gem 'webmock'
 end
-gem "bulkrax"
