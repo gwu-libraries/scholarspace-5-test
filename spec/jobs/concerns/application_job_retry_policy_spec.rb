@@ -26,6 +26,12 @@ RSpec.describe ApplicationJobRetryPolicy do
       expect(job.send(:configured_retry_attempts_for, error)).to eq(ApplicationJobRetryPolicy::DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT)
     end
 
+    it 'retries transient DNS resolution errors' do
+      error = Socket::ResolutionError.new('getaddrinfo: Name does not resolve')
+
+      expect(job.send(:configured_retry_attempts_for, error)).to eq(ApplicationJobRetryPolicy::DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT)
+    end
+
     it 'retries Ldp::HttpError by class without message matching' do
       skip 'Ldp::HttpError is not available in this runtime' unless defined?(::Ldp::HttpError)
 
