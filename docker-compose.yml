@@ -9,47 +9,29 @@ services:
       - sh
       - "-lc"
       - |
-        mkdir -p /app/scholarspace/tmp/cache/assets/sprockets \
-                  /app/scholarspace/tmp/test_storage \
-                  /app/scholarspace/tmp/derivatives-work-locks \
-                  /app/scholarspace/node_modules \
-                  /app/scholarspace/storage \
-                  /app/scholarspace/uploads \
-                  /app/scholarspace/tmp/cache/yarn \
-                  /app/scholarspace/tmp/cache/solr-ocr-index-cache \
-                  /app/scholarspace/tmp/cache/derivatives \
-                  /app/scholarspace/tmp/cache/whispercpp
+        mkdir -p /app/scholarspace/node_modules \
+          /app/scholarspace/tmp/cache/assets/sprockets \
+          /app/scholarspace/tmp/test_storage \
+          /app/scholarspace/tmp/derivatives-work-locks \
+          /app/scholarspace/storage \
+          /app/scholarspace/uploads \
+          /app/scholarspace/tmp/cache/yarn \
+          /app/scholarspace/tmp/cache/derivatives
         chown -R ${APP_UID:-1001}:${APP_GID:-101} \
-               /app/scholarspace/node_modules \
-               /app/scholarspace/tmp/test_storage \
-               /app/scholarspace/tmp \
-               /app/scholarspace/storage \
-               /app/scholarspace/uploads \
-               /app/scholarspace/tmp/cache/yarn \
-               /app/scholarspace/tmp/cache/solr-ocr-index-cache \
-               /app/scholarspace/tmp/cache/derivatives \
-               /app/scholarspace/tmp/cache/whispercpp \
-               /app/scholarspace/tmp/derivatives-work-locks
+          /app/scholarspace/node_modules \
+          /app/scholarspace/tmp \
+          /app/scholarspace/storage \
+          /app/scholarspace/uploads
         chmod -R ug+rwX /app/scholarspace/node_modules \
-                        /app/scholarspace/tmp/test_storage \
-                        /app/scholarspace/tmp \
-                        /app/scholarspace/storage \
-                        /app/scholarspace/uploads \
-                        /app/scholarspace/tmp/cache/yarn \
-                        /app/scholarspace/tmp/cache/solr-ocr-index-cache \
-                        /app/scholarspace/tmp/cache/derivatives \
-                        /app/scholarspace/tmp/cache/whispercpp \
-                        /app/scholarspace/tmp/derivatives-work-locks
+          /app/scholarspace/tmp/test_storage \
+          /app/scholarspace/tmp \
+          /app/scholarspace/storage \
+          /app/scholarspace/uploads
     restart: "no"
     volumes:
-      - node_modules:/app/scholarspace/node_modules
       - storage:/app/scholarspace/storage
       - uploads:/app/scholarspace/uploads
       - tmp:/app/scholarspace/tmp
-      - yarn-cache:/app/scholarspace/tmp/cache/yarn
-      - solr-ocr-index-cache:/app/scholarspace/tmp/cache/solr-ocr-index-cache
-      - derivatives-cache:/app/scholarspace/tmp/cache/derivatives
-      - whispercpp-cache:/app/scholarspace/tmp/cache/whispercpp
 
   postgres:
     image: postgres:15-alpine
@@ -126,12 +108,6 @@ services:
         consistency: cached
       - ./solr/conf:/opt/solr/server/configsets/hyraxconf
       - ./solr/plugins:/opt/solr/contrib/plugins
-      - type: volume
-        source: solr-ocr-index-cache
-        target: /app/scholarspace/tmp/cache/solr-ocr-index-cache
-      - type: volume
-        source: derivatives-cache
-        target: /app/scholarspace/tmp/cache/derivatives
     ulimits:
       nofile:
         soft: 65536
@@ -145,15 +121,9 @@ services:
 
 volumes:
   db:
-  node_modules:
   storage:
   uploads:
-  public:
   tmp:
-  yarn-cache:
   redis:
   fedora:
   solr_home:
-  solr-ocr-index-cache:
-  derivatives-cache:
-  whispercpp-cache:
