@@ -14,7 +14,7 @@ RSpec.describe DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualGen
       }
 
       allow(Hyrax.query_service).to receive(:find_by).with(id: 'work-audio-1').and_return(work)
-  allow(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual).to receive(:new).with(work).and_return(service)
+        allow(Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual).to receive(:new).with(work).and_return(service)
       allow(service).to receive(:generate_to_cache).with(source_file_set_id: 'src-1').and_return(payload)
       allow(DerivativeJobs::FileSetLevel::AudioTranscript::FromAudioVisualPersistJob).to receive(:perform_later)
 

@@ -13,6 +13,7 @@ module ApplicationJobRetryPolicy
     NoMethodError => NO_METHOD_ERROR_RETRY_ATTEMPTS,
     RuntimeError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     FrozenError => FROZEN_ERROR_RETRY_ATTEMPTS,
+    Socket::ResolutionError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::StorageAdapter::FileNotFound => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::ObjectNotFoundError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
     Valkyrie::Persistence::StaleObjectError => DEFAULT_ERROR_RETRY_ATTEMPTS_COUNT,
