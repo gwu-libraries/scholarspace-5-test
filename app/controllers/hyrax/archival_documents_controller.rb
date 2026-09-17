@@ -9,6 +9,7 @@ module Hyrax
     include Hyrax::WorksControllerBehavior
     include Hyrax::BreadcrumbsForWorks
     self.curation_concern_type = ::ArchivalDocument
+    self.show_presenter = ::WorkShowPresenter
 
     # Use a Valkyrie aware form service to generate Valkyrie::ChangeSet style
     # forms.

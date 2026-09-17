@@ -20,6 +20,6 @@ test:
 
 production:
   <<: *default
-  database: <%= ENV['DB_NAME'] %>_prod
+  database: <%= ENV['DB_NAME'] %>
   encoding: unicode
   pool: 50

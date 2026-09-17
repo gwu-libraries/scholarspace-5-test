@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
+ActiveRecord::Schema[7.2].define(version: 2024_12_05_212513) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
@@ -27,6 +27,135 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
+  create_table "bulkrax_entries", force: :cascade do |t|
+    t.string "identifier"
+    t.string "collection_ids"
+    t.string "type"
+    t.bigint "importerexporter_id"
+    t.text "raw_metadata"
+    t.text "parsed_metadata"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "last_error_at", precision: nil
+    t.datetime "last_succeeded_at", precision: nil
+    t.string "importerexporter_type", default: "Bulkrax::Importer"
+    t.integer "import_attempts", default: 0
+    t.string "status_message", default: "Pending"
+    t.string "error_class"
+    t.index ["identifier", "importerexporter_id", "importerexporter_type"], name: "bulkrax_identifier_idx"
+    t.index ["importerexporter_id", "importerexporter_type", "id"], name: "index_bulkrax_entries_on_importerexporter_id_type_and_id"
+    t.index ["importerexporter_id", "importerexporter_type"], name: "bulkrax_entries_importerexporter_idx"
+    t.index ["type"], name: "index_bulkrax_entries_on_type"
+  end
+
+  create_table "bulkrax_exporter_runs", force: :cascade do |t|
+    t.bigint "exporter_id"
+    t.integer "total_work_entries", default: 0
+    t.integer "enqueued_records", default: 0
+    t.integer "processed_records", default: 0
+    t.integer "deleted_records", default: 0
+    t.integer "failed_records", default: 0
+    t.index ["exporter_id"], name: "index_bulkrax_exporter_runs_on_exporter_id"
+  end
+
+  create_table "bulkrax_exporters", force: :cascade do |t|
+    t.string "name"
+    t.bigint "user_id"
+    t.string "parser_klass"
+    t.integer "limit"
+    t.text "parser_fields"
+    t.text "field_mapping"
+    t.string "export_source"
+    t.string "export_from"
+    t.string "export_type"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "last_error_at", precision: nil
+    t.datetime "last_succeeded_at", precision: nil
+    t.date "start_date"
+    t.date "finish_date"
+    t.string "work_visibility"
+    t.string "workflow_status"
+    t.boolean "include_thumbnails", default: false
+    t.boolean "generated_metadata", default: false
+    t.string "status_message", default: "Pending"
+    t.string "error_class"
+    t.index ["user_id"], name: "index_bulkrax_exporters_on_user_id"
+  end
+
+  create_table "bulkrax_importer_runs", force: :cascade do |t|
+    t.bigint "importer_id"
+    t.integer "total_work_entries", default: 0
+    t.integer "enqueued_records", default: 0
+    t.integer "processed_records", default: 0
+    t.integer "deleted_records", default: 0
+    t.integer "failed_records", default: 0
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "processed_collections", default: 0
+    t.integer "failed_collections", default: 0
+    t.integer "total_collection_entries", default: 0
+    t.integer "processed_relationships", default: 0
+    t.integer "failed_relationships", default: 0
+    t.text "invalid_records"
+    t.integer "processed_file_sets", default: 0
+    t.integer "failed_file_sets", default: 0
+    t.integer "total_file_set_entries", default: 0
+    t.integer "processed_works", default: 0
+    t.integer "failed_works", default: 0
+    t.index ["importer_id"], name: "index_bulkrax_importer_runs_on_importer_id"
+  end
+
+  create_table "bulkrax_importers", force: :cascade do |t|
+    t.string "name"
+    t.string "admin_set_id"
+    t.bigint "user_id"
+    t.string "frequency"
+    t.string "parser_klass"
+    t.integer "limit"
+    t.text "parser_fields"
+    t.text "field_mapping"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.boolean "validate_only"
+    t.datetime "last_error_at", precision: nil
+    t.datetime "last_succeeded_at", precision: nil
+    t.string "status_message", default: "Pending"
+    t.datetime "last_imported_at", precision: nil
+    t.datetime "next_import_at", precision: nil
+    t.string "error_class"
+    t.index ["user_id"], name: "index_bulkrax_importers_on_user_id"
+  end
+
+  create_table "bulkrax_pending_relationships", force: :cascade do |t|
+    t.bigint "importer_run_id", null: false
+    t.string "parent_id", null: false
+    t.string "child_id", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.integer "order", default: 0
+    t.string "status_message", default: "Pending"
+    t.index ["child_id"], name: "index_bulkrax_pending_relationships_on_child_id"
+    t.index ["importer_run_id"], name: "index_bulkrax_pending_relationships_on_importer_run_id"
+    t.index ["parent_id"], name: "index_bulkrax_pending_relationships_on_parent_id"
+  end
+
+  create_table "bulkrax_statuses", force: :cascade do |t|
+    t.string "status_message"
+    t.string "error_class"
+    t.text "error_message"
+    t.text "error_backtrace"
+    t.integer "statusable_id"
+    t.string "statusable_type"
+    t.integer "runnable_id"
+    t.string "runnable_type"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["error_class"], name: "index_bulkrax_statuses_on_error_class"
+    t.index ["runnable_id", "runnable_type"], name: "bulkrax_statuses_runnable_idx"
+    t.index ["statusable_id", "statusable_type"], name: "bulkrax_statuses_statusable_idx"
+  end
+
   create_table "checksum_audit_logs", force: :cascade do |t|
     t.string "file_set_id"
     t.string "file_id"
@@ -37,7 +166,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "updated_at", precision: nil, null: false
     t.boolean "passed"
     t.index ["checked_uri"], name: "index_checksum_audit_logs_on_checked_uri"
-    t.index %w[file_set_id file_id], name: "by_file_set_id_and_file_id"
+    t.index ["file_set_id", "file_id"], name: "by_file_set_id_and_file_id"
   end
 
   create_table "collection_branding_infos", force: :cascade do |t|
@@ -86,8 +215,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["lft"], name: "index_curation_concerns_operations_on_lft"
-    t.index ["parent_id"],
-            name: "index_curation_concerns_operations_on_parent_id"
+    t.index ["parent_id"], name: "index_curation_concerns_operations_on_parent_id"
     t.index ["rgt"], name: "index_curation_concerns_operations_on_rgt"
     t.index ["user_id"], name: "index_curation_concerns_operations_on_user_id"
   end
@@ -137,9 +265,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.boolean "share_applies_to_new_works", default: true, null: false
     t.boolean "brandable", default: true, null: false
     t.string "badge_color", default: "#663333"
-    t.index ["machine_id"],
-            name: "index_hyrax_collection_types_on_machine_id",
-            unique: true
+    t.index ["machine_id"], name: "index_hyrax_collection_types_on_machine_id", unique: true
   end
 
   create_table "hyrax_counter_metrics", force: :cascade do |t|
@@ -176,22 +302,16 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "relation"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["uploaded_file_id"],
-            name: "index_job_io_wrappers_on_uploaded_file_id"
+    t.index ["uploaded_file_id"], name: "index_job_io_wrappers_on_uploaded_file_id"
     t.index ["user_id"], name: "index_job_io_wrappers_on_user_id"
   end
 
-  create_table "mailboxer_conversation_opt_outs",
-               id: :serial,
-               force: :cascade do |t|
+  create_table "mailboxer_conversation_opt_outs", id: :serial, force: :cascade do |t|
     t.string "unsubscriber_type"
     t.integer "unsubscriber_id"
     t.integer "conversation_id"
-    t.index ["conversation_id"],
-            name: "index_mailboxer_conversation_opt_outs_on_conversation_id"
-    t.index %w[unsubscriber_id unsubscriber_type],
-            name:
-              "index_mailboxer_conversation_opt_outs_on_unsubscriber_id_type"
+    t.index ["conversation_id"], name: "index_mailboxer_conversation_opt_outs_on_conversation_id"
+    t.index ["unsubscriber_id", "unsubscriber_type"], name: "index_mailboxer_conversation_opt_outs_on_unsubscriber_id_type"
   end
 
   create_table "mailboxer_conversations", id: :serial, force: :cascade do |t|
@@ -216,14 +336,10 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "created_at", precision: nil, null: false
     t.boolean "global", default: false
     t.datetime "expires", precision: nil
-    t.index ["conversation_id"],
-            name: "index_mailboxer_notifications_on_conversation_id"
-    t.index %w[notified_object_id notified_object_type],
-            name: "index_mailboxer_notifications_on_notified_object_id_and_type"
-    t.index %w[notified_object_type notified_object_id],
-            name: "mailboxer_notifications_notified_object"
-    t.index %w[sender_id sender_type],
-            name: "index_mailboxer_notifications_on_sender_id_and_sender_type"
+    t.index ["conversation_id"], name: "index_mailboxer_notifications_on_conversation_id"
+    t.index ["notified_object_id", "notified_object_type"], name: "index_mailboxer_notifications_on_notified_object_id_and_type"
+    t.index ["notified_object_type", "notified_object_id"], name: "mailboxer_notifications_notified_object"
+    t.index ["sender_id", "sender_type"], name: "index_mailboxer_notifications_on_sender_id_and_sender_type"
     t.index ["type"], name: "index_mailboxer_notifications_on_type"
   end
 
@@ -240,10 +356,8 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.boolean "is_delivered", default: false
     t.string "delivery_method"
     t.string "message_id"
-    t.index ["notification_id"],
-            name: "index_mailboxer_receipts_on_notification_id"
-    t.index %w[receiver_id receiver_type],
-            name: "index_mailboxer_receipts_on_receiver_id_and_receiver_type"
+    t.index ["notification_id"], name: "index_mailboxer_receipts_on_notification_id"
+    t.index ["receiver_id", "receiver_type"], name: "index_mailboxer_receipts_on_receiver_id_and_receiver_type"
   end
 
   create_table "minter_states", id: :serial, force: :cascade do |t|
@@ -254,27 +368,19 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.binary "rand"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["namespace"],
-            name: "index_minter_states_on_namespace",
-            unique: true
+    t.index ["namespace"], name: "index_minter_states_on_namespace", unique: true
   end
 
-  create_table "orm_resources",
-               id: :uuid,
-               default: -> { "uuid_generate_v4()" },
-               force: :cascade do |t|
+  create_table "orm_resources", id: :uuid, default: -> { "uuid_generate_v4()" }, force: :cascade do |t|
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.string "internal_resource"
     t.integer "lock_version"
-    t.index ["internal_resource"],
-            name: "index_orm_resources_on_internal_resource"
+    t.index "(((metadata -> 'bulkrax_identifier'::text) ->> 0))", name: "index_on_bulkrax_identifier", where: "((metadata -> 'bulkrax_identifier'::text) IS NOT NULL)"
+    t.index ["internal_resource"], name: "index_orm_resources_on_internal_resource"
     t.index ["metadata"], name: "index_orm_resources_on_metadata", using: :gin
-    t.index ["metadata"],
-            name: "index_orm_resources_on_metadata_jsonb_path_ops",
-            opclass: :jsonb_path_ops,
-            using: :gin
+    t.index ["metadata"], name: "index_orm_resources_on_metadata_jsonb_path_ops", opclass: :jsonb_path_ops, using: :gin
     t.index ["updated_at"], name: "index_orm_resources_on_updated_at"
   end
 
@@ -285,11 +391,8 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "access"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[permission_template_id agent_id agent_type access],
-            name: "uk_permission_template_accesses",
-            unique: true
-    t.index ["permission_template_id"],
-            name: "index_permission_template_accesses_on_permission_template_id"
+    t.index ["permission_template_id", "agent_id", "agent_type", "access"], name: "uk_permission_template_accesses", unique: true
+    t.index ["permission_template_id"], name: "index_permission_template_accesses_on_permission_template_id"
   end
 
   create_table "permission_templates", force: :cascade do |t|
@@ -299,9 +402,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "updated_at", precision: nil, null: false
     t.date "release_date"
     t.string "release_period"
-    t.index ["source_id"],
-            name: "index_permission_templates_on_source_id",
-            unique: true
+    t.index ["source_id"], name: "index_permission_templates_on_source_id", unique: true
   end
 
   create_table "proxy_deposit_requests", force: :cascade do |t|
@@ -314,10 +415,8 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.text "receiver_comment"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["receiving_user_id"],
-            name: "index_proxy_deposit_requests_on_receiving_user_id"
-    t.index ["sending_user_id"],
-            name: "index_proxy_deposit_requests_on_sending_user_id"
+    t.index ["receiving_user_id"], name: "index_proxy_deposit_requests_on_receiving_user_id"
+    t.index ["sending_user_id"], name: "index_proxy_deposit_requests_on_sending_user_id"
   end
 
   create_table "proxy_deposit_rights", force: :cascade do |t|
@@ -342,11 +441,8 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "uri"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["local_authority_id"],
-            name: "index_qa_local_authority_entries_on_local_authority_id"
-    t.index ["uri"],
-            name: "index_qa_local_authority_entries_on_uri",
-            unique: true
+    t.index ["local_authority_id"], name: "index_qa_local_authority_entries_on_local_authority_id"
+    t.index ["uri"], name: "index_qa_local_authority_entries_on_uri", unique: true
   end
 
   create_table "roles", id: :serial, force: :cascade do |t|
@@ -356,11 +452,9 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
   create_table "roles_users", id: false, force: :cascade do |t|
     t.integer "role_id"
     t.integer "user_id"
-    t.index %w[role_id user_id],
-            name: "index_roles_users_on_role_id_and_user_id"
+    t.index ["role_id", "user_id"], name: "index_roles_users_on_role_id_and_user_id"
     t.index ["role_id"], name: "index_roles_users_on_role_id"
-    t.index %w[user_id role_id],
-            name: "index_roles_users_on_user_id_and_role_id"
+    t.index ["user_id", "role_id"], name: "index_roles_users_on_user_id_and_role_id"
     t.index ["user_id"], name: "index_roles_users_on_user_id"
   end
 
@@ -387,9 +481,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "proxy_for_type", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[proxy_for_id proxy_for_type],
-            name: "sipity_agents_proxy_for",
-            unique: true
+    t.index ["proxy_for_id", "proxy_for_type"], name: "sipity_agents_proxy_for", unique: true
   end
 
   create_table "sipity_comments", force: :cascade do |t|
@@ -409,12 +501,9 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "workflow_state_id"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["proxy_for_global_id"],
-            name: "sipity_entities_proxy_for_global_id",
-            unique: true
+    t.index ["proxy_for_global_id"], name: "sipity_entities_proxy_for_global_id", unique: true
     t.index ["workflow_id"], name: "index_sipity_entities_on_workflow_id"
-    t.index ["workflow_state_id"],
-            name: "index_sipity_entities_on_workflow_state_id"
+    t.index ["workflow_state_id"], name: "index_sipity_entities_on_workflow_state_id"
   end
 
   create_table "sipity_entity_specific_responsibilities", force: :cascade do |t|
@@ -424,13 +513,9 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["agent_id"], name: "sipity_entity_specific_responsibilities_agent"
-    t.index ["entity_id"],
-            name: "sipity_entity_specific_responsibilities_entity"
-    t.index %w[workflow_role_id entity_id agent_id],
-            name: "sipity_entity_specific_responsibilities_aggregate",
-            unique: true
-    t.index ["workflow_role_id"],
-            name: "sipity_entity_specific_responsibilities_role"
+    t.index ["entity_id"], name: "sipity_entity_specific_responsibilities_entity"
+    t.index ["workflow_role_id", "entity_id", "agent_id"], name: "sipity_entity_specific_responsibilities_aggregate", unique: true
+    t.index ["workflow_role_id"], name: "sipity_entity_specific_responsibilities_role"
   end
 
   create_table "sipity_notifiable_contexts", force: :cascade do |t|
@@ -440,24 +525,10 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "notification_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["notification_id"],
-            name: "sipity_notifiable_contexts_notification_id"
-    t.index %w[
-              scope_for_notification_id
-              scope_for_notification_type
-              reason_for_notification
-              notification_id
-            ],
-            name: "sipity_notifiable_contexts_concern_surrogate",
-            unique: true
-    t.index %w[
-              scope_for_notification_id
-              scope_for_notification_type
-              reason_for_notification
-            ],
-            name: "sipity_notifiable_contexts_concern_context"
-    t.index %w[scope_for_notification_id scope_for_notification_type],
-            name: "sipity_notifiable_contexts_concern"
+    t.index ["notification_id"], name: "sipity_notifiable_contexts_notification_id"
+    t.index ["scope_for_notification_id", "scope_for_notification_type", "reason_for_notification", "notification_id"], name: "sipity_notifiable_contexts_concern_surrogate", unique: true
+    t.index ["scope_for_notification_id", "scope_for_notification_type", "reason_for_notification"], name: "sipity_notifiable_contexts_concern_context"
+    t.index ["scope_for_notification_id", "scope_for_notification_type"], name: "sipity_notifiable_contexts_concern"
   end
 
   create_table "sipity_notification_recipients", force: :cascade do |t|
@@ -466,12 +537,9 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "recipient_strategy", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[notification_id role_id recipient_strategy],
-            name: "sipity_notifications_recipients_surrogate"
-    t.index ["notification_id"],
-            name: "sipity_notification_recipients_notification"
-    t.index ["recipient_strategy"],
-            name: "sipity_notification_recipients_recipient_strategy"
+    t.index ["notification_id", "role_id", "recipient_strategy"], name: "sipity_notifications_recipients_surrogate"
+    t.index ["notification_id"], name: "sipity_notification_recipients_notification"
+    t.index ["recipient_strategy"], name: "sipity_notification_recipients_recipient_strategy"
     t.index ["role_id"], name: "sipity_notification_recipients_role"
   end
 
@@ -481,8 +549,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["name"], name: "index_sipity_notifications_on_name", unique: true
-    t.index ["notification_type"],
-            name: "index_sipity_notifications_on_notification_type"
+    t.index ["notification_type"], name: "index_sipity_notifications_on_notification_type"
   end
 
   create_table "sipity_roles", force: :cascade do |t|
@@ -499,11 +566,8 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "name", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["resulting_workflow_state_id"],
-            name: "sipity_workflow_actions_resulting_workflow_state"
-    t.index %w[workflow_id name],
-            name: "sipity_workflow_actions_aggregate",
-            unique: true
+    t.index ["resulting_workflow_state_id"], name: "sipity_workflow_actions_resulting_workflow_state"
+    t.index ["workflow_id", "name"], name: "sipity_workflow_actions_aggregate", unique: true
     t.index ["workflow_id"], name: "sipity_workflow_actions_workflow"
   end
 
@@ -513,8 +577,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "workflow_action_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index ["workflow_action_id"],
-            name: "index_sipity_workflow_methods_on_workflow_action_id"
+    t.index ["workflow_action_id"], name: "index_sipity_workflow_methods_on_workflow_action_id"
   end
 
   create_table "sipity_workflow_responsibilities", force: :cascade do |t|
@@ -522,9 +585,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "workflow_role_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[agent_id workflow_role_id],
-            name: "sipity_workflow_responsibilities_aggregate",
-            unique: true
+    t.index ["agent_id", "workflow_role_id"], name: "sipity_workflow_responsibilities_aggregate", unique: true
   end
 
   create_table "sipity_workflow_roles", force: :cascade do |t|
@@ -532,20 +593,15 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "role_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[workflow_id role_id],
-            name: "sipity_workflow_roles_aggregate",
-            unique: true
+    t.index ["workflow_id", "role_id"], name: "sipity_workflow_roles_aggregate", unique: true
   end
 
-  create_table "sipity_workflow_state_action_permissions",
-               force: :cascade do |t|
+  create_table "sipity_workflow_state_action_permissions", force: :cascade do |t|
     t.integer "workflow_role_id", null: false
     t.integer "workflow_state_action_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[workflow_role_id workflow_state_action_id],
-            name: "sipity_workflow_state_action_permissions_aggregate",
-            unique: true
+    t.index ["workflow_role_id", "workflow_state_action_id"], name: "sipity_workflow_state_action_permissions_aggregate", unique: true
   end
 
   create_table "sipity_workflow_state_actions", force: :cascade do |t|
@@ -553,9 +609,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "workflow_action_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.index %w[originating_workflow_state_id workflow_action_id],
-            name: "sipity_workflow_state_actions_aggregate",
-            unique: true
+    t.index ["originating_workflow_state_id", "workflow_action_id"], name: "sipity_workflow_state_actions_aggregate", unique: true
   end
 
   create_table "sipity_workflow_states", force: :cascade do |t|
@@ -564,9 +618,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["name"], name: "index_sipity_workflow_states_on_name"
-    t.index %w[workflow_id name],
-            name: "sipity_type_state_aggregate",
-            unique: true
+    t.index ["workflow_id", "name"], name: "sipity_type_state_aggregate", unique: true
   end
 
   create_table "sipity_workflows", force: :cascade do |t|
@@ -578,9 +630,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.integer "permission_template_id"
     t.boolean "active"
     t.boolean "allows_access_grant"
-    t.index %w[permission_template_id name],
-            name: "index_sipity_workflows_on_permission_template_and_name",
-            unique: true
+    t.index ["permission_template_id", "name"], name: "index_sipity_workflows_on_permission_template_and_name", unique: true
   end
 
   create_table "tinymce_assets", force: :cascade do |t|
@@ -602,6 +652,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "file_set_uri"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.string "filename"
     t.index ["file_set_uri"], name: "index_uploaded_files_on_file_set_uri"
     t.index ["user_id"], name: "index_uploaded_files_on_user_id"
   end
@@ -651,9 +702,7 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.string "zotero_userid"
     t.string "preferred_locale"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["reset_password_token"],
-            name: "index_users_on_reset_password_token",
-            unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   create_table "version_committers", force: :cascade do |t|
@@ -676,23 +725,15 @@ ActiveRecord::Schema[7.2].define(version: 2023_08_03_165135) do
     t.index ["work_id"], name: "index_work_view_stats_on_work_id"
   end
 
+  add_foreign_key "bulkrax_exporter_runs", "bulkrax_exporters", column: "exporter_id"
+  add_foreign_key "bulkrax_importer_runs", "bulkrax_importers", column: "importer_id"
+  add_foreign_key "bulkrax_pending_relationships", "bulkrax_importer_runs", column: "importer_run_id"
   add_foreign_key "collection_type_participants", "hyrax_collection_types"
   add_foreign_key "curation_concerns_operations", "users"
-  add_foreign_key "mailboxer_conversation_opt_outs",
-                  "mailboxer_conversations",
-                  column: "conversation_id",
-                  name: "mb_opt_outs_on_conversations_id"
-  add_foreign_key "mailboxer_notifications",
-                  "mailboxer_conversations",
-                  column: "conversation_id",
-                  name: "notifications_on_conversation_id"
-  add_foreign_key "mailboxer_receipts",
-                  "mailboxer_notifications",
-                  column: "notification_id",
-                  name: "receipts_on_notification_id"
+  add_foreign_key "mailboxer_conversation_opt_outs", "mailboxer_conversations", column: "conversation_id", name: "mb_opt_outs_on_conversations_id"
+  add_foreign_key "mailboxer_notifications", "mailboxer_conversations", column: "conversation_id", name: "notifications_on_conversation_id"
+  add_foreign_key "mailboxer_receipts", "mailboxer_notifications", column: "notification_id", name: "receipts_on_notification_id"
   add_foreign_key "permission_template_accesses", "permission_templates"
-  add_foreign_key "qa_local_authority_entries",
-                  "qa_local_authorities",
-                  column: "local_authority_id"
+  add_foreign_key "qa_local_authority_entries", "qa_local_authorities", column: "local_authority_id"
   add_foreign_key "uploaded_files", "users"
 end
