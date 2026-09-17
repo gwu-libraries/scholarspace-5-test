@@ -74,8 +74,16 @@ function groupOriginalMembers(members) {
   return groupByRules(members, ORIGINAL_FILE_GROUPS, (member) => member);
 }
 
+function memberViewerType(member) {
+  if (isAudioVisualMember(member)) return 'ramp';
+  if (member.isPdf) return 'pdf';
+  if (isImageMember(member)) return 'images';
+  return null;
+}
+
 export {
   groupOriginalMembers,
   isAudioVisualMember,
   isImageMember,
+  memberViewerType,
 };

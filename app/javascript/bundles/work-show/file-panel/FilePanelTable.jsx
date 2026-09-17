@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import FilePanelRow from './FilePanelRow';
 import * as styles from './FilePanel.module.css';
 
-const FilePanelTable = ({ members, onViewMember, showViewColumn }) => (
+const FilePanelTable = ({ members, onViewMember = undefined, showViewColumn = true }) => (
   <table className={`table table-sm ${styles.fileTable}`}>
     <thead>
       <tr>
@@ -32,11 +32,6 @@ FilePanelTable.propTypes = {
   members: PropTypes.arrayOf(PropTypes.object).isRequired,
   onViewMember: PropTypes.func,
   showViewColumn: PropTypes.bool,
-};
-
-FilePanelTable.defaultProps = {
-  onViewMember: undefined,
-  showViewColumn: true,
 };
 
 export default FilePanelTable;

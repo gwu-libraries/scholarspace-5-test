@@ -61,7 +61,7 @@ function enrichServiceMembersWithRowThumbnails(members, thumbMap) {
   });
 }
 
-const FilePanelTabs = ({ originalMembers, serviceMembers, canViewServiceFiles, onViewMember, onViewReadingMode }) => {
+const FilePanelTabs = ({ originalMembers, serviceMembers, canViewServiceFiles, onViewMember = undefined, onViewReadingMode = undefined }) => {
   const [activeTab, setActiveTab] = useState(ORIGINAL_TAB);
   const thumbMap = thumbnailBySourceId(serviceMembers);
   const originalMembersWithThumbs = enrichMembersWithRowThumbnails(originalMembers, thumbMap);
@@ -123,11 +123,6 @@ FilePanelTabs.propTypes = {
   canViewServiceFiles: PropTypes.bool.isRequired,
   onViewMember: PropTypes.func,
   onViewReadingMode: PropTypes.func,
-};
-
-FilePanelTabs.defaultProps = {
-  onViewMember: undefined,
-  onViewReadingMode: undefined,
 };
 
 export default FilePanelTabs;

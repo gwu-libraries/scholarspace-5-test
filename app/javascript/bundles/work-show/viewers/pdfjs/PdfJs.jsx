@@ -15,7 +15,7 @@ const pdfjsViewerUrl = (fileUrl, initialPageIndex) => {
 
 const PdfJs = ({
   fileUrl,
-  initialPageIndex,
+  initialPageIndex = null,
 }) => {
   if (!fileUrl) {
     return <div className={styles.status}>No PDF available.</div>;
@@ -38,10 +38,6 @@ const PdfJs = ({
 PdfJs.propTypes = {
   fileUrl: PropTypes.string.isRequired,
   initialPageIndex: PropTypes.number,
-};
-
-PdfJs.defaultProps = {
-  initialPageIndex: null,
 };
 
 export default PdfJs;

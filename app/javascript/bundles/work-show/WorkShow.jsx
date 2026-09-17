@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import FilePanelTabs from './file-panel/FilePanelTabs';
 
-const WorkShow = ({ title, descriptions, originalMembers, serviceMembers, canViewServiceFiles }) => {
+const WorkShow = ({ title, descriptions = [], originalMembers, serviceMembers, canViewServiceFiles }) => {
   const safeDescriptions = descriptions || [];
 
   return (
@@ -31,10 +31,6 @@ WorkShow.propTypes = {
   originalMembers:    PropTypes.arrayOf(PropTypes.object).isRequired,
   serviceMembers:      PropTypes.arrayOf(PropTypes.object).isRequired,
   canViewServiceFiles: PropTypes.bool.isRequired,
-};
-
-WorkShow.defaultProps = {
-  descriptions: [],
 };
 
 export default WorkShow;

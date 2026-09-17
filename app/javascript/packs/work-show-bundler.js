@@ -37,27 +37,7 @@ ReactOnRails.register({
   WorkShow,
 });
 
+// react-on-rails already mounts/unmounts on turbolinks:render / turbo:render internally.
 forceBackgroundDownloadLinks();
-
-let lastBootPath = null;
-
-function bootReactOnRails() {
-  ensureDownloadIframe();
-  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  if (lastBootPath === currentPath) return;
-  lastBootPath = currentPath;
-  ReactOnRails.reactOnRailsPageLoaded();
-}
-
-document.addEventListener("turbolinks:load", bootReactOnRails);
-document.addEventListener("turbo:load", bootReactOnRails);
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    if (!window.Turbo && !window.Turbolinks) {
-      bootReactOnRails();
-    }
-  },
-  { once: true },
-);
+document.addEventListener("turbolinks:load", ensureDownloadIframe);
+document.addEventListener("turbo:load", ensureDownloadIframe);

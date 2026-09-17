@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import * as styles from './FilePanel.module.css';
 
-const FilePanelGroup = ({ label, count, children, defaultOpen, headerActions }) => {
+const FilePanelGroup = ({ label, count, children, defaultOpen = true, headerActions = null }) => {
   const [open, setOpen] = useState(defaultOpen !== false);
   const toggleLabel = `${open ? '\u25BE' : '\u25B8'}${label} (${count})`;
 
@@ -30,11 +30,6 @@ FilePanelGroup.propTypes = {
   children: PropTypes.node.isRequired,
   defaultOpen: PropTypes.bool,
   headerActions: PropTypes.node,
-};
-
-FilePanelGroup.defaultProps = {
-  defaultOpen: true,
-  headerActions: null,
 };
 
 export default FilePanelGroup;

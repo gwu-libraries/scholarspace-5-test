@@ -8,7 +8,7 @@ import * as styles from './FilePanel.module.css';
 
 const MEMBERS_PER_PAGE = 10;
 
-const FilePanelOriginalTab = ({ members, onViewMember, onViewReadingMode }) => {
+const FilePanelOriginalTab = ({ members, onViewMember = undefined, onViewReadingMode = undefined }) => {
   const [pageByGroupLabel, setPageByGroupLabel] = useState({});
 
   if (members.length === 0) return <p>No original files are attached to this work.</p>;
@@ -99,11 +99,6 @@ FilePanelOriginalTab.propTypes = {
   members: PropTypes.arrayOf(PropTypes.object).isRequired,
   onViewMember: PropTypes.func,
   onViewReadingMode: PropTypes.func,
-};
-
-FilePanelOriginalTab.defaultProps = {
-  onViewMember: undefined,
-  onViewReadingMode: undefined,
 };
 
 export default FilePanelOriginalTab;

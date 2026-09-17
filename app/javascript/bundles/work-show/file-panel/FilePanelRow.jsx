@@ -10,7 +10,7 @@ const ICON_CLASS_BY_VIEWER = {
   images: 'glyphicon-picture',
 };
 
-const FilePanelRow = ({ member, onViewMember, showViewColumn }) => {
+const FilePanelRow = ({ member, onViewMember = undefined, showViewColumn = true }) => {
   const viewerType = memberViewerType(member);
   const hasInlineAction = Boolean(viewerType && onViewMember);
   const iconClass = ICON_CLASS_BY_VIEWER[viewerType] || 'glyphicon-eye-open';
@@ -88,11 +88,6 @@ FilePanelRow.propTypes = {
   }).isRequired,
   onViewMember: PropTypes.func,
   showViewColumn: PropTypes.bool,
-};
-
-FilePanelRow.defaultProps = {
-  onViewMember: undefined,
-  showViewColumn: true,
 };
 
 export default FilePanelRow;
