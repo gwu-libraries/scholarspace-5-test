@@ -16,13 +16,14 @@ subnet_private_cidr             = "10.0.11.0/24"
 subnet_private_cidr_secondary   = "10.0.12.0/24"
 
 # Sidekiq Shared Settings (apply to all Sidekiq services: default/whisper/ocr_text/derivatives/thumbnail)
+# Sets common worker lifecycle, logging, networking, and queue-pressure autoscaling behavior.
 sidekiq_container_stop_timeout_seconds     = 120
-sidekiq_shutdown_timeout_seconds           = 110
+sidekiq_shutdown_timeout_seconds           = 90
 sidekiq_target_cpu_utilization             = 70
 sidekiq_target_memory_utilization          = 80
 sidekiq_scale_in_cooldown_seconds          = 7200
 sidekiq_assign_public_ip                   = false
-sidekiq_log_retention_days                 = 30
+sidekiq_log_retention_days                 = 90
 sidekiq_enable_log_based_autoscaling       = true
 sidekiq_log_autoscaling_pattern            = "\"queue_latency_high\""
 sidekiq_log_autoscaling_depth_pattern      = "\"queue_depth_high\""
@@ -34,52 +35,75 @@ sidekiq_log_scale_out_adjustment           = 1
 sidekiq_log_scale_out_cooldown_seconds     = 120
 
 # Sidekiq Default Queue
+# Defines the image, scale range, compute resources, and temporary storage for general jobs.
 sidekiq_default_image         = "<ecr_repository_url>:<TAG>-sidekiq-default"
 sidekiq_default_desired_count = 2
 sidekiq_default_min_capacity  = 2
 sidekiq_default_max_capacity  = 4
 sidekiq_task_cpu              = 2048
 sidekiq_task_memory           = 4096
+sidekiq_ephemeral_storage_gib = 50
+
+# Dedicated Sidekiq Ingest Queue
+# Reserves fixed, high-memory workers for file ingest jobs that require isolated capacity.
+sidekiq_ingest_desired_count         = 2
+sidekiq_ingest_min_capacity          = 2
+sidekiq_ingest_max_capacity          = 2
+sidekiq_ingest_task_cpu              = 4096
+sidekiq_ingest_task_memory           = 16384
+sidekiq_ingest_ephemeral_storage_gib = 50
 
 # Sidekiq Whisper
+# Configures workers that generate speech-to-text derivatives using Whisper.
 sidekiq_whisper_image                 = "<ecr_repository_url>:<TAG>-sidekiq-whisper"
 sidekiq_whisper_desired_count         = 1
 sidekiq_whisper_min_capacity          = 1
 sidekiq_whisper_max_capacity          = 3
 sidekiq_whisper_task_cpu              = 4096
 sidekiq_whisper_task_memory           = 16384
-sidekiq_whisper_ephemeral_storage_gib = 200
+sidekiq_whisper_ephemeral_storage_gib = 64
 
 # Sidekiq OCR Text
-sidekiq_ocr_text_image                 = "<ecr_repository_url>:<TAG>-sidekiq-ocr-text"
-sidekiq_ocr_text_desired_count         = 2
-sidekiq_ocr_text_min_capacity          = 2
-sidekiq_ocr_text_max_capacity          = 8
-sidekiq_ocr_text_task_cpu              = 1024
-sidekiq_ocr_text_task_memory           = 2048
+# Configures workers that extract text from source files through OCR.
+sidekiq_ocr_text_image         = "<ecr_repository_url>:<TAG>-sidekiq-ocr-text"
+sidekiq_ocr_text_desired_count = 2
+sidekiq_ocr_text_min_capacity  = 2
+sidekiq_ocr_text_max_capacity  = 8
+sidekiq_ocr_text_task_cpu      = 1024
+sidekiq_ocr_text_task_memory   = 2048
 
-# Image derivatives (Sidekiq)
-sidekiq_images_desired_count = 2
-sidekiq_images_min_capacity  = 2
-sidekiq_images_max_capacity  = 6
+# Images (Sidekiq)
+# Configures workers that create image-based derivatives from source files.
+sidekiq_images_desired_count = 8
+sidekiq_images_min_capacity  = 8
+sidekiq_images_max_capacity  = 12
 sidekiq_images_task_cpu      = 2048
 sidekiq_images_task_memory   = 4096
 
 # Thumbnail (Sidekiq)
-sidekiq_thumbnail_desired_count         = 1
-sidekiq_thumbnail_min_capacity          = 1
-sidekiq_thumbnail_max_capacity          = 4
-sidekiq_thumbnail_task_cpu              = 2048
-sidekiq_thumbnail_task_memory           = 8192
-sidekiq_thumbnail_ephemeral_storage_gib = 30
+# Configures workers that generate thumbnails and the capacity reserved for those jobs.
+sidekiq_thumbnail_desired_count = 4
+sidekiq_thumbnail_min_capacity  = 4
+sidekiq_thumbnail_max_capacity  = 8
+sidekiq_thumbnail_task_cpu      = 2048
+sidekiq_thumbnail_task_memory   = 8192
+
+# Shared derivative persist queue
+# Configures workers that persist completed derivatives and their related metadata.
+sidekiq_persist_desired_count = 4
+sidekiq_persist_min_capacity  = 4
+sidekiq_persist_max_capacity  = 6
+sidekiq_persist_task_cpu      = 2048
+sidekiq_persist_task_memory   = 8192
 
 # Rails Web
+# Configures the Rails application service image, capacity, autoscaling targets, and logs.
 web_image                     = "<ecr_repository_url>:<TAG>-web"
 web_desired_count             = 1
 web_min_capacity              = 1
 web_max_capacity              = 3
 web_task_cpu                  = 2048
-web_task_memory               = 4096
+web_task_memory               = 6144
 web_target_cpu_utilization    = 60
 web_target_memory_utilization = 75
 web_assign_public_ip          = false
@@ -113,7 +137,7 @@ memcached_log_retention_days        = 30
 # Fedora
 fedora_image                              = "fcrepo/fcrepo:6.5.2-tomcat9"
 fedora_database_name                      = "fcrepo"
-fedora_task_cpu                           = 1024
+fedora_task_cpu                           = 4096
 fedora_task_memory                        = 8192
 fedora_ephemeral_storage_gib              = 100
 fedora_jvm_xms_mb                         = 1024
@@ -139,12 +163,11 @@ solr_log_retention_days = 30
 aurora_engine_version        = "16.9"
 aurora_database_name         = "scholarspacetftestab"
 aurora_master_username       = "scholarspace"
-# Master password comes from DB_PASSWORD in ssm_env_file_path, not from tfvars.
 aurora_instance_class        = "db.t4g.medium"
 aurora_instance_count        = 1
 aurora_backup_retention_days = 7
-aurora_skip_final_snapshot   = false
-aurora_deletion_protection   = true
+aurora_skip_final_snapshot   = true
+aurora_deletion_protection   = false
 
 # ElastiCache Redis settings
 elasticache_node_type                    = "cache.t4g.micro"
