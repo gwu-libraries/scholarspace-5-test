@@ -16,10 +16,10 @@ Rails.application.config.to_prepare do
     # config.object_factory = Bulkrax::ValkyrieObjectFactory
 
     # Path to store pending imports
-    # config.import_path = 'tmp/imports'
+    config.import_path = 'uploads/imports'
 
     # Path to store exports before download
-    # config.export_path = 'tmp/exports'
+    config.export_path = 'uploads/exports'
 
     # Server name for oai request header
     # config.server_name = 'my_server@name.com'
