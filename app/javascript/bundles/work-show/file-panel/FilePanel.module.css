@@ -1,0 +1,111 @@
+.groupRoot {
+  margin-bottom: 8px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupToggle {
+  font-weight: 600;
+}
+
+.groupHeaderActions {
+  margin-left: auto;
+}
+
+.groupChildren {
+  padding-left: 16px;
+}
+
+.groupInlineAction {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+.readingModeButton {
+  background-color: #e6f4ea;
+  border-color: #8ac9a4;
+  color: #1d5b39;
+}
+
+.readingModeButton:hover,
+.readingModeButton:focus {
+  background-color: #d6eddc;
+  border-color: #73b88f;
+  color: #15482d;
+}
+
+.tabsList {
+  margin-bottom: 12px;
+}
+
+.fileTable {
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.fileTable thead th,
+.fileTable tbody td {
+  border: 1px solid #d7dce2;
+  vertical-align: middle;
+}
+
+.fileTable thead th {
+  background: #f7f9fb;
+  font-weight: 600;
+}
+
+.fileTable tbody tr:nth-child(even) {
+  background: #fcfdfe;
+}
+
+.cellView {
+  width: 90px;
+  white-space: nowrap;
+}
+
+.cellThumbnail {
+  width: 70px;
+}
+
+.cellTitle {
+  overflow-wrap: anywhere;
+}
+
+.cellDate {
+  width: 150px;
+  white-space: nowrap;
+}
+
+.cellDownload {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.viewButton {
+  margin-right: 0;
+}
+
+.rowThumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex: 0 0 48px;
+}
+
+.rowThumbnailPlaceholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+  flex: 0 0 48px;
+  background: #efefef;
+  border: 1px solid #ddd;
+}

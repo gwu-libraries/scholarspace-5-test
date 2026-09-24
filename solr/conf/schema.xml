@@ -176,7 +176,6 @@
 
     <fieldtype name="text_ocr" class="solr.TextField" storeOffsetsWithPositions="true">
       <analyzer type="index">
-        <charFilter class="solrocr.ExternalUtf8ContentFilterFactory" />
         <charFilter class="solrocr.OcrCharFilterFactory" />
         <tokenizer class="solr.StandardTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -357,7 +356,7 @@
 
     <dynamicField name="*suggest" type="textSuggest" indexed="true" stored="false" multiValued="true" />
 
-    <field name="ocr_text" type="text_ocr" multiValued="false" indexed="true" stored="true" />
+    <field name="hocr_markup" type="text_ocr" multiValued="false" indexed="true" stored="true" />
 
     <!-- you must define copyField source and dest fields explicity or schemaBrowser doesn't work -->
     <field name="all_text_tsimv" type="text" stored="true" indexed="true" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
@@ -402,7 +401,7 @@
  -->
 
   <!-- BEGIN Blacklight IIIF Search autocomplete config -->
-  <copyField source="all_text_tsimv" dest="iiif_suggest"/>
+  <copyField source="all_text_tsimv" dest="iiif_suggest" maxChars="3000"/>
   <!-- END Blacklight IIIF Search autocomplete config -->
 
 </schema>

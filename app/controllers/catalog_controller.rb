@@ -27,8 +27,8 @@ class CatalogController < ApplicationController
     # configuration for Blacklight IIIF Content Search
     config.iiif_search = {
       full_text_field: 'all_text_tsimv',
-      object_relation_field: 'is_page_of_ssim',
-      supported_params: %w[q page ocr_text]
+      object_relation_field: 'parent_work_id_ssim',
+      supported_params: %w[q page hocr_markup]
     }
 
     config.view.gallery(
