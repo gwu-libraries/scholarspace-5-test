@@ -5,8 +5,12 @@ terms:
     term: Audio
   - id: Book
     term: Book
+  - id: Book Review
+    term: Book Review
   - id: Capstone Project
     term: Capstone Project
+  - id: Commentary
+    term: Commentary
   - id: Conference Proceeding
     term: Conference Proceeding
   - id: Dataset
@@ -19,8 +23,12 @@ terms:
     term: Journal
   - id: Map or Cartographic Material
     term: Map or Cartographic Material
-  - id: Masters Thesis
-    term: Masters Thesis
+  - id: Master's Thesis
+    term: Master's Thesis
+  - id: Meeting Minutes
+    term: Meeting Minutes
+  - id: Newsletter
+    term: Newsletter
   - id: Part of Book
     term: Part of Book
   - id: Poster
@@ -37,5 +45,7 @@ terms:
     term: Software or Program Code
   - id: Video
     term: Video
+  - id: Working Paper
+    term: Working Paper
   - id: Other
     term: Other
