@@ -1,5 +1,13 @@
-import ReactOnRails from "react-on-rails";
 import { WorkShow } from "../bundles/work-show";
+
+let ReactOnRails;
+try {
+  // eslint-disable-next-line global-require
+  const required = require("react-on-rails");
+  ReactOnRails = required.default || required;
+} catch (e) {
+  ReactOnRails = window.ReactOnRails;
+}
 
 const DOWNLOAD_IFRAME_NAME = "work-show-global-download";
 
@@ -37,7 +45,10 @@ ReactOnRails.register({
   WorkShow,
 });
 
-// react-on-rails already mounts/unmounts on turbolinks:render / turbo:render internally.
+if (document.readyState === "complete") {
+  ReactOnRails.reactOnRailsPageLoaded();
+}
+
 forceBackgroundDownloadLinks();
 document.addEventListener("turbolinks:load", ensureDownloadIframe);
 document.addEventListener("turbo:load", ensureDownloadIframe);
