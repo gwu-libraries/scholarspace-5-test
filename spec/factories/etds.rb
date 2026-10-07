@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :gw_etd, class: "GwEtd" do
+  factory :etd, class: "ETD" do
     to_create do |obj|
       Hyrax.persister.save!(resource: obj)
       Hyrax.index_adapter.save(resource: obj)
@@ -34,7 +34,7 @@ FactoryBot.define do
       end
     end
 
-    title { ["Test title Gw Etd"] }
+    title { ["Test title ETD"] }
 
     after(:build) do |work, evaluator|
       if work.try(:apply_depositor_metadata, evaluator.user.user_key)
@@ -42,7 +42,7 @@ FactoryBot.define do
       end
     end
 
-    factory :public_gw_etd, traits: [:public]
+    factory :public_etd, traits: [:public]
 
     trait :public do
       visibility do
@@ -50,31 +50,31 @@ FactoryBot.define do
       end
     end
 
-    factory :invalid_gw_etd do
+    factory :invalid_etd do
       title { nil }
     end
 
-    factory :private_gw_etd do
+    factory :private_etd do
       # private is default
       # visibility { Hydra::AccessControls::AccessRight::VISIBILITY_TEXT_VALUE_PRIVATE }
     end
 
-    factory :registered_gw_etd do
+    factory :registered_etd do
       read_groups { ["registered"] }
     end
 
-    factory :gw_etd_with_one_file do
+    factory :etd_with_one_file do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
           :file_set,
           user: evaluator.user,
           title: ["A Contained Gw ETD FileSet"],
-          label: "gw_etd_filename.pdf"
+          label: "etd_filename.pdf"
         )
       end
     end
 
-    factory :gw_etd_with_files do
+    factory :etd_with_files do
       before(:create) do |work, evaluator|
         2.times do
           work.ordered_members << create(:file_set, user: evaluator.user)
@@ -82,7 +82,7 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_image_files do
+    factory :etd_with_image_files do
       before(:create) do |work, evaluator|
         2.times do
           work.ordered_members << create(
@@ -94,7 +94,7 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_ordered_files do
+    factory :etd_with_ordered_files do
       before(:create) do |work, evaluator|
         work.ordered_members << create(:file_set, user: evaluator.user)
         work.ordered_member_proxies.insert_target_at(
@@ -104,26 +104,26 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_one_child do
+    factory :etd_with_one_child do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained Gw ETD"]
         )
       end
     end
 
-    factory :gw_etd_with_two_children do
+    factory :etd_with_two_children do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained ETD"],
           id: "BlahBlah1"
         )
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["Another Contained ETD"],
           id: "BlahBlah2"
@@ -131,7 +131,7 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_representative_file do
+    factory :etd_with_representative_file do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
           :file_set,
@@ -142,14 +142,14 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_file_and_work do
+    factory :etd_with_file_and_work do
       before(:create) do |work, evaluator|
         work.ordered_members << create(:file_set, user: evaluator.user)
-        work.ordered_members << create(:gw_etd, user: evaluator.user)
+        work.ordered_members << create(:etd, user: evaluator.user)
       end
     end
 
-    factory :gw_etd_with_embargo_date do
+    factory :etd_with_embargo_date do
       # build with defaults:
       # let(:work) { create(:embargoed_work) }
 
@@ -171,7 +171,7 @@ FactoryBot.define do
           Hydra::AccessControls::AccessRight::VISIBILITY_TEXT_VALUE_PUBLIC
         end
       end
-      factory :embargoed_gw_etd do
+      factory :embargoed_etd do
         after(:build) do |work, evaluator|
           if evaluator.with_embargo_attributes
             work.apply_embargo(
@@ -188,7 +188,7 @@ FactoryBot.define do
           end
         end
       end
-      factory :embargoed_gw_etd_with_files do
+      factory :embargoed_etd_with_files do
         after(:build) do |work, evaluator|
           if evaluator.with_embargo_attributes
             work.apply_embargo(
@@ -212,7 +212,7 @@ FactoryBot.define do
       end
     end
 
-    factory :gw_etd_with_lease_date do
+    factory :etd_with_lease_date do
       # build with defaults:
       # let(:work) { create(:leased_work) }
 
@@ -234,7 +234,7 @@ FactoryBot.define do
           Hydra::AccessControls::AccessRight::VISIBILITY_TEXT_VALUE_PRIVATE
         end
       end
-      factory :leased_gw_etd do
+      factory :leased_etd do
         after(:build) do |work, evaluator|
           if evaluator.with_lease_attributes
             work.apply_lease(
@@ -251,7 +251,7 @@ FactoryBot.define do
           end
         end
       end
-      factory :leased_gw_etd_with_files do
+      factory :leased_etd_with_files do
         after(:build) do |work, evaluator|
           if evaluator.with_lease_attributes
             work.apply_lease(
@@ -277,8 +277,8 @@ FactoryBot.define do
   end
 
   # Doesn't set up any edit_users
-  factory :gw_etd_without_access, class: "GwEtd" do
-    title { ["Test title Gw Etd"] }
+  factory :etd_without_access, class: "ETD" do
+    title { ["Test title ETD"] }
     depositor { create(:user).user_key }
   end
 end
