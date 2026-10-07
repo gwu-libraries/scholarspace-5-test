@@ -68,16 +68,16 @@ Rails.application.config.to_prepare do
        #'date_modified' => { from: ['date_modified'], split: true },
        # from Hyrax::AdminSet
        'alternative_title' => { from: ['alternative_title'], split: '\|' },
-       # from GwWork
+      # from AcademicDocument
        'bulkrax_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
        'gw_affiliation' => { from: ['gw_affiliation'], split: true },
        'doi' => { from: ['doi'], split: '\|' },
-       # from GwEtd
+      # from ETD
        'degree' => { from: ['degree'], split: true },
        'advisor' => { from: ['advisor'], split: true },
        'committee_member' => { from: ['committee_member'], split: true },
        'proquest_zipfile' => {from: ['proquest_zipfile'], split: true },
-       # from GwJournalIssue
+       # from JournalIssue
        'volume' => {from: ['volume'], split: true },
        'issue' => {from: ['issue'], split: true },
        # needed for Bulkrax
