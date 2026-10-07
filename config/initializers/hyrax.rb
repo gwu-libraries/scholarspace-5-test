@@ -16,13 +16,10 @@ CarrierWave.configure do |config|
 end
 
 Hyrax.config do |config|
-  # Injected via `rails g hyrax:work_resource ArchivalDocument`
   config.register_curation_concern :archival_document
-  # Injected via `rails g hyrax:work_resource AcademicDocument`
   config.register_curation_concern :academic_document
-  config.register_curation_concern :gw_work
-  config.register_curation_concern :gw_etd
-  config.register_curation_concern :gw_journal_issue
+  config.register_curation_concern :etd
+  config.register_curation_concern :journal_issue
 
   config.disable_wings = true # not needed if ENV includes HYRAX_SKIP_WINGS=true
 
