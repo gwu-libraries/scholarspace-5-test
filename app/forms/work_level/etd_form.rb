@@ -3,10 +3,9 @@
 
 # @see https://github.com/samvera/hyrax/wiki/Hyrax-Valkyrie-Usage-Guide#forms
 # @see https://github.com/samvera/valkyrie/wiki/ChangeSets-and-Dirty-Tracking
-class GwEtdForm < Hyrax::Forms.PcdmObjectForm(GwEtd)
+class ETDForm < Hyrax::Forms.PcdmObjectForm(ETD)
   include Hyrax.FormFields(:basic_metadata)
-  include Hyrax.FormFields(:academic_document)
-  include Hyrax.FormFields(:gw_etd)
+  include Hyrax.FormFields(:etd)
 
   # Define custom form fields using the Valkyrie::ChangeSet interface
   #
