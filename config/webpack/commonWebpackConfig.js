@@ -15,6 +15,12 @@ const commonOptions = {
       contextRegExp: /video\.js[\\/]dist[\\/]lang$/,
     }),
   ],
+
+  optimization: {
+    splitChunks: {
+      chunks: "async",
+    },
+  },
 };
 
 // Generate the base webpack configuration and merge with common options
