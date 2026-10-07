@@ -48,3 +48,11 @@ attributes:
         index_keys:
             - "committee_member_tesim"
         predicate: http://scholarspace.library.gwu.edu/ns#committee_member
+    proquest_zipfile:
+        type: string
+        multiple: false
+        form:
+            primary: false
+        index_keys:
+            - "proquest_zipfile_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#proquest_zipfile
