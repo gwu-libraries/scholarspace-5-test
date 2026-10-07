@@ -20,8 +20,9 @@ mount Bulkrax::Engine, at: '/'
   mount Hydra::RoleManagement::Engine => '/'
   mount Sidekiq::Web => '/sidekiq'
   mount Qa::Engine => '/authorities'
-  mount Hyrax::Engine, at: '/'
   resources :welcome, only: 'index'
+  get '/concern/:work_type/:id/deep_search', to: 'deep_search#deep_search'
+  mount Hyrax::Engine, at: '/'
   get '/up', to: proc { [200, { 'Content-Type' => 'text/plain' }, ['ok']] }
   root 'hyrax/homepage#index'
   curation_concerns_basic_routes
