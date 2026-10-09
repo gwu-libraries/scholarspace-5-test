@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-class GwWorkIndexer < Hyrax::Indexers.PcdmObjectIndexer(
-  GwWork
+class ETDIndexer < Hyrax::Indexers.PcdmObjectIndexer(
+  ETD
 )
   include Hyrax.Indexer(:basic_metadata)
-  include Hyrax.Indexer(:academic_document)
-  include Hyrax.Indexer(:gw_work)
-  include FullTextIndexable
+  include Hyrax.Indexer(:etd)
+  include MemberFullTextAggregatable
+  include ContributorFacetIndexable
+  include YearCreatedIndexable
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr

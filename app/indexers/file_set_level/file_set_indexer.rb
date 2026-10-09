@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
-require 'open3'
-require 'tempfile'
-
 class FileSetIndexer < Hyrax::Indexers::FileSetIndexer
+  include VttTextIndexable
+  include OcrTextIndexable
+  include EmbeddedPdfTextIndexable
+
   MAX_INDEX_VALUE_CHARS = DerivativeServiceSettings.fetch(:indexing, :max_index_value_chars)
 
   def to_solr
@@ -41,12 +41,6 @@ class FileSetIndexer < Hyrax::Indexers::FileSetIndexer
     nil
   end
 
-  def hocr_markup_for_file(file, content)
-    return nil unless file && file.original_filename.to_s.downcase.end_with?('.hocr')
-
-    content
-  end
-
   def primary_file
     Hyrax.config.file_set_file_service.new(file_set: resource).primary_file
   end
@@ -57,59 +51,6 @@ class FileSetIndexer < Hyrax::Indexers::FileSetIndexer
 
     Hyrax.storage_adapter.find_by(id: file_identifier)&.stream&.read
   rescue Valkyrie::Persistence::ObjectNotFoundError
-    nil
-  end
-
-  def extract_hocr_plain_text(content)
-    document = Nokogiri::HTML(content, nil, 'UTF-8')
-    words = document.css('span.ocrx_word, span.ocr_word').filter_map { |node| normalize_plain_text(node.text) }
-    return words.join(' ') if words.any?
-
-    normalize_plain_text(document.at('body')&.text || document.text)
-  end
-
-  def normalize_vtt_text(content)
-    lines = content.lines.map(&:rstrip)
-    cleaned_lines = []
-    index = 0
-
-    while index < lines.length
-      line = lines[index].strip
-      if line.blank? || line.casecmp('WEBVTT').zero?
-        index += 1
-        next
-      end
-      if line.match?(/\A(?:NOTE|STYLE|REGION)\b/)
-        index += 1
-        index += 1 while index < lines.length && lines[index].strip.present?
-        next
-      end
-      if timestamp_line?(line) || (lines[index + 1] && timestamp_line?(lines[index + 1].strip))
-        index += 1
-        next
-      end
-      cleaned_lines << line
-      index += 1
-    end
-
-    normalize_plain_text(cleaned_lines.join(' '))
-  end
-
-  def timestamp_line?(line)
-    line.match?(%r{\A(?:\d{2}:)?\d{2}:\d{2}\.\d{3}\s+-->\s+(?:\d{2}:)?\d{2}:\d{2}\.\d{3}(?:\s+.*)?\z})
-  end
-
-  def extract_pdf_plain_text(content)
-    Tempfile.create(['scholarspace-index', '.pdf']) do |pdf_file|
-      pdf_file.binmode
-      pdf_file.write(content)
-      pdf_file.flush
-      stdout, _stderr, status = Open3.capture3('pdftotext', '-q', pdf_file.path, '-')
-      return nil unless status.success?
-
-      normalize_plain_text(stdout)
-    end
-  rescue StandardError
     nil
   end
 

@@ -7,7 +7,9 @@ class AcademicDocumentIndexer < Hyrax::Indexers.PcdmObjectIndexer(
 )
   include Hyrax.Indexer(:basic_metadata)
   include Hyrax.Indexer(:academic_document)
-  include FullTextIndexable
+  include MemberFullTextAggregatable
+  include ContributorFacetIndexable
+  include YearCreatedIndexable
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr

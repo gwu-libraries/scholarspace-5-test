@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-module FullTextIndexable
+module MemberFullTextAggregatable
+  # This module takes the full text from child file sets and applies them to the parent work, which allows
+  # for searching text from child file sets and getting the main containing work back as a result in the catalog.
   extend ActiveSupport::Concern
   include StringNormalization
 
