@@ -146,9 +146,7 @@ APP_ECR="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${APP_REPO}"
 
 TAG="${CUSTOM_TAG:-$(date +%Y%m%d-%H%M%S)}"
 WEB_IMAGE_URI="${APP_ECR}:${TAG}-web"
-SIDEKIQ_DEFAULT_IMAGE_URI="${APP_ECR}:${TAG}-sidekiq-default"
-SIDEKIQ_WHISPER_IMAGE_URI="${APP_ECR}:${TAG}-sidekiq-whisper"
-SIDEKIQ_OCR_TEXT_IMAGE_URI="${APP_ECR}:${TAG}-sidekiq-ocr-text"
+SIDEKIQ_IMAGE_URI="${APP_ECR}:${TAG}-sidekiq"
 FITS_IMAGE_URI="${APP_ECR}:${TAG}-fits"
 SOLR_IMAGE_URI="${APP_ECR}:${TAG}-solr"
 
@@ -165,9 +163,7 @@ assert_tag_exists() {
 
 echo "APP_ECR=$APP_ECR"
 echo "WEB_IMAGE_URI=$WEB_IMAGE_URI"
-echo "SIDEKIQ_DEFAULT_IMAGE_URI=$SIDEKIQ_DEFAULT_IMAGE_URI"
-echo "SIDEKIQ_WHISPER_IMAGE_URI=$SIDEKIQ_WHISPER_IMAGE_URI"
-echo "SIDEKIQ_OCR_TEXT_IMAGE_URI=$SIDEKIQ_OCR_TEXT_IMAGE_URI"
+echo "SIDEKIQ_IMAGE_URI=$SIDEKIQ_IMAGE_URI"
 echo "FITS_IMAGE_URI=$FITS_IMAGE_URI"
 echo "SOLR_IMAGE_URI=$SOLR_IMAGE_URI"
 echo "TAG=$TAG"
@@ -190,33 +186,13 @@ docker buildx build \
   --push \
   "$REPO_ROOT"
 
-echo "Building and pushing sidekiq default image..."
+echo "Building and pushing shared sidekiq image..."
 docker buildx build \
   --platform linux/amd64 \
   --build-arg BUILD_ENV=prod \
-  --target scholarspace-sidekiq-default-prod \
+  --target scholarspace-sidekiq-prod \
   -f "${REPO_ROOT}/Dockerfile" \
-  -t "${SIDEKIQ_DEFAULT_IMAGE_URI}" \
-  --push \
-  "$REPO_ROOT"
-
-echo "Building and pushing sidekiq whisper image..."
-docker buildx build \
-  --platform linux/amd64 \
-  --build-arg BUILD_ENV=prod \
-  --target scholarspace-sidekiq-whisper-prod \
-  -f "${REPO_ROOT}/Dockerfile" \
-  -t "${SIDEKIQ_WHISPER_IMAGE_URI}" \
-  --push \
-  "$REPO_ROOT"
-
-echo "Building and pushing sidekiq ocr-text image..."
-docker buildx build \
-  --platform linux/amd64 \
-  --build-arg BUILD_ENV=prod \
-  --target scholarspace-sidekiq-ocr-text-prod \
-  -f "${REPO_ROOT}/Dockerfile" \
-  -t "${SIDEKIQ_OCR_TEXT_IMAGE_URI}" \
+  -t "${SIDEKIQ_IMAGE_URI}" \
   --push \
   "$REPO_ROOT"
 
@@ -238,9 +214,7 @@ docker buildx build \
 
 echo "Verifying pushed tags in ECR..."
 assert_tag_exists "$APP_REPO" "${TAG}-web"
-assert_tag_exists "$APP_REPO" "${TAG}-sidekiq-default"
-assert_tag_exists "$APP_REPO" "${TAG}-sidekiq-whisper"
-assert_tag_exists "$APP_REPO" "${TAG}-sidekiq-ocr-text"
+assert_tag_exists "$APP_REPO" "${TAG}-sidekiq"
 assert_tag_exists "$APP_REPO" "${TAG}-fits"
 assert_tag_exists "$APP_REPO" "${TAG}-solr"
 
@@ -251,9 +225,7 @@ echo "IMAGE_TAG=$TAG"
 if [[ "$UPDATE_TFVARS" == true ]]; then
   echo "Updating image URIs in $TFVARS_FILE..."
   upsert_tfvars_string web_image "${WEB_IMAGE_URI}" "$TFVARS_FILE"
-  upsert_tfvars_string sidekiq_default_image "${SIDEKIQ_DEFAULT_IMAGE_URI}" "$TFVARS_FILE"
-  upsert_tfvars_string sidekiq_whisper_image "${SIDEKIQ_WHISPER_IMAGE_URI}" "$TFVARS_FILE"
-  upsert_tfvars_string sidekiq_ocr_text_image "${SIDEKIQ_OCR_TEXT_IMAGE_URI}" "$TFVARS_FILE"
+  upsert_tfvars_string sidekiq_image "${SIDEKIQ_IMAGE_URI}" "$TFVARS_FILE"
   upsert_tfvars_string fits_image "${FITS_IMAGE_URI}" "$TFVARS_FILE"
   upsert_tfvars_string solr_image "${SOLR_IMAGE_URI}" "$TFVARS_FILE"
   echo "terraform.tfvars image URIs updated."
