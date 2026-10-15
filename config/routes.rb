@@ -8,6 +8,7 @@ mount Bulkrax::Engine, at: '/'
   mount Blacklight::Engine => '/'
 
   concern :searchable, Blacklight::Routes::Searchable.new
+  concern :range_searchable, BlacklightRangeLimit::Routes::RangeSearchable.new
 
   resource :catalog,
            only: [:index],
@@ -15,6 +16,7 @@ mount Bulkrax::Engine, at: '/'
            path: '/catalog',
            controller: 'catalog' do
     concerns :searchable
+    concerns :range_searchable
   end
   devise_for :users
   mount Hydra::RoleManagement::Engine => '/'
