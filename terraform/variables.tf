@@ -81,36 +81,14 @@ variable "ocfl_s3_prefix" {
   default     = ""
 }
 
-variable "sidekiq_default_image" {
-  description = "Full image URI for the default Sidekiq ECS service. Must be explicitly set."
+variable "sidekiq_image" {
+  description = "Full image URI shared by all Sidekiq worker pools. Must be explicitly set."
   type        = string
   default     = ""
 
   validation {
-    condition     = length(trimspace(var.sidekiq_default_image)) > 0
-    error_message = "sidekiq_default_image must be set to a non-empty image URI."
-  }
-}
-
-variable "sidekiq_whisper_image" {
-  description = "Full image URI for the whisper Sidekiq ECS service. Must be explicitly set."
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = length(trimspace(var.sidekiq_whisper_image)) > 0
-    error_message = "sidekiq_whisper_image must be set to a non-empty image URI."
-  }
-}
-
-variable "sidekiq_ocr_text_image" {
-  description = "Full image URI for the OCR text extraction Sidekiq ECS service. Must be explicitly set."
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = length(trimspace(var.sidekiq_ocr_text_image)) > 0
-    error_message = "sidekiq_ocr_text_image must be set to a non-empty image URI."
+    condition     = length(trimspace(var.sidekiq_image)) > 0
+    error_message = "sidekiq_image must be set to a non-empty image URI."
   }
 }
 
