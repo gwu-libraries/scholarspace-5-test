@@ -4,6 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem 'activerecord-nulldb-adapter', '~> 1.1'
 gem 'blacklight-access_controls'
+gem 'blacklight_range_limit'
 gem 'blacklight_iiif_search'
 gem 'bootsnap', '>= 1.1.0', require: false
 gem 'bootstrap', '~> 4.0'
