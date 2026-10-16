@@ -5,25 +5,44 @@ RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 APP_UID="${APP_UID:-$(id -u)}"
 APP_GID="${APP_GID:-$(id -g)}"
 COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
+if [[ "$COMPOSE_ENV_FILE" != /* ]]; then
+  COMPOSE_ENV_FILE="$RAILS_ROOT/$COMPOSE_ENV_FILE"
+fi
 
 # in dev, this helps with making sure uids/gids are the same when using bind mounts
 export APP_UID APP_GID COMPOSE_ENV_FILE
 
 docker compose \
+  --env-file "$COMPOSE_ENV_FILE" \
   -f "$RAILS_ROOT/docker-compose.yml" \
   run --rm --no-deps -T app-volumes-init
 
 if [ ! -f "$RAILS_ROOT/docker-compose-dev-local.yml"  ]; then
 
-    exec docker compose \
+    docker compose \
+    --env-file "$COMPOSE_ENV_FILE" \
     -f "$RAILS_ROOT/docker-compose.yml" \
     -f "$RAILS_ROOT/docker-compose-dev.yml" \
-    up --build "$@"
+    build worker
+
+    exec docker compose \
+    --env-file "$COMPOSE_ENV_FILE" \
+    -f "$RAILS_ROOT/docker-compose.yml" \
+    -f "$RAILS_ROOT/docker-compose-dev.yml" \
+    up --no-build "$@"
 fi
 echo "Local configuration found"
 
-  exec docker compose \
+  docker compose \
+  --env-file "$COMPOSE_ENV_FILE" \
   -f "$RAILS_ROOT/docker-compose.yml" \
   -f "$RAILS_ROOT/docker-compose-dev.yml" \
   -f "$RAILS_ROOT/docker-compose-dev-local.yml" \
-  up --build "$@"
+  build worker
+
+  exec docker compose \
+  --env-file "$COMPOSE_ENV_FILE" \
+  -f "$RAILS_ROOT/docker-compose.yml" \
+  -f "$RAILS_ROOT/docker-compose-dev.yml" \
+  -f "$RAILS_ROOT/docker-compose-dev-local.yml" \
+  up --no-build "$@"

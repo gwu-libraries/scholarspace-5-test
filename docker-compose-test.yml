@@ -88,7 +88,7 @@ services:
 
   worker:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: default
@@ -96,7 +96,7 @@ services:
 
   worker_ingest:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/ingest.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/ingest.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: ingest
@@ -104,7 +104,7 @@ services:
 
   worker_whisper:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/whisper.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/whisper.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: whisper
@@ -112,7 +112,7 @@ services:
 
   worker_ocr_text:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/ocr_text.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/ocr_text.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: ocr_text
@@ -120,7 +120,7 @@ services:
 
   worker_images:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/images.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/images.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: images
@@ -128,7 +128,7 @@ services:
 
   worker_thumbnail:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/thumbnail.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/thumbnail.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: thumbnail
@@ -136,7 +136,7 @@ services:
 
   worker_persist:
     <<: *scholarspace-test-worker
-    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/persist.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'exec bundle exec sidekiq -C config/sidekiq/persist.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-test-worker-environment
       SIDEKIQ_WORKER_POOL: persist

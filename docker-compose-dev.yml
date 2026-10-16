@@ -23,7 +23,6 @@ x-scholarspace-dev-worker: &scholarspace-dev-worker
   stdin_open: true
   tty: true
   image: scholarspace-worker:${RAILS_TAG:-latest}
-  build: *scholarspace-dev-build
   restart: always
   stop_grace_period: 120s
   user: ${APP_UID:-1001}:${APP_GID:-101}
@@ -46,8 +45,7 @@ services:
       - node_modules:/app/scholarspace/node_modules
 
   rails:
-    image: scholarspace-rails:${RAILS_TAG:-latest}
-    build: *scholarspace-dev-build
+    image: scholarspace-worker:${RAILS_TAG:-latest}
     command: sh -lc 'bundle install && yarn install --force && yarn build:dev && bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails db:seed && rm -f tmp/pids/server.pid && exec ./bin/rails server -p 3000 -b 0.0.0.0'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
@@ -101,7 +99,8 @@ services:
 
   worker:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    build: *scholarspace-dev-build
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: default
@@ -109,7 +108,7 @@ services:
 
   worker_ingest:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ingest.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ingest.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: ingest
@@ -117,7 +116,7 @@ services:
 
   worker_whisper:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/whisper.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/whisper.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: whisper
@@ -125,7 +124,7 @@ services:
 
   worker_ocr_text:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ocr_text.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ocr_text.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: ocr_text
@@ -133,7 +132,7 @@ services:
 
   worker_images:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/images.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/images.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: images
@@ -141,7 +140,7 @@ services:
 
   worker_thumbnail:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/thumbnail.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/thumbnail.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: thumbnail
@@ -149,7 +148,7 @@ services:
 
   worker_persist:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/persist.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/persist.yml $${SIDEKIQ_CONCURRENCY:+-c $$SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
       SIDEKIQ_WORKER_POOL: persist
