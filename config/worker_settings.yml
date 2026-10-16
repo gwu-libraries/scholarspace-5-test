@@ -1,5 +1,6 @@
 shared:
   monitoring:
+    # Configure how often worker health is checked and when latency or queue depth is considered high.
     poll_interval_seconds: 20
     latency_threshold_seconds: 120
     depth_threshold: 25
