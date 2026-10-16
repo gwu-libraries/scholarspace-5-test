@@ -47,16 +47,16 @@ shared:
     waits:
       work_reindex_debounce_seconds: 300
       hyrax_listener:
-        orchestrate_debounce_seconds: 300
-        orchestrate_enqueue_wait_seconds: 120
+        orchestrate_debounce_seconds: 60
+        orchestrate_enqueue_wait_seconds: 30
       work_level_orchestrate:
         readiness_retry_max: 10
         readiness_retry_step_seconds: 60
         readiness_retry_max_wait_seconds: 600
-        representative_thumbnail_seconds: 1800
+        representative_thumbnail_seconds: 60
       reading_mode_pdf_generation:
-        from_images_generate_seconds: 1800
-        assemble_hocr_seconds: 2700
+        from_images_generate_seconds: 60
+        assemble_hocr_seconds: 120
 
   services:
     transcription:
