@@ -4,39 +4,42 @@ ARG BUILD_ENV
 ARG EXTRA_APK_PACKAGES=""
 ARG RUBYGEMS_VERSION=""
 
-FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-builder-base
+FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-runtime-base
 
-ARG BUILD_ENV
 ARG EXTRA_APK_PACKAGES=""
-ARG RUBYGEMS_VERSION=""
 
 RUN addgroup -S --gid 101 app && \
     adduser -S -G app -u 1001 -s /bin/sh -h /app app
 
 RUN apk --no-cache upgrade && \
   apk --no-cache add acl \
-  build-base \
-  cmake \
   curl \
   gcompat \
   libreoffice \
   vips \
   libxml2 \
-  libxml2-dev \
-  postgresql-dev \
-  git \
+  imagemagick \
+  imagemagick-heic \
+  imagemagick-jpeg \
+  imagemagick-jxl \
+  imagemagick-pdf \
+  imagemagick-svg \
+  imagemagick-tiff \
+  imagemagick-webp \
+  ghostscript \
+  tesseract-ocr \
+  tesseract-ocr-data-eng \
+  poppler-utils \
+  zip \
   jemalloc \
   ruby-grpc \
   tzdata \
   ffmpeg \
   $EXTRA_APK_PACKAGES
 
-RUN setfacl -d -m o::rwx /usr/local/bundle && \
-  if [ -n "$RUBYGEMS_VERSION" ]; then gem update --silent --system "$RUBYGEMS_VERSION"; fi
-
 USER app
 
-RUN mkdir -p /app/scholarspace
+RUN mkdir -p /app/scholarspace/tmp/derivatives-work-locks
 WORKDIR /app/scholarspace
 
 # lets just set the adapters here so its explicitly the same in each environment
@@ -46,6 +49,20 @@ ENV PATH="/app/scholarspace:$PATH" \
     VALKYRIE_METADATA_ADAPTER="fedora_metadata" \
     VALKYRIE_STORAGE_ADAPTER="fedora_storage" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+
+FROM scholarspace-runtime-base AS scholarspace-builder-base
+
+ARG BUILD_ENV
+ARG RUBYGEMS_VERSION=""
+
+USER root
+
+RUN apk --no-cache add build-base cmake libxml2-dev postgresql-dev git
+
+RUN setfacl -d -m o::rwx /usr/local/bundle && \
+  if [ -n "$RUBYGEMS_VERSION" ]; then gem update --silent --system "$RUBYGEMS_VERSION"; fi
+
+USER app
 
 COPY --chown=app:app Gemfile Gemfile.lock ./
 
@@ -143,116 +160,7 @@ ENV PATH="/app/scholarspace:$PATH" \
 COPY --from=scholarspace-web-builder --chown=app:app /usr/local/bundle /usr/local/bundle
 COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace /app/scholarspace
 
-FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-sidekiq-default-prod
-
-ARG EXTRA_APK_PACKAGES=""
-
-RUN addgroup -S --gid 101 app && \
-    adduser -S -G app -u 1001 -s /bin/sh -h /app app
-
-RUN apk --no-cache upgrade && \
-  apk --no-cache add acl \
-  curl \
-  gcompat \
-  libreoffice \
-  vips \
-  imagemagick \
-  imagemagick-heic \
-  imagemagick-jpeg \
-  imagemagick-jxl \
-  imagemagick-pdf \
-  imagemagick-svg \
-  imagemagick-tiff \
-  imagemagick-webp \
-  ghostscript \
-  ffmpeg \
-  tesseract-ocr \
-  tesseract-ocr-data-eng \
-  zip \
-  jemalloc \
-  ruby-grpc \
-  tzdata \
-  libxml2 \
-  $EXTRA_APK_PACKAGES
-
-USER app
-
-RUN mkdir -p /app/scholarspace \
-  /app/scholarspace/tmp/derivatives-work-locks
-WORKDIR /app/scholarspace
-
-ENV PATH="/app/scholarspace:$PATH" \
-    RAILS_ROOT="/app/scholarspace" \
-    RAILS_SERVE_STATIC_FILES="1" \
-    VALKYRIE_METADATA_ADAPTER="fedora_metadata" \
-    VALKYRIE_STORAGE_ADAPTER="fedora_storage" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
-
-COPY --from=scholarspace-sidekiq-builder --chown=app:app /usr/local/bundle /usr/local/bundle
-COPY --from=scholarspace-sidekiq-builder --chown=app:app /app/scholarspace /app/scholarspace
-COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/assets /app/scholarspace/public/assets
-COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/packs /app/scholarspace/public/packs
-
-FROM scholarspace-sidekiq-default-prod AS scholarspace-sidekiq-whisper-prod
-
-USER root
-
-RUN apk --no-cache add ffmpeg
-
-USER app
-
-FROM scholarspace-sidekiq-default-prod AS scholarspace-sidekiq-ocr-text-prod
-
-USER root
-
-RUN apk --no-cache add tesseract-ocr tesseract-ocr-data-eng poppler-utils
-
-USER app
-
-FROM ruby:$RUBY_VERSION-alpine$ALPINE_VERSION AS scholarspace-sidekiq-prod
-
-ARG EXTRA_APK_PACKAGES=""
-
-RUN addgroup -S --gid 101 app && \
-    adduser -S -G app -u 1001 -s /bin/sh -h /app app
-
-RUN apk --no-cache upgrade && \
-  apk --no-cache add acl \
-  curl \
-  gcompat \
-  libreoffice \
-  vips \
-  imagemagick \
-  imagemagick-heic \
-  imagemagick-jpeg \
-  imagemagick-jxl \
-  imagemagick-pdf \
-  imagemagick-svg \
-  imagemagick-tiff \
-  imagemagick-webp \
-  ghostscript \
-  tesseract-ocr \
-  tesseract-ocr-data-eng \
-  ffmpeg \
-  zip \
-  jemalloc \
-  ruby-grpc \
-  tzdata \
-  libxml2 \
-  poppler-utils \
-  $EXTRA_APK_PACKAGES
-
-USER app
-
-RUN mkdir -p /app/scholarspace
-WORKDIR /app/scholarspace
-
-ENV PATH="/app/scholarspace:$PATH" \
-    RAILS_ROOT="/app/scholarspace" \
-    RAILS_SERVE_STATIC_FILES="1" \
-    VALKYRIE_METADATA_ADAPTER="fedora_metadata" \
-    VALKYRIE_STORAGE_ADAPTER="fedora_storage" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+FROM scholarspace-runtime-base AS scholarspace-sidekiq-prod
 
 COPY --from=scholarspace-sidekiq-builder --chown=app:app /usr/local/bundle /usr/local/bundle
 COPY --from=scholarspace-sidekiq-builder --chown=app:app /app/scholarspace /app/scholarspace
@@ -263,21 +171,3 @@ COPY --from=scholarspace-web-builder --chown=app:app /app/scholarspace/public/pa
 # workflows. This target includes the shared Rails, asset, and Sidekiq runtime;
 # ECS deployment images are built from explicit prod targets by the push script.
 FROM scholarspace-web-builder AS scholarspace-default
-
-USER root
-
-RUN apk --no-cache add \
-  imagemagick \
-  imagemagick-heic \
-  imagemagick-jpeg \
-  imagemagick-jxl \
-  imagemagick-pdf \
-  imagemagick-svg \
-  imagemagick-tiff \
-  imagemagick-webp \
-  ghostscript \
-  tesseract-ocr \
-  tesseract-ocr-data-eng \
-  poppler-utils
-
-USER app

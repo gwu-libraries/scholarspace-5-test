@@ -1,120 +1,60 @@
 locals {
-  sidekiq_default_image_uri  = trimspace(var.sidekiq_default_image)
-  sidekiq_whisper_image_uri  = trimspace(var.sidekiq_whisper_image)
-  sidekiq_ocr_text_image_uri = trimspace(var.sidekiq_ocr_text_image)
-
   sidekiq_service_configs = {
     ingest = {
-      image                            = local.sidekiq_default_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "true"
-      concurrency                      = "2"
-      desired_count                    = var.sidekiq_ingest_desired_count
-      min_capacity                     = var.sidekiq_ingest_min_capacity
-      max_capacity                     = var.sidekiq_ingest_max_capacity
-      cpu                              = var.sidekiq_ingest_task_cpu
-      memory                           = var.sidekiq_ingest_task_memory
-      ephemeral_storage_gib            = var.sidekiq_ingest_ephemeral_storage_gib
+      desired_count         = var.sidekiq_ingest_desired_count
+      min_capacity          = var.sidekiq_ingest_min_capacity
+      max_capacity          = var.sidekiq_ingest_max_capacity
+      cpu                   = var.sidekiq_ingest_task_cpu
+      memory                = var.sidekiq_ingest_task_memory
+      ephemeral_storage_gib = var.sidekiq_ingest_ephemeral_storage_gib
     }
     default = {
-      image                            = local.sidekiq_default_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "4"
-      desired_count                    = var.sidekiq_default_desired_count
-      min_capacity                     = var.sidekiq_default_min_capacity
-      max_capacity                     = var.sidekiq_default_max_capacity
-      cpu                              = var.sidekiq_task_cpu
-      memory                           = var.sidekiq_task_memory
-      ephemeral_storage_gib            = var.sidekiq_ephemeral_storage_gib
+      desired_count         = var.sidekiq_default_desired_count
+      min_capacity          = var.sidekiq_default_min_capacity
+      max_capacity          = var.sidekiq_default_max_capacity
+      cpu                   = var.sidekiq_task_cpu
+      memory                = var.sidekiq_task_memory
+      ephemeral_storage_gib = var.sidekiq_ephemeral_storage_gib
     }
     whisper = {
-      image                            = local.sidekiq_whisper_image_uri
-      sidekiq_only_audio_transcript    = "true"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "1"
-      desired_count                    = var.sidekiq_whisper_desired_count
-      min_capacity                     = var.sidekiq_whisper_min_capacity
-      max_capacity                     = var.sidekiq_whisper_max_capacity
-      cpu                              = var.sidekiq_whisper_task_cpu
-      memory                           = var.sidekiq_whisper_task_memory
-      ephemeral_storage_gib            = var.sidekiq_whisper_ephemeral_storage_gib
+      desired_count         = var.sidekiq_whisper_desired_count
+      min_capacity          = var.sidekiq_whisper_min_capacity
+      max_capacity          = var.sidekiq_whisper_max_capacity
+      cpu                   = var.sidekiq_whisper_task_cpu
+      memory                = var.sidekiq_whisper_task_memory
+      ephemeral_storage_gib = var.sidekiq_whisper_ephemeral_storage_gib
     }
     ocr_text = {
-      image                            = local.sidekiq_ocr_text_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "true"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "1"
-      desired_count                    = var.sidekiq_ocr_text_desired_count
-      min_capacity                     = var.sidekiq_ocr_text_min_capacity
-      max_capacity                     = var.sidekiq_ocr_text_max_capacity
-      cpu                              = var.sidekiq_ocr_text_task_cpu
-      memory                           = var.sidekiq_ocr_text_task_memory
-      ephemeral_storage_gib            = var.sidekiq_ocr_text_ephemeral_storage_gib
+      desired_count         = var.sidekiq_ocr_text_desired_count
+      min_capacity          = var.sidekiq_ocr_text_min_capacity
+      max_capacity          = var.sidekiq_ocr_text_max_capacity
+      cpu                   = var.sidekiq_ocr_text_task_cpu
+      memory                = var.sidekiq_ocr_text_task_memory
+      ephemeral_storage_gib = var.sidekiq_ocr_text_ephemeral_storage_gib
     }
     images = {
-      image                            = local.sidekiq_default_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "true"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "2"
-      desired_count                    = var.sidekiq_images_desired_count
-      min_capacity                     = var.sidekiq_images_min_capacity
-      max_capacity                     = var.sidekiq_images_max_capacity
-      cpu                              = var.sidekiq_images_task_cpu
-      memory                           = var.sidekiq_images_task_memory
-      ephemeral_storage_gib            = var.sidekiq_images_ephemeral_storage_gib
+      desired_count         = var.sidekiq_images_desired_count
+      min_capacity          = var.sidekiq_images_min_capacity
+      max_capacity          = var.sidekiq_images_max_capacity
+      cpu                   = var.sidekiq_images_task_cpu
+      memory                = var.sidekiq_images_task_memory
+      ephemeral_storage_gib = var.sidekiq_images_ephemeral_storage_gib
     }
     thumbnail = {
-      image                            = local.sidekiq_default_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "true"
-      sidekiq_only_persist             = "false"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "1"
-      desired_count                    = var.sidekiq_thumbnail_desired_count
-      min_capacity                     = var.sidekiq_thumbnail_min_capacity
-      max_capacity                     = var.sidekiq_thumbnail_max_capacity
-      cpu                              = var.sidekiq_thumbnail_task_cpu
-      memory                           = var.sidekiq_thumbnail_task_memory
-      ephemeral_storage_gib            = var.sidekiq_thumbnail_ephemeral_storage_gib
+      desired_count         = var.sidekiq_thumbnail_desired_count
+      min_capacity          = var.sidekiq_thumbnail_min_capacity
+      max_capacity          = var.sidekiq_thumbnail_max_capacity
+      cpu                   = var.sidekiq_thumbnail_task_cpu
+      memory                = var.sidekiq_thumbnail_task_memory
+      ephemeral_storage_gib = var.sidekiq_thumbnail_ephemeral_storage_gib
     }
     persist = {
-      image                            = local.sidekiq_default_image_uri
-      sidekiq_only_audio_transcript    = "false"
-      sidekiq_only_ocr_text_extraction = "false"
-      sidekiq_only_images              = "false"
-      sidekiq_only_thumbnail           = "false"
-      sidekiq_only_persist             = "true"
-      sidekiq_only_ingest              = "false"
-      concurrency                      = "4"
-      desired_count                    = var.sidekiq_persist_desired_count
-      min_capacity                     = var.sidekiq_persist_min_capacity
-      max_capacity                     = var.sidekiq_persist_max_capacity
-      cpu                              = var.sidekiq_persist_task_cpu
-      memory                           = var.sidekiq_persist_task_memory
-      ephemeral_storage_gib            = var.sidekiq_persist_ephemeral_storage_gib
+      desired_count         = var.sidekiq_persist_desired_count
+      min_capacity          = var.sidekiq_persist_min_capacity
+      max_capacity          = var.sidekiq_persist_max_capacity
+      cpu                   = var.sidekiq_persist_task_cpu
+      memory                = var.sidekiq_persist_task_memory
+      ephemeral_storage_gib = var.sidekiq_persist_ephemeral_storage_gib
     }
   }
 
@@ -167,21 +107,16 @@ resource "aws_ecs_task_definition" "sidekiq" {
   container_definitions = jsonencode([
     {
       name        = "sidekiq-${each.key}"
-      image       = each.value.image
+      image       = trimspace(var.sidekiq_image)
       essential   = true
       stopTimeout = var.sidekiq_container_stop_timeout_seconds
       command = [
-        "sh",
-        "-lc",
-        "exec bundle exec sidekiq -c ${each.value.concurrency} -t ${var.sidekiq_shutdown_timeout_seconds}"
+        "bundle", "exec", "sidekiq",
+        "-C", each.key == "default" ? "config/sidekiq.yml" : "config/sidekiq/${each.key}.yml",
+        "-t", tostring(var.sidekiq_shutdown_timeout_seconds)
       ]
       environment = concat(local.ecs_common_container_environment, [
-        { name = "SIDEKIQ_ONLY_AUDIO_TRANSCRIPT", value = each.value.sidekiq_only_audio_transcript },
-        { name = "SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION", value = each.value.sidekiq_only_ocr_text_extraction },
-        { name = "SIDEKIQ_ONLY_IMAGES", value = each.value.sidekiq_only_images },
-        { name = "SIDEKIQ_ONLY_THUMBNAIL", value = each.value.sidekiq_only_thumbnail },
-        { name = "SIDEKIQ_ONLY_PERSIST", value = each.value.sidekiq_only_persist },
-        { name = "SIDEKIQ_ONLY_INGEST", value = each.value.sidekiq_only_ingest }
+        { name = "SIDEKIQ_WORKER_POOL", value = each.key }
       ])
       secrets = local.ecs_common_container_secrets
       mountPoints = [

@@ -18,12 +18,6 @@ x-scholarspace-dev-worker-environment: &scholarspace-dev-worker-environment
   DB_NAME: ${POSTGRES_DB:-scholarspace}
   DB_USERNAME: ${POSTGRES_USER:-hyrax_user}
   DB_PASSWORD: ${POSTGRES_PASSWORD:-hyrax_password}
-  SIDEKIQ_ONLY_AUDIO_TRANSCRIPT: "false"
-  SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION: "false"
-  SIDEKIQ_ONLY_IMAGES: "false"
-  SIDEKIQ_ONLY_THUMBNAIL: "false"
-  SIDEKIQ_ONLY_PERSIST: "false"
-  SIDEKIQ_ONLY_INGEST: "false"
 
 x-scholarspace-dev-worker: &scholarspace-dev-worker
   stdin_open: true
@@ -31,6 +25,7 @@ x-scholarspace-dev-worker: &scholarspace-dev-worker
   image: scholarspace-worker:${RAILS_TAG:-latest}
   build: *scholarspace-dev-build
   restart: always
+  stop_grace_period: 120s
   user: ${APP_UID:-1001}:${APP_GID:-101}
   env_file:
     - ${COMPOSE_ENV_FILE:-dev.env}
@@ -106,51 +101,59 @@ services:
 
   worker:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DEFAULT_WORKERS:-4}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
+      SIDEKIQ_WORKER_POOL: default
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_DEFAULT_WORKERS:-}"
 
   worker_ingest:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_INGEST_WORKERS:-2}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ingest.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_INGEST: "true"
+      SIDEKIQ_WORKER_POOL: ingest
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_INGEST_WORKERS:-}"
 
   worker_whisper:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_TRANSCRIPT_WORKERS:-1}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/whisper.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_AUDIO_TRANSCRIPT: "true"
+      SIDEKIQ_WORKER_POOL: whisper
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_TRANSCRIPT_WORKERS:-}"
 
   worker_ocr_text:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_OCR_TEXT_WORKERS:-1}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/ocr_text.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION: "true"
+      SIDEKIQ_WORKER_POOL: ocr_text
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_OCR_TEXT_WORKERS:-}"
 
   worker_images:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_DERIVATIVES_WORKERS:-2}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/images.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_IMAGES: "true"
+      SIDEKIQ_WORKER_POOL: images
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_DERIVATIVES_WORKERS:-}"
 
   worker_thumbnail:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_THUMBNAIL_WORKERS:-1}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/thumbnail.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_THUMBNAIL: "true"
+      SIDEKIQ_WORKER_POOL: thumbnail
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_THUMBNAIL_WORKERS:-}"
 
   worker_persist:
     <<: *scholarspace-dev-worker
-    command: sh -lc 'bundle install && exec bundle exec sidekiq -c "${SIDEKIQ_PERSIST_WORKERS:-4}" -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
+    command: sh -lc 'bundle install && exec bundle exec sidekiq -C config/sidekiq/persist.yml ${SIDEKIQ_CONCURRENCY:+-c $SIDEKIQ_CONCURRENCY} -t "${SIDEKIQ_SHUTDOWN_TIMEOUT:-90}"'
     environment:
       <<: *scholarspace-dev-worker-environment
-      SIDEKIQ_ONLY_PERSIST: "true"
+      SIDEKIQ_WORKER_POOL: persist
+      SIDEKIQ_CONCURRENCY: "${SIDEKIQ_PERSIST_WORKERS:-}"
 
   solr:
     ports:

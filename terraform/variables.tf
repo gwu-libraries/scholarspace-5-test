@@ -440,6 +440,12 @@ variable "sidekiq_log_scale_out_cooldown_seconds" {
   default     = 120
 }
 
+variable "web_ephemeral_storage_gib" {
+  description = "Ephemeral storage (GiB) for web upload buffering; null uses Fargate's default"
+  type        = number
+  default     = 64
+}
+
 variable "web_image" {
   description = "Full image URI used by ECS web tasks. Must be explicitly set."
   type        = string

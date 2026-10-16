@@ -1,0 +1,5 @@
+shared:
+  monitoring:
+    poll_interval_seconds: 20
+    latency_threshold_seconds: 120
+    depth_threshold: 25

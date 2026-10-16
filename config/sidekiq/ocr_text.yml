@@ -1,0 +1,6 @@
+---
+:concurrency: 1
+:queues:
+  - [derivatives_text_extraction_from_pdf_generate, 1]
+  - [derivatives_text_extraction_from_images_generate, 1]
+  - [derivatives_presentation_version_from_pdf_generate, 1]

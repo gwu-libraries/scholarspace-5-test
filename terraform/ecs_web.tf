@@ -49,6 +49,13 @@ resource "aws_ecs_task_definition" "web" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
+  dynamic "ephemeral_storage" {
+    for_each = var.web_ephemeral_storage_gib == null ? [] : [var.web_ephemeral_storage_gib]
+    content {
+      size_in_gib = ephemeral_storage.value
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name      = "web"

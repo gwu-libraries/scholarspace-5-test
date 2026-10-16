@@ -11,19 +11,19 @@ redis_url = ENV['REDIS_URL'].presence || "redis://#{redis_config[:host]}:#{redis
 def sidekiq_redis_options(redis_url:, redis_password:)
   {
     url: redis_url,
-    password: redis_password,
-    network_timeout: ENV.fetch('SIDEKIQ_REDIS_NETWORK_TIMEOUT', 10).to_i,
-    pool_timeout: ENV.fetch('SIDEKIQ_REDIS_POOL_TIMEOUT', 10).to_i,
-    connect_timeout: ENV.fetch('SIDEKIQ_REDIS_CONNECT_TIMEOUT', 5).to_f,
-    read_timeout: ENV.fetch('SIDEKIQ_REDIS_READ_TIMEOUT', 5).to_f,
-    write_timeout: ENV.fetch('SIDEKIQ_REDIS_WRITE_TIMEOUT', 5).to_f,
-    reconnect_attempts: ENV.fetch('SIDEKIQ_REDIS_RECONNECT_ATTEMPTS', 3).to_i
+    password: redis_password
   }
 end
 
-QUEUE_PRESSURE_LOG_INTERVAL_SECONDS = 20
-QUEUE_LATENCY_THRESHOLD_SECONDS = 120.0
-QUEUE_DEPTH_THRESHOLD = 25
+worker_monitoring = YAML.safe_load(
+  File.read(Rails.root.join('config/worker_settings.yml'))
+).fetch('shared').fetch('monitoring').to_h do |name, value|
+  number = Integer(value.to_s, 10)
+  [name, number]
+end
+QUEUE_PRESSURE_LOG_INTERVAL_SECONDS = worker_monitoring.fetch('poll_interval_seconds')
+QUEUE_LATENCY_THRESHOLD_SECONDS = worker_monitoring.fetch('latency_threshold_seconds').to_f
+QUEUE_DEPTH_THRESHOLD = worker_monitoring.fetch('depth_threshold')
 
 Sidekiq.configure_server do |config|
   config.redis = sidekiq_redis_options(
@@ -37,33 +37,11 @@ Sidekiq.configure_server do |config|
   config.on(:shutdown) { pressure_check_stop = true }
 
   config.on(:startup) do
-    only_audio_transcript = ENV['SIDEKIQ_ONLY_AUDIO_TRANSCRIPT'] == 'true'
-    only_ocr_text_extraction = ENV['SIDEKIQ_ONLY_OCR_TEXT_EXTRACTION'] == 'true' || ENV['SIDEKIQ_ONLY_PDF_TEXT_EXTRACTION'] == 'true'
-    only_images = ENV['SIDEKIQ_ONLY_IMAGES'] == 'true'
-    only_thumbnail = ENV['SIDEKIQ_ONLY_THUMBNAIL'] == 'true'
-    only_ingest = ENV['SIDEKIQ_ONLY_INGEST'] == 'true'
-
-    profile = if only_ingest
-                'ingest'
-              elsif only_audio_transcript
-                'audio_transcript'
-              elsif only_ocr_text_extraction
-                'pdf_text_derivatives'
-              elsif only_thumbnail
-                'thumbnail_derivatives'
-              elsif only_images
-                'image_assembly_derivatives'
-              else
-                'default_core'
-              end
-
+    pool = ENV.fetch('SIDEKIQ_WORKER_POOL', 'default')
     queue_names = Array(config[:queues]).map { |entry| Array(entry).first.to_s }.reject(&:empty?).uniq
 
     Rails.logger.info(
-      "sidekiq_profile_start profile=#{profile} queues=#{queue_names.join(',')} " \
-      "only_audio_transcript=#{only_audio_transcript} " \
-      "only_ocr_text_extraction=#{only_ocr_text_extraction} " \
-      "only_images=#{only_images} only_thumbnail=#{only_thumbnail} only_ingest=#{only_ingest}"
+      "sidekiq_profile_start pool=#{pool} queues=#{queue_names.join(',')}"
     )
 
     Thread.new do

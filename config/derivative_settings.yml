@@ -59,6 +59,14 @@ shared:
         assemble_hocr_seconds: 2700
 
   services:
+    transcription:
+      model: base
+
+    presentation_version:
+      video:
+        preset: veryfast
+        crf: 28
+
     thumbnails:
     # Used when a source file has no thumbnail-generatable derivative (e.g. unsupported
     # type, generation failure) so the work still has something to display.
