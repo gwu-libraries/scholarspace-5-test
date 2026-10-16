@@ -64,6 +64,8 @@ shared:
 
     presentation_version:
       video:
+        # x264 presets: ultrafast, superfast, veryfast, faster, fast, medium,
+        # slow, slower, veryslow, placebo. CRF is an integer from 0 to 51.
         preset: veryfast
         crf: 28
 
