@@ -13,7 +13,7 @@ module Derivatives
 
         def generate_vtt(file_path, output_dir:, title: File.basename(file_path, File.extname(file_path)))
           configure_whisper_cache_dir
-          whisper = Whisper::Context.new('base')
+          whisper = Whisper::Context.new(DerivativeServiceSettings.transcription_model)
           vtt = whisper.transcribe(file_path, Whisper::Params.new).to_webvtt
 
           vtt_path = "#{output_dir}/#{title}_VTT.vtt"

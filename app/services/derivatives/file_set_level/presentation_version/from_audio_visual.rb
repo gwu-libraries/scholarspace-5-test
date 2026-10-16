@@ -115,7 +115,8 @@ module Derivatives
           cmd = if mime_type.start_with?(VIDEO_MIME_PREFIX)
                   [
                     'ffmpeg', '-y', '-i', source_path,
-                    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28',
+                    '-c:v', 'libx264',
+                    *DerivativeServiceSettings.video_encoding_arguments,
                     '-c:a', 'aac', '-b:a', '128k',
                     '-movflags', '+faststart',
                     output_path
