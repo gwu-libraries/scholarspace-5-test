@@ -17,6 +17,7 @@ RUN apk --no-cache upgrade && \
   gcompat \
   libreoffice \
   vips \
+  vips-tools \
   libxml2 \
   imagemagick \
   imagemagick-heic \
@@ -125,6 +126,7 @@ RUN apk --no-cache upgrade && \
   gcompat \
   libreoffice \
   vips \
+  vips-tools \
   imagemagick \
   imagemagick-heic \
   imagemagick-jpeg \
