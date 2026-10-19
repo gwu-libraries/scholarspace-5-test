@@ -7,14 +7,14 @@ module Derivatives
     module ThumbnailCreation
       class FromPdf
         include FileOperations
-        include ::Constants::ThumbnailFilenameConstants
-        include Concerns::ThumbnailCreation::ThumbnailGeneratable
+        include ::Derivatives::Constants::ThumbnailFilenameConstants
+        include Derivatives::ThumbnailCreation::ThumbnailGeneratable
 
         def self.supported_file_set?(file_set)
           if file_set.respond_to?(:pdf?)
             file_set.pdf?
           else
-            file_set.original_file&.mime_type.to_s == Constants::MimeTypeConstants::PDF_MIME_TYPE
+            file_set.original_file&.mime_type.to_s == ::Derivatives::Constants::MimeTypeConstants::PDF_MIME_TYPE
           end
         end
 

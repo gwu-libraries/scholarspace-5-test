@@ -5,9 +5,9 @@ module Derivatives
     module ThumbnailCreation
       # File-set thumbnail creation entrypoint used by file_set_level jobs.
       class Thumbnail
-        include ::Constants::DerivativeTypeConstants
-        include Concerns::FileSetAttachable
-        include Concerns::ThumbnailCreation::ThumbnailGeneratable
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::ThumbnailCreation::ThumbnailGeneratable
 
         # Returned when no thumbnail can be derived. The work-level representative
         # thumbnail falls back to a placeholder, so nothing is lost here.
@@ -39,7 +39,7 @@ module Derivatives
               filename: thumbnail_filename
             )
 
-            DerivativeCacheService.instance.store_derivative_from_path(
+            Derivatives::Cache::Service.instance.store_derivative_from_path(
               file_identifier: cache_file_identifier,
               original_filename: thumbnail_filename,
               source_path: output_path,
@@ -69,7 +69,7 @@ module Derivatives
 
           Dir.mktmpdir("thumbnail_persist_#{@work.id}_") do |dir|
             @working_dir = dir
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )

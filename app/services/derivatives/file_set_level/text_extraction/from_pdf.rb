@@ -9,19 +9,19 @@ module Derivatives
     module TextExtraction
       # Entry point for extracting searchable text from source PDFs.
       class FromPdf
-        EMBEDDED_TEXT_SAMPLE_PAGES = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_sample_pages)
-        EMBEDDED_TEXT_MIN_WORDS = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_words)
-        EMBEDDED_TEXT_MIN_ALPHA_CHARS = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_alpha_chars)
-        EMBEDDED_TEXT_MIN_ALPHA_RATIO = DerivativeServiceSettings.fetch(:text_extraction, :embedded_text_min_alpha_ratio)
+        EMBEDDED_TEXT_SAMPLE_PAGES = Configuration::DerivativeSettings.fetch(:text_extraction, :embedded_text_sample_pages)
+        EMBEDDED_TEXT_MIN_WORDS = Configuration::DerivativeSettings.fetch(:text_extraction, :embedded_text_min_words)
+        EMBEDDED_TEXT_MIN_ALPHA_CHARS = Configuration::DerivativeSettings.fetch(:text_extraction, :embedded_text_min_alpha_chars)
+        EMBEDDED_TEXT_MIN_ALPHA_RATIO = Configuration::DerivativeSettings.fetch(:text_extraction, :embedded_text_min_alpha_ratio)
 
-        include Concerns::FileSetAttachable
-        include Concerns::TextExtraction::HocrGeneratable
-        include Concerns::TextExtraction::HocrMergeable
-        include Concerns::DerivativeCacheWriter
-        include ::Constants::DerivativeTypeConstants
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::TextExtraction::HocrGeneratable
+        include Derivatives::TextExtraction::HocrMergeable
+        include Derivatives::Cache::DerivativeCacheWriter
+        include ::Derivatives::Constants::DerivativeTypeConstants
         include FileOperations
-        include ::FileSetDerivativeMetadata
-        include ::Constants::MimeTypeConstants
+        include ::Derivatives::Persistence::FileSetDerivativeMetadata
+        include ::Derivatives::Constants::MimeTypeConstants
         include PersistenceAdapter
         include StringNormalization
 
@@ -131,7 +131,7 @@ module Derivatives
             next false unless file_set.service_file
             next false unless source_file_set_id_for(file_set) == source_id
 
-            related_values = DerivativeLinkResolver.related_url_values_for(file_set)
+            related_values = Resolvers::DerivativeLinkResolver.related_url_values_for(file_set)
             related_values.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
           end
 
@@ -157,7 +157,7 @@ module Derivatives
           original_file = file_set.original_file
           return false unless original_file
 
-          related_values = DerivativeLinkResolver.related_url_values_for(file_set)
+          related_values = Resolvers::DerivativeLinkResolver.related_url_values_for(file_set)
           return true if related_values.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_HOCR}")
 
           filename = original_file.respond_to?(:original_filename) ? original_file.original_filename.to_s : ''
@@ -168,7 +168,7 @@ module Derivatives
         end
 
         def source_file_set_id_for(file_set)
-          DerivativeLinkResolver.source_file_set_id_for(file_set)
+          Resolvers::DerivativeLinkResolver.source_file_set_id_for(file_set)
         end
 
         def expected_hocr_filename_for(pdf_file_set)
@@ -218,7 +218,7 @@ module Derivatives
             source_file_set_id: pdf_file_set.id,
             filename: cache_filename
           )
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: cache_filename,
             source_path: hocr_path,
@@ -234,7 +234,7 @@ module Derivatives
             source_file_set_id: pdf_file_set.id,
             filename: cache_filename
           )
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: cache_filename,
             source_path: embedded_pdf_path,
@@ -460,7 +460,7 @@ module Derivatives
 
         def reading_mode_pdf_file_set?(file_set)
           filename = file_set.original_file&.original_filename.to_s
-          filename.casecmp?(Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME)
+          filename.casecmp?(::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME)
         end
 
         def pdf_file_set?(file_set)
@@ -477,7 +477,7 @@ module Derivatives
         def presentation_version_pdf_filename_for(pdf_file_set)
           original_filename = pdf_file_set.original_file.original_filename.to_s
           base_name = File.basename(original_filename, File.extname(original_filename))
-          "#{base_name}#{Constants::DerivativeFilenameConstants::PDF_PRESENTATION_VERSION_SUFFIX}"
+          "#{base_name}#{::Derivatives::Constants::DerivativeFilenameConstants::PDF_PRESENTATION_VERSION_SUFFIX}"
         end
 
         def generate_embedded_text_pdf(pdf_path, temp_dir, pdf_filename)
@@ -641,7 +641,7 @@ module Derivatives
         def fetch_from_cache_to_disk(cache_file_identifier:, cache_filename:, dir:, skip_if_attached: true)
           return nil if skip_if_attached && file_set_attached_with_name?(cache_filename)
 
-          cached_io = DerivativeCacheService.instance.fetch_stream(
+          cached_io = Derivatives::Cache::Service.instance.fetch_stream(
             file_identifier: cache_file_identifier,
             original_filename: cache_filename
           )
@@ -707,7 +707,7 @@ module Derivatives
             next false unless member_file_set.original_file&.original_filename.to_s.downcase.end_with?('.pdf')
             next false unless source_file_set_id_for(member_file_set) == source_id
 
-            related_values = DerivativeLinkResolver.related_url_values_for(member_file_set)
+            related_values = Resolvers::DerivativeLinkResolver.related_url_values_for(member_file_set)
             related_values.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
           end
         rescue StandardError

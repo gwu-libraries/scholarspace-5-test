@@ -5,15 +5,15 @@ module Derivatives
     module TextExtraction
       # Entry point for extracting text from source images (hOCR + reading mode PDF flow).
       class FromImages
-        include ::Constants::DerivativeFilenameConstants
-        include ::Constants::DerivativeTypeConstants
-        include ::Constants::DerivativeFilenameConstants
-        include ::Constants::MimeTypeConstants
-        include ::Constants::ThumbnailTagConstants
+        include ::Derivatives::Constants::DerivativeFilenameConstants
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include ::Derivatives::Constants::DerivativeFilenameConstants
+        include ::Derivatives::Constants::MimeTypeConstants
+        include ::Derivatives::Constants::ThumbnailTagConstants
 
-        include Concerns::FileSetAttachable
-        include Concerns::TextExtraction::HocrGeneratable
-        include Concerns::TextExtraction::HocrMergeable
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::TextExtraction::HocrGeneratable
+        include Derivatives::TextExtraction::HocrMergeable
         include FileOperations
         include PersistenceAdapter
         include StringNormalization
@@ -46,7 +46,7 @@ module Derivatives
               filename: cache_filename
             )
 
-            DerivativeCacheService.instance.store_derivative_from_path(
+            Derivatives::Cache::Service.instance.store_derivative_from_path(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename,
               source_path: hocr_path,
@@ -76,7 +76,7 @@ module Derivatives
           return if file_set_attached_with_name?(cache_filename)
 
           Dir.mktmpdir("images_to_pdf_persist_#{@work.id}_") do |dir|
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -306,8 +306,8 @@ module Derivatives
           @work.member_file_sets.find do |file_set|
             attached_name = file_set.original_file&.original_filename.to_s
             attached_title = file_set.title.to_a.join(' ')
-            attached_name == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME ||
-              attached_title == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
+            attached_name == ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME ||
+              attached_title == ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
           end
         end
 

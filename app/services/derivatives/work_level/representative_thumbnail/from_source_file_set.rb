@@ -6,13 +6,13 @@ module Derivatives
   module WorkLevel
     module RepresentativeThumbnail
       class FromSourceFileSet
-        include Concerns::FileSetAttachable
-        include ::FileSetDerivativeMetadata
+        include Derivatives::Persistence::FileSetAttachable
+        include ::Derivatives::Persistence::FileSetDerivativeMetadata
         include StringNormalization
-        include Derivatives::Concerns::ThumbnailCreation::ThumbnailGeneratable
+        include Derivatives::ThumbnailCreation::ThumbnailGeneratable
 
-        include ::Constants::DerivativeTypeConstants
-        include ::Constants::ThumbnailFilenameConstants
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include ::Derivatives::Constants::ThumbnailFilenameConstants
 
         def initialize(work)
           @work = work
@@ -49,7 +49,7 @@ module Derivatives
 
           Dir.mktmpdir("representative_thumbnail_persist_#{@work.id}_") do |dir|
             @working_dir = dir
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -220,7 +220,7 @@ module Derivatives
         def cache_payload(source_file_set:, output_path:)
           cache_filename = REPRESENTATIVE_THUMBNAIL_FILENAME
           cache_file_identifier = representative_cache_file_identifier_for(filename: cache_filename)
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: cache_filename,
             source_path: output_path,

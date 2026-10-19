@@ -7,14 +7,14 @@ module Derivatives
     module ThumbnailCreation
       class FromImage
         include FileOperations
-        include ::Constants::ThumbnailFilenameConstants
-        include Concerns::ThumbnailCreation::ThumbnailGeneratable
+        include ::Derivatives::Constants::ThumbnailFilenameConstants
+        include Derivatives::ThumbnailCreation::ThumbnailGeneratable
 
         def self.supported_file_set?(file_set)
           if file_set.respond_to?(:image?)
             file_set.image?
           else
-            file_set.original_file&.mime_type.to_s.start_with?(Constants::MimeTypeConstants::IMAGE_MIME_PREFIX)
+            file_set.original_file&.mime_type.to_s.start_with?(::Derivatives::Constants::MimeTypeConstants::IMAGE_MIME_PREFIX)
           end
         end
 

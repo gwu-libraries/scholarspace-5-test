@@ -6,11 +6,11 @@ module Derivatives
   module FileSetLevel
     module PresentationVersion
       class FromPdf
-        include ::Constants::DerivativeTypeConstants
-        include ::Constants::FileExtensionConstants
-        include ::Constants::MimeTypeConstants
-        include Concerns::FileSetAttachable
-        include Derivatives::Concerns::SourceFileSetMimeDetection
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include ::Derivatives::Constants::FileExtensionConstants
+        include ::Derivatives::Constants::MimeTypeConstants
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::SourceFiles::SourceFileSetMimeDetection
         include FileOperations
         include PersistenceAdapter
 
@@ -45,7 +45,7 @@ module Derivatives
           return unless depositor
 
           Dir.mktmpdir("presentation_persist_#{@work.id}_") do |dir|
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -147,10 +147,10 @@ module Derivatives
         def linked_presentation_file_sets(source_file_set)
           @work.member_file_sets.select do |file_set|
             next false unless file_set.service_file
-            next false unless DerivativeLinkResolver.source_file_set_id_for(file_set) == source_file_set.id.to_s
+            next false unless Resolvers::DerivativeLinkResolver.source_file_set_id_for(file_set) == source_file_set.id.to_s
             next false unless file_set.original_file&.original_filename.to_s.downcase.end_with?('.pdf')
 
-            related_values = DerivativeLinkResolver.related_url_values_for(file_set)
+            related_values = Resolvers::DerivativeLinkResolver.related_url_values_for(file_set)
             related_values.include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
           end
         rescue StandardError
@@ -188,7 +188,7 @@ module Derivatives
 
         def cache_payload(source_file_set:, output_path:, filename:)
           cache_file_identifier = cache_file_identifier_for(source_file_set_id: source_file_set.id, filename: filename)
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: filename,
             source_path: output_path,

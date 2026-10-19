@@ -6,11 +6,11 @@ module Derivatives
   module FileSetLevel
     module PresentationVersion
       class FromImage
-        include ::Constants::DerivativeTypeConstants
-        include ::Constants::FileExtensionConstants
-        include ::Constants::MimeTypeConstants
-        include Concerns::FileSetAttachable
-        include Derivatives::Concerns::SourceFileSetMimeDetection
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include ::Derivatives::Constants::FileExtensionConstants
+        include ::Derivatives::Constants::MimeTypeConstants
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::SourceFiles::SourceFileSetMimeDetection
         include FileOperations
         include PersistenceAdapter
 
@@ -52,7 +52,7 @@ module Derivatives
           raise 'Image presentation depositor not found' unless depositor
 
           Dir.mktmpdir("presentation_persist_#{@work.id}_") do |dir|
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -150,7 +150,7 @@ module Derivatives
 
         def cache_payload(source_file_set:, output_path:, filename:)
           cache_file_identifier = cache_file_identifier_for(source_file_set_id: source_file_set.id, filename: filename)
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: filename,
             source_path: output_path,

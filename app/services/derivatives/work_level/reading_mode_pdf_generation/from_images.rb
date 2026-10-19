@@ -7,7 +7,7 @@ module Derivatives
   module WorkLevel
     module ReadingModePdfGeneration
       class FromImages
-        include Concerns::FileSetAttachable
+        include Derivatives::Persistence::FileSetAttachable
         include FileOperations
         include PersistenceAdapter
         include StringNormalization
@@ -39,7 +39,7 @@ module Derivatives
           return unless source_file_set
 
           Dir.mktmpdir("images_to_pdf_persist_#{@work.id}_") do |dir|
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -59,7 +59,7 @@ module Derivatives
         end
 
         def joined_pdf_filename
-          Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
+          ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
         end
 
         private
@@ -174,7 +174,7 @@ module Derivatives
                 io: file_io,
                 source_file_set: source_file_set,
                 skip_derivatives: true,
-                derivative_type: Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
+                derivative_type: ::Derivatives::Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
               )
               file_set.service_file = true
               file_set = save_and_index(file_set)
@@ -185,7 +185,7 @@ module Derivatives
               cache_derivative(
                 file_path: pdf_path,
                 file_set: file_set,
-                derivative_type: Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
+                derivative_type: ::Derivatives::Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
               )
 
               file_set
@@ -197,19 +197,19 @@ module Derivatives
           @work.member_file_sets.find do |file_set|
             attached_name = file_set.original_file&.original_filename.to_s
             attached_title = file_set.title.to_a.join(' ')
-            attached_name == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME ||
-              attached_title == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
+            attached_name == ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME ||
+              attached_title == ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
           end
         end
 
         def cache_payload(source_file_set:, output_path:)
           cache_filename = joined_pdf_filename
           cache_file_identifier = cache_file_identifier_for(filename: cache_filename)
-          DerivativeCacheService.instance.store_derivative_from_path(
+          Derivatives::Cache::Service.instance.store_derivative_from_path(
             file_identifier: cache_file_identifier,
             original_filename: cache_filename,
             source_path: output_path,
-            derivative_type: Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PDF_DERIVATIVE
+            derivative_type: ::Derivatives::Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PDF_DERIVATIVE
           )
 
           {

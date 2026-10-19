@@ -5,12 +5,12 @@ module Derivatives
     module TranscriptExtraction
       # Entry point for transcript extraction from source audio/video files.
       class FromAudioVisual
-        include ::Constants::DerivativeTypeConstants
-        include ::Constants::MimeTypeConstants
-        include Concerns::FileSetAttachable
-        include Derivatives::Concerns::SourceFileSetMimeDetection
-        include Concerns::TranscriptExtraction::VttGeneratable
-        include Concerns::TranscriptExtraction::WavConvertible
+        include ::Derivatives::Constants::DerivativeTypeConstants
+        include ::Derivatives::Constants::MimeTypeConstants
+        include Derivatives::Persistence::FileSetAttachable
+        include Derivatives::SourceFiles::SourceFileSetMimeDetection
+        include Derivatives::TranscriptExtraction::VttGeneratable
+        include Derivatives::TranscriptExtraction::WavConvertible
         include FileOperations
         include PersistenceAdapter
 
@@ -43,7 +43,7 @@ module Derivatives
               filename: cache_filename
             )
 
-            DerivativeCacheService.instance.store_derivative_from_path(
+            Derivatives::Cache::Service.instance.store_derivative_from_path(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename,
               source_path: vtt_path,
@@ -65,7 +65,7 @@ module Derivatives
           return unless source_file_set
 
           Dir.mktmpdir("audio_transcript_persist_#{@work.id}_") do |dir|
-            cached_io = DerivativeCacheService.instance.fetch_stream(
+            cached_io = Derivatives::Cache::Service.instance.fetch_stream(
               file_identifier: cache_file_identifier,
               original_filename: cache_filename
             )
@@ -128,7 +128,7 @@ module Derivatives
             name_matches = attached_name == filename || attached_title == filename
             next false unless name_matches
 
-            DerivativeLinkResolver.source_file_set_id_for(file_set) == source_file_set.id.to_s
+            Resolvers::DerivativeLinkResolver.source_file_set_id_for(file_set) == source_file_set.id.to_s
           end
         end
 
@@ -153,7 +153,7 @@ module Derivatives
         def ensure_source_linkage!(file_set:, source_file_set:)
           return unless file_set && source_file_set
 
-          linked_source_id = DerivativeLinkResolver.source_file_set_id_for(file_set)
+          linked_source_id = Resolvers::DerivativeLinkResolver.source_file_set_id_for(file_set)
           return if linked_source_id == source_file_set.id.to_s
 
           raise "Transcript derivative missing source linkage: file_set=#{file_set.id} source=#{source_file_set.id}"

@@ -3,8 +3,8 @@
 module Derivatives
   module WorkLevel
     class RepresentativeSelector
-      include ::Constants::MimeTypeConstants
-      include Derivatives::Concerns::SourceFileSetMimeDetection
+      include ::Derivatives::Constants::MimeTypeConstants
+      include Derivatives::SourceFiles::SourceFileSetMimeDetection
       include PersistenceAdapter
 
       def initialize(work:)

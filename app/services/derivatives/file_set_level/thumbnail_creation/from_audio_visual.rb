@@ -7,15 +7,15 @@ module Derivatives
     module ThumbnailCreation
       class FromAudioVisual
         include FileOperations
-        include ::Constants::ThumbnailFilenameConstants
-        include Concerns::ThumbnailCreation::ThumbnailGeneratable
+        include ::Derivatives::Constants::ThumbnailFilenameConstants
+        include Derivatives::ThumbnailCreation::ThumbnailGeneratable
 
         def self.supported_file_set?(file_set)
           if file_set.respond_to?(:video?) && file_set.respond_to?(:audio?)
             file_set.audio? || file_set.video?
           else
             mime_type = file_set.original_file&.mime_type.to_s
-            mime_type.start_with?(Constants::MimeTypeConstants::VIDEO_MIME_PREFIX, Constants::MimeTypeConstants::AUDIO_MIME_PREFIX)
+            mime_type.start_with?(::Derivatives::Constants::MimeTypeConstants::VIDEO_MIME_PREFIX, ::Derivatives::Constants::MimeTypeConstants::AUDIO_MIME_PREFIX)
           end
         end
 
