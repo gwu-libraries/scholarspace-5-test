@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class DerivativeJobs::WorkLevel::OrchestrateJob < ApplicationJob
-  include Constants::MimeTypeConstants
-  include Derivatives::Concerns::SourceFileSetMimeDetection
+  include ::Derivatives::Constants::MimeTypeConstants
+  include Derivatives::SourceFiles::SourceFileSetMimeDetection
   include JobDistributedLock
 
   # For simplicity sake, we are waiting until all of the filesets attach to a work have been characterized prior to

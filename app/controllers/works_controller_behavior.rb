@@ -9,7 +9,7 @@ module WorksControllerBehavior
     include Hyrax::WorksControllerBehavior
     include Hyrax::BreadcrumbsForWorks
 
-    self.iiif_manifest_builder = IiifManifestBuilder
+    self.iiif_manifest_builder = IiifBuilders::ManifestBuilder
     self.show_presenter = WorkShowPresenter
     self.work_form_service = Hyrax::FormFactory.new
 

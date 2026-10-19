@@ -2,7 +2,7 @@
 
 module FileSetFileTypeDetection
   extend ActiveSupport::Concern
-  include Constants::MimeTypeConstants
+  include ::Derivatives::Constants::MimeTypeConstants
   include StringNormalization
 
   def pdf?

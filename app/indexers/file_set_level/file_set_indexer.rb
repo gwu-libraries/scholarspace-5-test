@@ -5,7 +5,7 @@ class FileSetIndexer < Hyrax::Indexers::FileSetIndexer
   include OcrTextIndexable
   include EmbeddedPdfTextIndexable
 
-  MAX_INDEX_VALUE_CHARS = DerivativeServiceSettings.fetch(:indexing, :max_index_value_chars)
+  MAX_INDEX_VALUE_CHARS = Configuration::DerivativeSettings.fetch(:indexing, :max_index_value_chars)
 
   def to_solr
     super.tap do |index_document|

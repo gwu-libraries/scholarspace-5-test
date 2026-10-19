@@ -8,11 +8,11 @@ class WorkShowPropsBuilder
   VIEWER_TYPE_CLOVER = 'clover'
   VIEWER_ADMIN_ROLE_NAMES = %w[admin content-admin].freeze
 
-  include Constants::FileExtensionConstants
-  include Constants::DerivativeTypeConstants
-  include Constants::MimeTypeConstants
-  include Constants::ThumbnailTagConstants
-  include Derivatives::Concerns::SourceFileSetMimeDetection
+  include ::Derivatives::Constants::FileExtensionConstants
+  include ::Derivatives::Constants::DerivativeTypeConstants
+  include ::Derivatives::Constants::MimeTypeConstants
+  include ::Derivatives::Constants::ThumbnailTagConstants
+  include Derivatives::SourceFiles::SourceFileSetMimeDetection
 
   attr_reader :presenter, :view_context
 
@@ -334,21 +334,21 @@ class WorkShowPropsBuilder
     return false if presenter.thumbnail_id.blank?
     return false unless member.id.to_s == presenter.thumbnail_id.to_s
 
-    DerivativeLinkResolver.related_url_values_for(member).include?(Constants::ThumbnailTagConstants::THUMBNAIL_DERIVATIVE_TAG)
+    Resolvers::DerivativeLinkResolver.related_url_values_for(member).include?(::Derivatives::Constants::ThumbnailTagConstants::THUMBNAIL_DERIVATIVE_TAG)
   end
 
   def representative_thumbnail_tagged_member?(member)
-    DerivativeLinkResolver.related_url_values_for(member).any? do |value|
-      value.start_with?(Constants::ThumbnailTagConstants::REPRESENTATIVE_THUMBNAIL_TAG_PREFIX)
+    Resolvers::DerivativeLinkResolver.related_url_values_for(member).any? do |value|
+      value.start_with?(::Derivatives::Constants::ThumbnailTagConstants::REPRESENTATIVE_THUMBNAIL_TAG_PREFIX)
     end
   end
 
   def representative_thumbnail_filename?(member)
-    member_label(member).to_s.casecmp?(Constants::ThumbnailFilenameConstants::REPRESENTATIVE_THUMBNAIL_FILENAME)
+    member_label(member).to_s.casecmp?(::Derivatives::Constants::ThumbnailFilenameConstants::REPRESENTATIVE_THUMBNAIL_FILENAME)
   end
 
   def source_file_set_id(member)
-    DerivativeLinkResolver.source_file_set_id_for(member)
+    Resolvers::DerivativeLinkResolver.source_file_set_id_for(member)
   end
 
   def thumbnail_urls_for_members(members, service_members)
@@ -390,7 +390,7 @@ class WorkShowPropsBuilder
   end
 
   def thumbnail_resolver
-    @thumbnail_resolver ||= ThumbnailResolver.new
+    @thumbnail_resolver ||= Resolvers::ThumbnailResolver.new
   end
 
   def reading_mode_pdf_member?(member)
@@ -406,13 +406,13 @@ class WorkShowPropsBuilder
     return false unless member_pdf?(member, member_label(member), member_mime_type(member))
     return false unless service_member?(member)
 
-    DerivativeLinkResolver.related_url_values_for(member).include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
+    Resolvers::DerivativeLinkResolver.related_url_values_for(member).include?("#{THUMBNAIL_DERIVATIVE_PREFIX}#{DERIVATIVE_TYPE_PRESENTATION_VERSION}")
   end
 
   def reading_mode_pdf_filename?(member)
     return false unless member_pdf?(member, member_label(member), member_mime_type(member))
 
-    member_label(member).to_s == Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
+    member_label(member).to_s == ::Derivatives::Constants::DerivativeFilenameConstants::READING_MODE_PDF_FILENAME
   end
 
   def service_member?(member)

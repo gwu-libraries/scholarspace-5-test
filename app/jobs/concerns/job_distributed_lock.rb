@@ -50,7 +50,7 @@ module JobDistributedLock
   # checked back in while still in use and two job threads can interleave commands
   # on one socket, leaving a thread blocked on a reply that never arrives.
   def redlock_client
-    Redlock::Client.new([RedisConnectionSettings.pool])
+    Redlock::Client.new([Configuration::RedisSettings.pool])
   end
 
   def with_distributed_lock(lock_key, timeout_seconds)

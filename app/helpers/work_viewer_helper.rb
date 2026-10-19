@@ -26,12 +26,12 @@ module WorkViewerHelper
   end
 
   def pdf_download_url_for_file(file_id)
-    download_path(id: file_id, locale: nil)
+    Hyrax::Engine.routes.url_helpers.download_path(id: file_id, locale: nil)
   end
 
   def preferred_download_url_for_member(presenter, member_id)
     member = work_viewer_resolver_for(presenter).preferred_download_member(member_id)
-    download_path(id: member.id, locale: nil) if member
+    Hyrax::Engine.routes.url_helpers.download_path(id: member.id, locale: nil) if member
   end
 
   def hocr_download_url_for_work(presenter, pdf_file_id: nil)
@@ -39,13 +39,13 @@ module WorkViewerHelper
     hocr_file_id = work_viewer_resolver_for(presenter).hocr_file_id(pdf_file_id)
     return nil if hocr_file_id.blank?
 
-    download_path(id: hocr_file_id, locale: nil)
+    Hyrax::Engine.routes.url_helpers.download_path(id: hocr_file_id, locale: nil)
   end
 
   private
 
   def work_viewer_resolver_for(presenter)
     @work_viewer_resolvers ||= {}
-    @work_viewer_resolvers[presenter.id.to_s] ||= WorkViewerResolver.new(presenter: presenter)
+    @work_viewer_resolvers[presenter.id.to_s] ||= Resolvers::WorkViewerResolver.new(presenter: presenter)
   end
 end

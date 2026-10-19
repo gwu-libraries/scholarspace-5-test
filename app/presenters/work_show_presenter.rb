@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class WorkShowPresenter < Hyrax::WorkShowPresenter
-  include Constants::FileExtensionConstants
-  include Constants::MimeTypeConstants
-  include Constants::ThumbnailTagConstants
-  include Derivatives::Concerns::SourceFileSetMimeDetection
+  include ::Derivatives::Constants::FileExtensionConstants
+  include ::Derivatives::Constants::MimeTypeConstants
+  include ::Derivatives::Constants::ThumbnailTagConstants
+  include Derivatives::SourceFiles::SourceFileSetMimeDetection
   include StringNormalization
 
   def list_of_item_ids_to_display
@@ -149,7 +149,7 @@ class WorkShowPresenter < Hyrax::WorkShowPresenter
   end
 
   def derivative_link_resolver
-    @derivative_link_resolver ||= DerivativeLinkResolver.new(members: all_member_presenters)
+    @derivative_link_resolver ||= Resolvers::DerivativeLinkResolver.new(members: all_member_presenters)
   end
 
   def all_member_presenters

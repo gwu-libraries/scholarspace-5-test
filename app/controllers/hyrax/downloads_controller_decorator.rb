@@ -1,7 +1,7 @@
 module Hyrax
     module DownloadsControllerDecorator
         include StringNormalization
-        include Constants::MimeTypeConstants
+        include ::Derivatives::Constants::MimeTypeConstants
 
         def show
             return show_valkyrie if Hyrax.config.use_valkyrie?
@@ -99,7 +99,7 @@ module Hyrax
         def derivative_cache_lookup(file_metadata)
             return nil unless is_pdf_or_hocr?(file_metadata)
 
-            cached_stream = DerivativeCacheService.instance.fetch_stream(
+            cached_stream = Derivatives::Cache::Service.instance.fetch_stream(
                 file_identifier: file_metadata.file_identifier,
                 original_filename: file_metadata.original_filename
             )
