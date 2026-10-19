@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as styles from './Ramp.module.css';
 import 'video.js/dist/video-js.css';
 import '@samvera/ramp/dist/ramp.css';
@@ -39,7 +39,7 @@ const Ramp = ({
   transcriptFiles = [],
 }) => {
   const playerID = 'scholarspace-ramp-player';
-  const [transcriptCollapsed, setTranscriptCollapsed] = useState(false);
+  const playerContainerRef = useRef(null);
   const [mounted, setMounted] = useState(true);
   const transcripts = mapTranscriptFilesToRampTranscripts(transcriptFiles);
   const hasTranscripts = transcripts.length > 0;
@@ -55,42 +55,71 @@ const Ramp = ({
     };
   }, []);
 
+  useEffect(() => {
+    const targetTime = Number(startCanvasTime);
+    if (!Number.isFinite(targetTime) || targetTime <= 0) return undefined;
+
+    const playerContainer = playerContainerRef.current;
+    if (!playerContainer) return undefined;
+
+    let mediaElement;
+    const seekToResult = () => {
+      const nextMediaElement = playerContainer.querySelector('video, audio');
+      if (!nextMediaElement) return;
+
+      if (mediaElement !== nextMediaElement) {
+        mediaElement = nextMediaElement;
+        mediaElement.addEventListener('loadedmetadata', seekToResult, { once: true });
+        mediaElement.addEventListener('canplay', seekToResult, { once: true });
+      }
+
+      if (mediaElement.readyState > 0) mediaElement.currentTime = targetTime;
+    };
+
+    const observer = new MutationObserver(seekToResult);
+    observer.observe(playerContainer, {
+      attributes: true,
+      attributeFilter: ['src'],
+      childList: true,
+      subtree: true,
+    });
+    seekToResult();
+
+    return () => {
+      observer.disconnect();
+      mediaElement?.removeEventListener('loadedmetadata', seekToResult);
+      mediaElement?.removeEventListener('canplay', seekToResult);
+    };
+  }, [startCanvasId, startCanvasTime]);
+
   if (!mounted) return null;
 
   return (
-    <IIIFPlayer {...playerProps}>
-      <div className="panel panel-default">
-        <div className="panel-body">
-          {hasTranscripts && (
-            <button
-              type="button"
-              onClick={() => setTranscriptCollapsed((collapsed) => !collapsed)}
-              className="btn btn-default btn-sm"
-            >
-              {transcriptCollapsed ? 'Show Transcript' : 'Hide Transcript'}
-            </button>
-          )}
-
-          <div className={`row ${styles.layoutRow}`}>
-            <div className={!transcriptCollapsed && hasTranscripts ? `col-sm-9 ${styles.layoutCol}` : `col-sm-12 ${styles.layoutCol}`}>
-              <MediaPlayer playerID={playerID} enableFileDownload={false} />
-            </div>
-
-            {hasTranscripts && !transcriptCollapsed && (
-              <div className={`col-sm-3 ${styles.layoutCol} ${styles.transcriptCol}`}>
-                <div className={styles.transcriptShell}>
-                  <Transcript
-                    playerID={playerID}
-                    manifestUrl={manifestUrl}
-                    transcripts={transcripts}
-                  />
-                </div>
+    <div ref={playerContainerRef}>
+      <IIIFPlayer {...playerProps}>
+        <div className={`panel panel-default ${styles.viewer}`}>
+          <div className={`panel-body ${styles.panelBody}`}>
+            <div className={`row ${styles.layoutRow}`}>
+              <div className={`col-sm-12 ${styles.layoutCol} ${styles.playerCol}`}>
+                <MediaPlayer playerID={playerID} enableFileDownload={false} />
               </div>
-            )}
+
+              {hasTranscripts && (
+                <div className={`col-sm-12 ${styles.layoutCol} ${styles.transcriptCol}`}>
+                  <div className={styles.transcriptShell}>
+                    <Transcript
+                      playerID={playerID}
+                      manifestUrl={manifestUrl}
+                      transcripts={transcripts}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </IIIFPlayer>
+      </IIIFPlayer>
+    </div>
   );
 };
 

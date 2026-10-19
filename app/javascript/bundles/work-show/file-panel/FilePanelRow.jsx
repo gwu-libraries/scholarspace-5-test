@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { memberViewerType } from '../utils';
+import { memberViewerType } from './grouping';
 import * as styles from './FilePanel.module.css';
 
 const ICON_CLASS_BY_VIEWER = {

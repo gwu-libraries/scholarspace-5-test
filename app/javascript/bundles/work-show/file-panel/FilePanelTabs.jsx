@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import FilePanelOriginalTab from './FilePanelOriginalTab';
 import FilePanelServiceTab from './FilePanelServiceTab';
+import * as styles from './FilePanel.module.css';
 
 const ORIGINAL_TAB = 'original-files';
 const SERVICE_TAB = 'service-files';
@@ -78,7 +79,7 @@ const FilePanelTabs = ({ originalMembers, serviceMembers, canViewServiceFiles, o
   return (
     <div>
       {canViewServiceFiles && (
-        <div className="btn-group" role="tablist" aria-label="Work files tabs">
+        <div className={styles.tabsList} role="tablist" aria-label="Work files tabs">
           <button
             type="button"
             role="tab"

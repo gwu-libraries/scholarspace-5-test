@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import FilePanelGroup from './FilePanelGroup';
 import FilePanelTable from './FilePanelTable';
-import { groupOriginalMembers } from '../utils';
+import { groupOriginalMembers } from './grouping';
 import * as styles from './FilePanel.module.css';
 
 const MEMBERS_PER_PAGE = 10;

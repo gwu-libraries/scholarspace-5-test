@@ -1,5 +1,6 @@
 .groupRoot {
   margin-bottom: 8px;
+  margin-left: 12px;
 }
 
 .groupHeader {
@@ -9,7 +10,23 @@
 }
 
 .groupToggle {
+  width: 100%;
+  padding: 10px 12px;
   font-weight: 600;
+  text-align: left;
+  background: #f7f9fb;
+  border: 1px solid #d7dce2;
+  border-radius: 0;
+  color: #212529;
+  box-shadow: none;
+}
+
+.groupToggle:hover,
+.groupToggle:focus {
+  background: #eef2f5;
+  border-color: #c5cdd5;
+  color: #212529;
+  box-shadow: none;
 }
 
 .groupHeaderActions {
@@ -42,7 +59,26 @@
 }
 
 .tabsList {
+  display: flex;
+  width: 100%;
   margin-bottom: 12px;
+}
+
+.tabsList button {
+  flex: 1 1 50%;
+  border-radius: 0;
+  border-color: #d7dce2;
+  box-shadow: none;
+}
+
+.tabsList button:first-child {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.tabsList button:last-child {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 .fileTable {
