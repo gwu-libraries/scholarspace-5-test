@@ -4,5 +4,5 @@
 
 <% if controller_name == 'catalog' %>
   <%= tag.meta name: 'catalog-range-order-error', content: t('catalog.range_validation.reversed') %>
-  <%= javascript_pack_tag 'catalog', defer: true %>
+  <%= javascript_pack_tag 'catalog-bundler', defer: true %>
 <% end %>

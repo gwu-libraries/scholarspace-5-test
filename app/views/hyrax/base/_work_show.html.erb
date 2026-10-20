@@ -1,7 +1,9 @@
 <% work_show_props = @presenter.work_show_props(self) %>
 
-<%= stylesheet_pack_tag "work-show-bundler" %>
-<%= javascript_pack_tag "work-show-bundler" %>
+<% content_for(:head) do %>
+  <%= stylesheet_pack_tag "work-show-bundler" %>
+  <%= javascript_pack_tag "work-show-bundler" %>
+<% end %>
 
 <%= react_component(
   "WorkShow",
