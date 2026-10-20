@@ -2,7 +2,7 @@
 
 require 'hyrax/file_set_derivatives_service'
 require 'carrierwave'
-require Rails.root.join('app/services/large_file_characterization_service')
+require Rails.root.join('app/services/characterization/large_file_service')
 
 hyrax_upload_path = Pathname.new(
   ENV.fetch('HYRAX_UPLOAD_PATH', Rails.root.join('tmp', 'uploads').to_s)
@@ -26,7 +26,7 @@ Hyrax.config do |config|
   config.characterization_options = {
     ch12n_tool: ENV.fetch('CH12N_TOOL', 'fits').to_sym
   }
-  config.characterization_service = LargeFileCharacterizationService
+  config.characterization_service = Characterization::LargeFileService
 
   config.disable_include_metadata = false
   config.file_set_include_metadata = true
