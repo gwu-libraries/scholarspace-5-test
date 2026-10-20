@@ -1,33 +1,35 @@
 # ScholarSpace
 
-## Contributing
+## Develop
 
-If you're working on a PR for this project, create a feature branch off of `main`.
+Create a feature branch from `main`. For local development, copy
+`example.dev.env` to `dev.env`, then start the application with `bin/dev`.
+Run the test suite with `bundle exec rspec` from the Rails container.
 
-## Production Environment
+Production images are built from the targets in `Dockerfile` and deployed with
+the ECS task definitions in `terraform/`. See
+[`script/rebuild-and-push-all-images.sh`](script/rebuild-and-push-all-images.sh)
+for image publishing.
 
-Production does not run with Docker Compose. Runtime images are built from the
-explicit production targets in `Dockerfile`, pushed to ECR, and deployed by the
-Terraform ECS task definitions in `terraform/`.
+## Customizations
 
-- Build and push production images with `script/rebuild-and-push-all-images.sh`.
-- Pass image URIs to Terraform through `terraform/terraform.tfvars` or run the
-  image push script with `--update-tfvars`.
+The application customizes the Hyrax work and file experience across the data
+model, indexing, background processing, and React interface:
 
-## Development Environment
+| Area | Overview |
+| --- | --- |
+| Work types and file sets | ETDs, journal issues, academic and archival documents, with shared file-set behavior. See [model notes](app/models/readme.md). |
+| Work pages | Access-aware file lists, transcripts, viewer data, and page props. See [presenter notes](app/presenters/readme.md) and [props-builder notes](app/props_builders/readme.md). |
+| Frontend | React work pages with image, PDF, and audiovisual viewers, deep search, and catalog date-range tools. See [JavaScript notes](app/javascript/readme.md). |
+| Derivatives and IIIF | File processing, derivative caching, viewer manifests, and file selection. See [service notes](app/services/readme.md). |
+| Background jobs | Asynchronous derivative orchestration, persistence, queueing, and duplicate-work protection. See [job notes](app/jobs/readme.md). |
+| Search | Solr indexing of work metadata and searchable text from files. See [indexer notes](app/indexers/readme.md). |
 
-- Local development uses `docker-compose.yml` plus `docker-compose-dev.yml`.
-- Copy `example.dev.env` to `dev.env` and adjust local values as needed.
-- Start the stack with `docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build`.
-- The `rails`, `worker`, and specialized `worker_*` services all build the
-  `scholarspace-default` Dockerfile target with `BUILD_ENV=dev`. The worker
-  variants use the same image and are separated by their `SIDEKIQ_ONLY_*`
-  environment flags.
+Operational behavior is configured alongside the application:
 
-## Tests
-
-- To run tests, launch the application in development mode. 
-- Connect to the rails container (`docker exec -it rails /bin/sh`)
-- Run `bundle exec rspec`
-
-At the moment, there are 8 failing tests. Issue appears to be more with the test setup, so consider 8 failing tests passing for now, but needs to be fixed at some point. 
+- Sidekiq uses separate worker pools and queue definitions in
+  [`config/sidekiq/`](config/sidekiq) and [`config/sidekiq.yml`](config/sidekiq.yml).
+- Derivative quality, scheduling, and service settings are in
+  [`config/derivative_settings.yml`](config/derivative_settings.yml).
+- Local development uses Docker Compose; production sizing and deployment are
+  managed in [`terraform/`](terraform).
