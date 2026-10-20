@@ -196,7 +196,7 @@ RSpec.describe Derivatives::FileSetLevel::TextExtraction::FromPdf do
       allow(service).to receive(:pdf_contains_embedded_text?).and_return(false)
       allow(service).to receive(:extract_hocr_for_pdf).and_return('/tmp/pdf_extraction_test/Sample Document_HOCR.hocr')
       allow(service).to receive(:generate_embedded_text_pdf).and_return('/tmp/pdf_extraction_test/Sample Document_presentation_version.pdf')
-      allow(DerivativeCacheService.instance).to receive(:store_derivative_from_path)
+      allow(Derivatives::Cache::Service.instance).to receive(:store_derivative_from_path)
 
       payload = service.generate_to_cache(pdf_file_set_id: 'pdf-fs-1')
 
@@ -231,7 +231,7 @@ RSpec.describe Derivatives::FileSetLevel::TextExtraction::FromPdf do
       allow(service).to receive(:extract_hocr_for_pdf)
       allow(service).to receive(:generate_text_preserving_presentation_pdf)
         .and_return('/tmp/pdf_extraction_test/Sample Document_presentation_version.pdf')
-      allow(DerivativeCacheService.instance).to receive(:store_derivative_from_path)
+      allow(Derivatives::Cache::Service.instance).to receive(:store_derivative_from_path)
 
       payload = service.generate_to_cache(pdf_file_set_id: 'pdf-fs-1')
 

@@ -15,7 +15,7 @@ RSpec.describe HyraxListener do
       allow(Hyrax).to receive(:custom_queries).and_return(custom_queries)
       allow(custom_queries).to receive(:find_parent_work).with(resource: file_set).and_return(work)
       allow(listener).to receive(:derivatives_enqueue_debounced?).with('work-1').and_return(false)
-      allow(DerivativeJobs::WorkLevel::OrchestrateJob).to receive(:set).with(wait: 2.minutes).and_return(delayed_job)
+      allow(DerivativeJobs::WorkLevel::OrchestrateJob).to receive(:set).with(wait: 30.seconds).and_return(delayed_job)
     end
 
     it 'schedules derivative orchestration for characterized source file sets' do

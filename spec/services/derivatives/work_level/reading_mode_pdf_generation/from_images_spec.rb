@@ -84,14 +84,14 @@ RSpec.describe Derivatives::WorkLevel::ReadingModePdfGeneration::FromImages do
         io: an_instance_of(StringIO),
         source_file_set: source_file_set_1,
         skip_derivatives: true,
-        derivative_type: Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
+        derivative_type: ::Derivatives::Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
       )
       expect(file_set).to have_received(:service_file=).with(true)
       expect(member_ids).to eq(['joined-pdf-1'])
       expect(service).to have_received(:cache_derivative).with(
         file_path: '/tmp/workdir/pdfs/reading_mode_pdf.pdf',
         file_set: file_set,
-        derivative_type: Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
+        derivative_type: ::Derivatives::Constants::DerivativeTypeConstants::DERIVATIVE_TYPE_PRESENTATION_VERSION
       )
       expect(result).to eq(file_set)
     end

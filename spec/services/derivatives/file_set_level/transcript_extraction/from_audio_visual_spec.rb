@@ -57,11 +57,11 @@ RSpec.describe Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual 
         FileUtils.mkdir_p(output_dir)
         File.join(output_dir, 'lecture_VTT.vtt').tap { |path| File.write(path, 'WEBVTT') }
       end
-      allow(DerivativeCacheService.instance).to receive(:store_derivative_from_path)
+      allow(Derivatives::Cache::Service.instance).to receive(:store_derivative_from_path)
 
       payload = service.generate_to_cache(source_file_set_id: 'audio-1')
 
-      expect(DerivativeCacheService.instance).to have_received(:store_derivative_from_path).with(
+      expect(Derivatives::Cache::Service.instance).to have_received(:store_derivative_from_path).with(
         file_identifier: 'derivatives:audio_transcript:work:work-audio_visual-1:source:audio-1:lecture_VTT.vtt',
         original_filename: 'lecture_VTT.vtt',
         source_path: kind_of(String),
@@ -90,7 +90,7 @@ RSpec.describe Derivatives::FileSetLevel::TranscriptExtraction::FromAudioVisual 
 
     it 'replaces an existing linked transcript and keeps rendering ids current' do
       allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-      allow(DerivativeCacheService.instance).to receive(:fetch_stream).with(
+      allow(Derivatives::Cache::Service.instance).to receive(:fetch_stream).with(
         file_identifier: 'cache-transcript-1',
         original_filename: 'lecture_VTT.vtt'
       ).and_return(cached_io)

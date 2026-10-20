@@ -75,11 +75,11 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
         expect(source_path).to eq('/tmp/source-page.tif')
         File.write(output_path, 'presentation image')
       end
-      allow(DerivativeCacheService.instance).to receive(:store_derivative_from_path)
+      allow(Derivatives::Cache::Service.instance).to receive(:store_derivative_from_path)
 
       payload = image_presentation.generate_to_cache(source_file_set_id: 'image-1')
 
-      expect(DerivativeCacheService.instance).to have_received(:store_derivative_from_path).with(
+      expect(Derivatives::Cache::Service.instance).to have_received(:store_derivative_from_path).with(
         file_identifier: 'derivatives:presentation_version:work:work-1:source:image-1:page_presentation_version.jpg',
         original_filename: 'page_presentation_version.jpg',
         source_path: kind_of(String),
@@ -108,7 +108,7 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
 
     it 'replaces an existing linked presentation file instead of attaching a duplicate' do
       allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-      allow(DerivativeCacheService.instance).to receive(:fetch_stream).with(
+      allow(Derivatives::Cache::Service.instance).to receive(:fetch_stream).with(
         file_identifier: 'cache-image-1',
         original_filename: 'page_presentation_version.jpg'
       ).and_return(cached_io)
@@ -133,7 +133,7 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
 
     it 'reindexes the work and presentation file set after replacing an existing linked presentation file' do
       allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-      allow(DerivativeCacheService.instance).to receive(:fetch_stream).with(
+      allow(Derivatives::Cache::Service.instance).to receive(:fetch_stream).with(
         file_identifier: 'cache-image-1',
         original_filename: 'page_presentation_version.jpg'
       ).and_return(cached_io)
@@ -159,7 +159,7 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
       )
 
       allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-      allow(DerivativeCacheService.instance).to receive(:fetch_stream).with(
+      allow(Derivatives::Cache::Service.instance).to receive(:fetch_stream).with(
         file_identifier: 'cache-image-1',
         original_filename: 'page_v2_presentation_version.jpg'
       ).and_return(cached_io)
@@ -198,7 +198,7 @@ RSpec.describe Derivatives::FileSetLevel::PresentationVersion do
 
     it 'keeps an existing text-bearing PDF presentation instead of replacing it' do
       allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-      allow(DerivativeCacheService.instance).to receive(:fetch_stream).with(
+      allow(Derivatives::Cache::Service.instance).to receive(:fetch_stream).with(
         file_identifier: 'cache-pdf-1',
         original_filename: 'source_presentation_version.pdf'
       ).and_return(cached_io)

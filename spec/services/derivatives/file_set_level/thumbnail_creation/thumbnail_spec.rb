@@ -22,13 +22,13 @@ RSpec.describe Derivatives::FileSetLevel::ThumbnailCreation::Thumbnail do
     )
   end
   let(:depositor) { instance_double('User') }
-  let(:cache_service) { instance_double(DerivativeCacheService) }
+  let(:cache_service) { instance_double(Derivatives::Cache::Service) }
 
   before do
     allow(work).to receive(:find_member_file_set) { |id| id.to_s == 'source-1' ? source_file_set : nil }
     allow(Hyrax::SolrService).to receive(:post).and_return({ 'response' => { 'docs' => [] } })
     allow(User).to receive(:find_by).with(email: 'depositor@example.edu').and_return(depositor)
-    allow(DerivativeCacheService).to receive(:instance).and_return(cache_service)
+    allow(Derivatives::Cache::Service).to receive(:instance).and_return(cache_service)
     allow(Derivatives::FileSetLevel::ThumbnailCreation::FromImage).to receive(:supported_file_set?).with(source_file_set).and_return(true)
   end
 
