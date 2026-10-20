@@ -36,6 +36,43 @@ RSpec.describe Derivatives::TranscriptExtraction::VttGeneratable do
       expect(File.read(vtt_path)).to include('WEBVTT')
     end
 
+    context 'when Whisper returns UTF-8 bytes tagged as ASCII-8BIT' do
+      let(:expected_content) { "WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\n\u201cHello\u201d \u2014 caf\u00e9\n" }
+      let(:vtt_content) { expected_content.b.freeze }
+
+      it 'preserves non-ASCII text and writes valid UTF-8 without mutating the output' do
+        vtt_path = service.send(:generate_vtt, '/tmp/audio.wav', output_dir: output_dir, title: 'clip')
+        written = File.read(vtt_path, encoding: Encoding::UTF_8)
+
+        expect(written).to eq(expected_content)
+        expect(written).to be_valid_encoding
+        expect(File.binread(vtt_path)).to eq(vtt_content)
+        expect(vtt_content.encoding).to eq(Encoding::ASCII_8BIT)
+      end
+    end
+
+    context 'when Whisper returns text in another declared encoding' do
+      let(:vtt_content) { "WEBVTT\n\ncaf\u00e9\n".encode(Encoding::ISO_8859_1) }
+
+      it 'transcodes the text to UTF-8' do
+        vtt_path = service.send(:generate_vtt, '/tmp/audio.wav', output_dir: output_dir, title: 'clip')
+
+        expect(File.read(vtt_path, encoding: Encoding::UTF_8)).to eq("WEBVTT\n\ncaf\u00e9\n")
+      end
+    end
+
+    context 'when Whisper returns invalid UTF-8 bytes' do
+      let(:vtt_content) { "WEBVTT\n\n\xE2".b }
+
+      it 'raises rather than writing a corrupt transcript' do
+        expect do
+          service.send(:generate_vtt, '/tmp/audio.wav', output_dir: output_dir, title: 'clip')
+        end.to raise_error(Encoding::InvalidByteSequenceError, /UTF-8/)
+
+        expect(File).not_to exist("#{output_dir}/clip_VTT.vtt")
+      end
+    end
+
     it 'derives the title from the file basename when no title is given' do
       vtt_path = service.send(:generate_vtt, '/tmp/my_video.mp4', output_dir: output_dir)
 

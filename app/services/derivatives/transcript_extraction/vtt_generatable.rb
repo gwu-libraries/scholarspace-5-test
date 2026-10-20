@@ -13,9 +13,13 @@ module Derivatives::TranscriptExtraction
       configure_whisper_cache_dir
       whisper = Whisper::Context.new(Configuration::DerivativeSettings.transcription_model)
       vtt = whisper.transcribe(file_path, Whisper::Params.new).to_webvtt
+      # Whisper's native UTF-8 output can be tagged as ASCII-8BIT.
+      vtt = vtt.dup.force_encoding(Encoding::UTF_8) if vtt.encoding == Encoding::ASCII_8BIT
+      vtt = vtt.encode(Encoding::UTF_8)
+      raise Encoding::InvalidByteSequenceError, 'Whisper returned invalid UTF-8 WebVTT' unless vtt.valid_encoding?
 
       vtt_path = "#{output_dir}/#{title}_VTT.vtt"
-      File.open(vtt_path, 'w') { |file| file.write(vtt) }
+      File.open(vtt_path, 'w:UTF-8') { |file| file.write(vtt) }
       vtt_path
     end
 
