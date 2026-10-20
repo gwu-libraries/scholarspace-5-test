@@ -93,3 +93,4 @@ terraform/*.plan
 terraform/*.log
 
 .local
+.cache
