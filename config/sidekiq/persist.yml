@@ -1,0 +1,4 @@
+---
+:concurrency: 1
+:queues:
+  - [derivatives_persist, 1]

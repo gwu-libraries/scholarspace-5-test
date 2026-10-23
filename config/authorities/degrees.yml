@@ -1,0 +1,43 @@
+terms:
+  - id: D.Engr.
+    term: D.Engr.
+    active: true
+  - id: D.Sc.
+    term: D.Sc.
+    active: true
+  - id: Dr.P.H.
+    term: Dr.P.H.
+    active: true
+  - id: Ed.D.
+    term: Ed.D.
+    active: true
+  - id: LL.M.
+    term: LL.M.
+    active: true
+  - id: M.A.
+    term: M.A.
+    active: true
+  - id: M.A.T.
+    term: M.A.T.
+    active: true
+  - id: M.B.A.
+    term: M.B.A.
+    active: true
+  - id: M.F.A.
+    term: M.F.A.
+    active: true
+  - id: M.F.S.
+    term: M.F.S.
+    active: true
+  - id: M.P.H.
+    term: M.P.H.
+    active: true
+  - id: M.P.S.
+    term: M.P.S.
+    active: true
+  - id: M.S.
+    term: M.S.
+    active: true
+  - id: Ph.D.
+    term: Ph.D.
+    active: true

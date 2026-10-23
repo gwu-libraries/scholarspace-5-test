@@ -1,0 +1,13 @@
+# FITS servlet image with MediaInfo library support
+FROM ghcr.io/samvera/fitsservlet:1.6.0
+
+RUN apt-get update -qq && \
+    apt-get install -y -qq mediainfo && \
+    rm -rf /var/lib/apt/lists/*
+
+# Resolve library paths dynamically so this works on ARM64 and x86_64.
+RUN set -eux; \
+    MEDIAINFO_LIB="$(ldconfig -p | awk '/libmediainfo\.so\.0/{print $NF; exit}')"; \
+    ZEN_LIB="$(ldconfig -p | awk '/libzen\.so\.0/{print $NF; exit}')"; \
+    cp "$MEDIAINFO_LIB" /opt/fits/tools/mediainfo/linux/libmediainfo.so.0; \
+    cp "$ZEN_LIB" /opt/fits/tools/mediainfo/linux/libzen.so.0; \

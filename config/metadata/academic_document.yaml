@@ -21,4 +21,12 @@
 # Generated via
 #  `rails generate hyrax:work_resource AcademicDocument`
 
-attributes: {}
+attributes:
+  bulkrax_identifier:
+    type: string
+    multiple: true
+    form:
+      primary: false
+    index_keys:
+      - "bulkrax_identifier_tesim"
+    predicate: https://iro.bl.uk/resource#bulkraxIdentifier

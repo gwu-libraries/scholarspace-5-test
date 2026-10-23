@@ -1,24 +1,24 @@
-require 'rails_helper'
-require 'pry'
+# require 'rails_helper'
+# require 'pry'
 
-RSpec.describe "Import files and works with Bulkrax" do
+# RSpec.describe "Import files and works with Bulkrax" do
 
-  before :all do
-    @importer = FactoryBot.build(:bulkrax_importer)
-    field_mapping_key = "Bulkrax::CsvParser"
-    @importer.field_mapping = Bulkrax.field_mappings[field_mapping_key]
-    @importer.parser_fields['update_files'] = true
-    @importer.save
-    Bulkrax::ImporterJob.send(@importer.parser.perform_method, @importer.id)
-  end
-  describe "Imported works and files" do
-    xit "Has the correct visibility" do
-      #binding.pry
-      puts @importer.current_run.inspect
-    end
-  end
+#   before :all do
+#     @importer = FactoryBot.build(:bulkrax_importer)
+#     field_mapping_key = "Bulkrax::CsvParser"
+#     @importer.field_mapping = Bulkrax.field_mappings[field_mapping_key]
+#     @importer.parser_fields['update_files'] = true
+#     @importer.save
+#     Bulkrax::ImporterJob.send(@importer.parser.perform_method, @importer.id)
+#   end
+#   describe "Imported works and files" do
+#     xit "Has the correct visibility" do
+#       #binding.pry
+#       puts @importer.current_run.inspect
+#     end
+#   end
 
-end
+# end
 
 =begin
 #<ActionController::Parameters {"authenticity_token"=>"kf8U83C-WgXomskt8sB4fDZJ9aXWm5hMtWgkuUcuKNZT-Y_O_tRrF02xkRL8MXd58G5hQmaixIuytJI0BrGIvg", "importer"=>{"name"=>"test-pry", "admin_set_id"=>"9851fdc7-174e-44e9-924e-2c079e9078f9", "user_id"=>"1", "frequency"=>"PT0S", "limit"=>"", "parser_klass"=>"Bulkrax::CsvParser", "parser_fields"=>{"visibility"=>"open", "rights_statement"=>"", "override_rights_statement"=>"0", "file_style"=>"Upload a File", "import_file_path"=>"", "entry_statuses"=>[""]}}, "uploaded_files"=>["270"], "commit"=>"Create and Import", "locale"=>"en", "controller"=>"bulkrax/importers", "action"=>"create"} permitted: false>

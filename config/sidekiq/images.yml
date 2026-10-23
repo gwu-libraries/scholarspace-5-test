@@ -1,0 +1,7 @@
+---
+:concurrency: 1
+:queues:
+  - [derivatives_reading_mode_pdf_generation_orchestrate, 1]
+  - [derivatives_reading_mode_pdf_generation_from_images_generate, 1]
+  - [derivatives_reading_mode_pdf_generation_assemble_hocr, 1]
+  - [derivatives_presentation_version_from_image_generate, 1]

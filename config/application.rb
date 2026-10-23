@@ -12,6 +12,16 @@ module Scholarspace
     config.load_defaults 7.2
     config.add_autoload_paths_to_load_path = true
 
+    %w[work_level file_set_level collection_level].each do |level|
+      Rails.autoloaders.main.collapse(Rails.root.join('app/indexers', level))
+      concerns_path = Rails.root.join('app/indexers', level, 'concerns')
+      Rails.autoloaders.main.collapse(concerns_path) if concerns_path.directory?
+    end
+
+    %w[work_level collection_level].each do |level|
+      Rails.autoloaders.main.collapse(Rails.root.join('app/forms', level))
+    end
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded after loading
