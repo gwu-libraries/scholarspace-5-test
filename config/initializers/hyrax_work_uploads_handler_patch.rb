@@ -3,7 +3,38 @@ Rails.application.config.to_prepare do
     module WorkUploadsHandlerDecorator
       FILE_SET_CREATE_CONFLICT_RETRY_ATTEMPTS = 5
 
+      def attach
+           return true if Array.wrap(files).empty? # short circuit to avoid aquiring a lock we won't use
+
+           acquire_lock_for(work.id) do
+             event_payloads = files.each_with_object([]).with_index do |(file, arry), index|
+               arry << make_file_set_and_ingest(file, @file_set_params[index] || {})
+             end
+             BulkraxImportLogger.info("method: attach, work: #{work.id}, work members before save: #{work.member_ids}")
+             @persister.save(resource: work)
+             BulkraxImportLogger.info("method: attach, work: #{work.id}, work members after save: #{Hyrax.query_service.find_by(id: work.id).member_ids}")
+             Hyrax.publisher.publish('object.metadata.updated', object: work, user: files.first.user)
+             event_payloads.each do |payload|
+               payload.delete(:job).enqueue
+               Hyrax.publisher.publish('file.set.attached', payload)
+             end
+           end
+         end
+
+
       private
+
+      def append_to_work(file_set)
+          # Try to catch behavior where the second file set is being saved and overwriting the membership of the first
+          if (file_set.title[0].ends_with? "2.pdf") && (work.member_ids.length != 1)
+            puts work.id
+            binding.pry
+          end
+          work.member_ids += [file_set.id]
+          work.representative_id = file_set.id if work.respond_to?(:representative_id) && work.representative_id.blank?
+          work.thumbnail_id = file_set.id if work.respond_to?(:thumbnail_id) && work.thumbnail_id.blank?
+          BulkraxImportLogger.info("method: append_to_work, file_set: #{file_set.inspect}, work members: #{work.member_ids}")
+      end
 
       def make_file_set_and_ingest(file, file_set_params = {})
         file_set = save_file_set_with_conflict_retry(file_set_args(file, file_set_params))

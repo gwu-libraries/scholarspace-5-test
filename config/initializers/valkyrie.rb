@@ -41,10 +41,10 @@ end
 # Valkyrie::MetadataAdapter
 #   .register(Valkyrie::Sequel::MetadataAdapter.new(connection: connection),
 #             :nurax_pg_metadata_adapter)
-# Valkyrie::MetadataAdapter.register(
-#   Valkyrie::Persistence::Postgres::MetadataAdapter.new,
-#   :pg_metadata
-# )
+Valkyrie::MetadataAdapter.register(
+   Valkyrie::Persistence::Postgres::MetadataAdapter.new,
+   :pg_metadata
+)
 
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Fedora::MetadataAdapter.new(
@@ -82,6 +82,14 @@ Valkyrie::StorageAdapter.register(
   :fedora_storage
 )
 
-Valkyrie.config.metadata_adapter = :fedora_metadata
-Valkyrie.config.storage_adapter = :fedora_storage
+Valkyrie::StorageAdapter.register(
+  Valkyrie::Storage::VersionedDisk.new(base_path: ENV.fetch('HYRAX_STORAGE_PATH') { Rails.root.join("storage", "files") },
+                                       file_mover: FileUtils.method(:cp)),
+  :versioned_disk_storage
+)
+
+#Valkyrie.config.metadata_adapter = :fedora_metadata
+Valkyrie.config.metadata_adapter = :pg_metadata
+#Valkyrie.config.storage_adapter = :fedora_storage
+Valkyrie.config.storage_adapter = :versioned_disk_storage
 Valkyrie.config.indexing_adapter = :solr_index
