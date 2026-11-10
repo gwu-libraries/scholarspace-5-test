@@ -18,7 +18,8 @@ mount Bulkrax::Engine, at: '/'
     concerns :searchable
     concerns :range_searchable
   end
-  devise_for :users
+  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks',
+                                      sessions: 'users/sessions' }
   mount Hydra::RoleManagement::Engine => '/'
   mount Sidekiq::Web => '/sidekiq'
   mount Qa::Engine => '/authorities'
@@ -42,5 +43,13 @@ mount Bulkrax::Engine, at: '/'
     concerns :exportable
 
     collection { delete 'clear' }
+  end
+  Hyrax::Engine.routes.draw do
+    # Redirects non-privileged users to the application homepage
+    authenticate :user, lambda { |u| !u.admin? && !u.contentadmin?} do
+      namespace :dashboard do
+        match '(*any)', to: redirect('/'), via: [:get, :post]
+      end
+    end
   end
 end

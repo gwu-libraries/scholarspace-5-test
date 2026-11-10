@@ -12,11 +12,12 @@ class User < ApplicationRecord
   include Blacklight::User
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
-  devise :database_authenticatable,
-         :registerable,
+  devise :database_authenticatable, # :registerable,
          :recoverable,
          :rememberable,
-         :validatable
+         :validatable,
+         :omniauthable,
+         omniauth_providers: [:saml]
 
   # Method added by Blacklight; Blacklight uses #to_s on your
   # user class to get a user-displayable login/identifier for
@@ -24,4 +25,19 @@ class User < ApplicationRecord
   def to_s
     email
   end
+
+  def contentadmin?
+      roles.where(name: 'content-admin').exists?
+  end
+
+  def self.from_omniauth(auth)
+      # Recommended implementation from Devise: https://github.com/heartcombo/devise/wiki/OmniAuth:-Overview
+      # provider and uid (email) are stored in the User ActiveRecord
+      find_or_create_by(provider: auth.provider, uid: auth.uid) do |user|
+          user.email = auth.info.email
+          user.display_name = "#{auth.info.first_name} #{auth.info.last_name}"
+          user.password = SecureRandom.urlsafe_base64
+      end
+  end
+
 end
