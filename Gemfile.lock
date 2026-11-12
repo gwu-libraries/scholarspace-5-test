@@ -1399,6 +1399,7 @@ DEPENDENCIES
   jquery-rails
   json (< 3.0)
   launchy
+  method_source
   okcomputer
   orderly
   package_json
