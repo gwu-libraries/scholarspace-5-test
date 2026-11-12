@@ -864,6 +864,9 @@ GEM
       logger
       rack (>= 2.2.8)
       rack-protection (>= 2.2.0)
+    omniauth-rails_csrf_protection (2.0.1)
+      actionpack (>= 4.2)
+      omniauth (~> 2.0)
     omniauth-saml (2.2.5)
       omniauth (~> 2.1)
       ruby-saml (~> 1.18)
@@ -1412,6 +1415,7 @@ DEPENDENCIES
   launchy
   method_source
   okcomputer
+  omniauth-rails_csrf_protection (~> 2.0.1)
   omniauth-saml (~> 2.2.5)
   orderly
   package_json

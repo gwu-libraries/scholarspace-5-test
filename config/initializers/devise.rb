@@ -299,26 +299,26 @@ Devise.setup do |config|
   #
   #
   # for dev environments in production mode, this will create empty cert and key files
+  # The fake values here prevent Rails from throwing an error during asset precompilation in the Docker build
   if Rails.env.production?
     config.omniauth :saml,
-      idp_cert: File.open(ENV['IDP_CERT_PEM'], File::RDONLY|File::CREAT) { |file| file.read },
-      idp_sso_service_url: ENV['IDP_SSO_URL'],
-      #idp_slo_service_url: ENV['IDP_SLO_URL'],
-      sp_entity_id: ENV.fetch('ISSUER') + 'users/auth/saml',
-      assertion_consumer_service_url: ENV.fetch('ISSUER') + 'users/auth/saml/callback',
-      private_key: File.open(ENV['SP_KEY'], File::RDONLY|File::CREAT) { |file| file.read },
-      certificate: File.open(ENV['SP_CERT'], File::RDONLY|File::CREAT) { |file| file.read },
-      request_attributes: {}
+                    idp_cert: ENV.fetch('IDP_CERT_PEM', ''),
+                    idp_sso_service_url: ENV.fetch('IDP_SSO_URL', ''), #idp_slo_service_url: ENV['IDP_SLO_URL'],
+                    sp_entity_id: ENV.fetch('ISSUER', '') + 'users/auth/saml',
+                    assertion_consumer_service_url: ENV.fetch('ISSUER', '') + 'users/auth/saml/callback',
+                    private_key: ENV.fetch('SP_KEY', ''),
+                    certificate: ENV.fetch('SP_CERT', ''),
+                    request_attributes: {}
   else
     config.omniauth :saml,
-      idp_cert: 'cert',
-      idp_sso_service_url: 'https://www.example.com',
-      idp_slo_service_url: 'https://www.example.com',
-      sp_entity_id: 'http://localhost:3000/users/auth/saml',
-      assertion_consumer_service_url: 'http://localhost:3000/users/auth/saml/callback',
-      private_key: 'key',
-      certificate: 'cert',
-      request_attributes: {}
+                    idp_cert: 'cert',
+                    idp_sso_service_url: 'https://www.example.com',
+                    idp_slo_service_url: 'https://www.example.com',
+                    sp_entity_id: 'http://localhost:3000/users/auth/saml',
+                    assertion_consumer_service_url: 'http://localhost:3000/users/auth/saml/callback',
+                    private_key: 'key',
+                    certificate: 'cert',
+                    request_attributes: {}
   end
   # ==> Turbolinks configuration
   # If your app is using Turbolinks, Turbolinks::Controller needs to be included to make redirection work correctly:
