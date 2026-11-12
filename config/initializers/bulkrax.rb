@@ -71,7 +71,7 @@ Rails.application.config.to_prepare do
        # from Hyrax::AdminSet
        'alternative_title' => { from: ['alternative_title'], split: '\|' },
       # from AcademicDocument
-       'source_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
+       'bulkrax_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
        'gw_affiliation' => { from: ['gw_affiliation'], split: true },
        'doi' => { from: ['doi'], split: '\|' },
       # from ETD

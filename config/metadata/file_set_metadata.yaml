@@ -153,11 +153,11 @@ attributes:
     predicate: http://purl.org/dc/elements/1.1/subject
   bulkrax_identifier:
     type: string
-    multiple: true
+    multiple: false
     form:
       primary: false
     index_keys:
-      - 'bulkrax_identifier_tesim'
+      - 'bulkrax_identifier_sim'
     predicate: https://iro.bl.uk/resource#bulkraxIdentifier
   service_file:
     type: bool

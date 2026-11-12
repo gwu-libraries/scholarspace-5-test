@@ -10,5 +10,5 @@ Rails.application.config.to_prepare do
       end
     end
   end
-  ContentEventJob.prepend ContentEventJobDecorator
+  #ContentEventJob.prepend ContentEventJobDecorator
 end

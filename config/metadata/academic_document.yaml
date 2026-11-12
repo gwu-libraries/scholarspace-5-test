@@ -40,9 +40,9 @@ attributes:
     predicate: http://scholarspace.library.gwu.edu/ns#doi
   bulkrax_identifier:
     type: string
-    multiple: true
+    multiple: false
     form:
       primary: false
     index_keys:
-      - 'bulkrax_identifier_tesim'
+      - 'bulkrax_identifier_sim'
     predicate: https://iro.bl.uk/resource#bulkraxIdentifier
