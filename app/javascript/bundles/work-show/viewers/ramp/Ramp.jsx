@@ -44,7 +44,7 @@ const Ramp = ({
   const transcripts = mapTranscriptFilesToRampTranscripts(transcriptFiles);
   const hasTranscripts = transcripts.length > 0;
   const playerProps = startCanvasId
-    ? { manifestUrl, startCanvasId, startCanvasTime: Number.isFinite(startCanvasTime) ? startCanvasTime : 0 }
+    ? { manifestUrl, startCanvasId }
     : { manifestUrl };
 
   useEffect(() => {
@@ -56,30 +56,35 @@ const Ramp = ({
   }, []);
 
   useEffect(() => {
-    const targetTime = Number(startCanvasTime);
-    if (!Number.isFinite(targetTime) || targetTime <= 0) return undefined;
+    if (!Number.isFinite(startCanvasTime) || startCanvasTime <= 0) return undefined;
 
     const playerContainer = playerContainerRef.current;
     if (!playerContainer) return undefined;
 
     let mediaElement;
+    let sought = false;
+    const resetSeek = () => { sought = false; };
     const seekToResult = () => {
       const nextMediaElement = playerContainer.querySelector('video, audio');
       if (!nextMediaElement) return;
 
       if (mediaElement !== nextMediaElement) {
+        mediaElement?.removeEventListener('canplay', seekToResult);
+        mediaElement?.removeEventListener('emptied', resetSeek);
         mediaElement = nextMediaElement;
-        mediaElement.addEventListener('loadedmetadata', seekToResult, { once: true });
-        mediaElement.addEventListener('canplay', seekToResult, { once: true });
+        sought = false;
+        mediaElement.addEventListener('canplay', seekToResult);
+        mediaElement.addEventListener('emptied', resetSeek);
       }
 
-      if (mediaElement.readyState > 0) mediaElement.currentTime = targetTime;
+      if (sought || mediaElement.readyState < 2) return;
+
+      sought = true;
+      mediaElement.currentTime = startCanvasTime;
     };
 
     const observer = new MutationObserver(seekToResult);
     observer.observe(playerContainer, {
-      attributes: true,
-      attributeFilter: ['src'],
       childList: true,
       subtree: true,
     });
@@ -87,8 +92,8 @@ const Ramp = ({
 
     return () => {
       observer.disconnect();
-      mediaElement?.removeEventListener('loadedmetadata', seekToResult);
       mediaElement?.removeEventListener('canplay', seekToResult);
+      mediaElement?.removeEventListener('emptied', resetSeek);
     };
   }, [startCanvasId, startCanvasTime]);
 
