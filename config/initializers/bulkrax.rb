@@ -14,6 +14,8 @@ Rails.application.config.to_prepare do
     config.object_factory = Bulkrax::ValkyrieObjectFactory
     # Use this for a Postgres-backed Valkyrized Hyrax
     # config.object_factory = Bulkrax::ValkyrieObjectFactory
+    config.collection_model_class = Hyrax.config.collection_class
+    config.file_model_class = Hyrax.config.file_set_class
 
     # Path to store pending imports
     # config.import_path = 'tmp/imports'
@@ -69,7 +71,7 @@ Rails.application.config.to_prepare do
        # from Hyrax::AdminSet
        'alternative_title' => { from: ['alternative_title'], split: '\|' },
       # from AcademicDocument
-       'bulkrax_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
+       'source_identifier' => { from: ['bulkrax_identifier'], source_identifier: true },
        'gw_affiliation' => { from: ['gw_affiliation'], split: true },
        'doi' => { from: ['doi'], split: '\|' },
       # from ETD

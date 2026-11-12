@@ -859,17 +859,6 @@ GEM
       rack (>= 1.2, < 4)
     okcomputer (1.20.0)
       benchmark
-    omniauth (2.3.1)
-      hashie (>= 3.5.2)
-      logger
-      rack (>= 2.2.8)
-      rack-protection (>= 2.2.0)
-    omniauth-rails_csrf_protection (2.0.1)
-      actionpack (>= 4.2)
-      omniauth (~> 2.0)
-    omniauth-saml (2.2.5)
-      omniauth (~> 2.1)
-      ruby-saml (~> 1.18)
     openseadragon (0.9.0)
       rails (> 6.1.0)
     openssl (4.0.2)
@@ -1185,9 +1174,6 @@ GEM
       multipart-post
       oauth2
     ruby-progressbar (1.13.0)
-    ruby-saml (1.18.1)
-      nokogiri (>= 1.13.10)
-      rexml
     ruby-vips (2.3.0)
       ffi (~> 1.12)
       logger
@@ -1415,8 +1401,6 @@ DEPENDENCIES
   launchy
   method_source
   okcomputer
-  omniauth-rails_csrf_protection (~> 2.0.1)
-  omniauth-saml (~> 2.2.5)
   orderly
   package_json
   pg (~> 1.3)
