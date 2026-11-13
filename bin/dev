@@ -10,7 +10,7 @@ COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
 export APP_UID APP_GID COMPOSE_ENV_FILE
 
 PARAMS=""
-COMPOSE_COMMAND="up --build"
+COMPOSE_COMMAND="up --no-build"
 
 while (( "$#" )); do
     case "$1" in
@@ -29,21 +29,22 @@ while (( "$#" )); do
     esac
 done
 
-docker compose \
-  -f "$RAILS_ROOT/docker-compose.yml" \
+
+COMPOSE_ARGS=(
+  --env-file "$COMPOSE_ENV_FILE"
+  -f "$RAILS_ROOT/docker-compose.yml"
+  -f "$RAILS_ROOT/docker-compose-dev.yml"
+)
+if [ -f "$RAILS_ROOT/docker-compose-dev-local.yml" ]; then
+  echo "Local configuration found"
+  COMPOSE_ARGS+=(-f "$RAILS_ROOT/docker-compose-dev-local.yml")
+fi
+
+docker compose "${COMPOSE_ARGS[@]}" \
   run --rm --no-deps -T app-volumes-init
 
-if [ ! -f "$RAILS_ROOT/docker-compose-dev-local.yml"  ]; then
+docker compose "${COMPOSE_ARGS[@]}" build worker fits
 
-    exec docker compose \
-    -f "$RAILS_ROOT/docker-compose.yml" \
-    -f "$RAILS_ROOT/docker-compose-dev.yml" \
-    up --build "$@"
-fi
-echo "Local configuration found"
-
-  exec docker compose \
-  -f "$RAILS_ROOT/docker-compose.yml" \
-  -f "$RAILS_ROOT/docker-compose-dev.yml" \
-  -f "$RAILS_ROOT/docker-compose-dev-local.yml" \
-  ${COMPOSE_COMMAND} ${PARAMS}
+exec docker compose \
+    ${COMPOSE_ARGS[@]}" \
+    ${COMPOSE_COMMAND} ${PARAMS}
