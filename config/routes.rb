@@ -5,11 +5,10 @@ mount Bulkrax::Engine, at: '/'
   concern :iiif_search, BlacklightIiifSearch::Routes.new
   mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
 
-  get '/uv/config/:id', to: 'application#uv_config', as: 'uv_config', defaults: { format: :json }
-
   mount Blacklight::Engine => '/'
 
   concern :searchable, Blacklight::Routes::Searchable.new
+  concern :range_searchable, BlacklightRangeLimit::Routes::RangeSearchable.new
 
   resource :catalog,
            only: [:index],
@@ -17,13 +16,16 @@ mount Bulkrax::Engine, at: '/'
            path: '/catalog',
            controller: 'catalog' do
     concerns :searchable
+    concerns :range_searchable
   end
   devise_for :users
   mount Hydra::RoleManagement::Engine => '/'
   mount Sidekiq::Web => '/sidekiq'
   mount Qa::Engine => '/authorities'
-  mount Hyrax::Engine, at: '/'
   resources :welcome, only: 'index'
+  get '/concern/:work_type/:id/deep_search', to: 'deep_search#deep_search'
+  mount Hyrax::Engine, at: '/'
+  get '/up', to: proc { [200, { 'Content-Type' => 'text/plain' }, ['ok']] }
   root 'hyrax/homepage#index'
   curation_concerns_basic_routes
   concern :exportable, Blacklight::Routes::Exportable.new
@@ -41,5 +43,4 @@ mount Bulkrax::Engine, at: '/'
 
     collection { delete 'clear' }
   end
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

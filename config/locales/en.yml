@@ -31,3 +31,7 @@
 
 en:
   hello: "Hello world"
+  catalog:
+    range_validation:
+      reversed: "The beginning year must be less than or equal to the ending year."
+      invalid_year: "Enter valid whole-number years for Date Created."

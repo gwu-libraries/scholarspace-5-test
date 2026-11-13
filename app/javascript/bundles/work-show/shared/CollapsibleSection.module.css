@@ -1,0 +1,21 @@
+.section {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #d7dce2;
+}
+
+.summary {
+  padding: 10px 12px;
+  font-weight: 600;
+  background: #f7f9fb;
+  border: 1px solid #d7dce2;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.summary::marker {
+  color: #286090;
+}
+
+.content {
+  padding-top: 12px;
+}

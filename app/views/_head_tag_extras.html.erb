@@ -1,0 +1,8 @@
+<%# we need this here to provide a prompt if a user tries to use the
+ date_created filter on the catalog and puts in an end-date that is earlier than a start-date. 
+ %>
+
+<% if controller_name == 'catalog' %>
+  <%= tag.meta name: 'catalog-range-order-error', content: t('catalog.range_validation.reversed') %>
+  <%= javascript_pack_tag 'catalog-bundler', defer: true %>
+<% end %>

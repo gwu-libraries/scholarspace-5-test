@@ -2,6 +2,23 @@
 
 require 'faraday/multipart'
 
+fedora_open_timeout = ENV.fetch('FEDORA_OPEN_TIMEOUT_SECONDS', 60).to_i
+fedora_request_timeout = ENV.fetch('FEDORA_TIMEOUT_SECONDS', 14_400).to_i
+fedora_read_timeout = ENV.fetch('FEDORA_READ_TIMEOUT_SECONDS', fedora_request_timeout).to_i
+fedora_write_timeout = ENV.fetch('FEDORA_WRITE_TIMEOUT_SECONDS', fedora_request_timeout).to_i
+
+Hyrax.config.fedora_connection_builder = lambda do |url|
+  Faraday.new(url) do |connection|
+    connection.request :multipart
+    connection.request :url_encoded
+    connection.options.open_timeout = fedora_open_timeout
+    connection.options.timeout = fedora_request_timeout
+    connection.options.read_timeout = fedora_read_timeout if connection.options.respond_to?(:read_timeout=)
+    connection.options.write_timeout = fedora_write_timeout if connection.options.respond_to?(:write_timeout=)
+    connection.adapter Faraday.default_adapter
+  end
+end
+
 # require "shrine/storage/s3"
 # require "valkyrie/storage/shrine"
 # require "valkyrie/shrine/checksum/s3"
@@ -24,17 +41,17 @@ require 'faraday/multipart'
 # Valkyrie::MetadataAdapter
 #   .register(Valkyrie::Sequel::MetadataAdapter.new(connection: connection),
 #             :nurax_pg_metadata_adapter)
-# Valkyrie::MetadataAdapter.register(
-#   Valkyrie::Persistence::Postgres::MetadataAdapter.new,
-#   :pg_metadata
-# )
+Valkyrie::MetadataAdapter.register(
+   Valkyrie::Persistence::Postgres::MetadataAdapter.new,
+   :pg_metadata
+)
 
 Valkyrie::MetadataAdapter.register(
   Valkyrie::Persistence::Fedora::MetadataAdapter.new(
     connection:
       ::Ldp::Client.new(
         Hyrax.config.fedora_connection_builder.call(
-          ENV.fetch('FEDORA_URL') { 'http://localhost:8080/fcrepo/rest' }
+          ENV.fetch('FEDORA_URL', 'http://localhost:8080/fcrepo/rest')
         )
       ),
     base_path: Rails.env, # sets to '/development' instead of '/dev'
@@ -54,7 +71,7 @@ Valkyrie::StorageAdapter.register(
     connection:
       ::Ldp::Client.new(
         Hyrax.config.fedora_connection_builder.call(
-          ENV.fetch('FEDORA_URL') { 'http://localhost:8080/fcrepo/rest' }
+          ENV.fetch('FEDORA_URL', 'http://localhost:8080/fcrepo/rest')
         )
       ),
     base_path: Rails.env, # sets to '/development' instead of '/dev'
@@ -65,6 +82,14 @@ Valkyrie::StorageAdapter.register(
   :fedora_storage
 )
 
+Valkyrie::StorageAdapter.register(
+  Valkyrie::Storage::VersionedDisk.new(base_path: ENV.fetch('HYRAX_STORAGE_PATH') { Rails.root.join("storage", "files") },
+                                       file_mover: FileUtils.method(:cp)),
+  :versioned_disk_storage
+)
+
 Valkyrie.config.metadata_adapter = :fedora_metadata
+#Valkyrie.config.metadata_adapter = :pg_metadata
 Valkyrie.config.storage_adapter = :fedora_storage
+#Valkyrie.config.storage_adapter = :versioned_disk_storage
 Valkyrie.config.indexing_adapter = :solr_index

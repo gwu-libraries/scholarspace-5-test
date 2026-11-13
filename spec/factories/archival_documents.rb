@@ -107,7 +107,7 @@ FactoryBot.define do
     factory :archival_document_with_one_child do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained Work"]
         )
@@ -117,13 +117,13 @@ FactoryBot.define do
     factory :archival_document_with_two_children do
       before(:create) do |work, evaluator|
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["A Contained Work"],
           id: "BlahBlah1"
         )
         work.ordered_members << create(
-          :work,
+          :academic_document,
           user: evaluator.user,
           title: ["Another Contained Work"],
           id: "BlahBlah2"

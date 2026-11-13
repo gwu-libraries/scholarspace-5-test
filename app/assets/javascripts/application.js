@@ -27,5 +27,5 @@
 //= require blacklight_gallery
 
 //= require bulkrax/application
-//= require_tree .
+//= require openseadragon
 //= require hyrax

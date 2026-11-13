@@ -1,0 +1,31 @@
+.metadata {
+  margin-bottom: 12px;
+}
+
+.description {
+  max-width: 75ch;
+  margin: 0 0 12px;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.35fr) minmax(0, 1fr);
+  margin: 0;
+  border-top: 1px solid #d7dce2;
+}
+
+.list dt,
+.list dd {
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid #d7dce2;
+}
+
+.list dt {
+  font-weight: 600;
+  background: #f7f9fb;
+}
+
+.list dd div + div {
+  margin-top: 4px;
+}

@@ -1,0 +1,58 @@
+---
+attributes:
+    gw_affiliation:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "gw_affiliation_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#gwaffiliation
+    doi:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "doi_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#doi
+    bulkrax_identifier:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "bulkrax_identifier_tesim"
+        predicate: https://iro.bl.uk/resource#bulkraxIdentifier
+    degree:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "degree_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#degree
+    advisor:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "advisor_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#advisor
+    committee_member:
+        type: string
+        multiple: true
+        form:
+            primary: false
+        index_keys:
+            - "committee_member_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#committee_member
+    proquest_zipfile:
+        type: string
+        multiple: false
+        form:
+            primary: false
+        index_keys:
+            - "proquest_zipfile_tesim"
+        predicate: http://scholarspace.library.gwu.edu/ns#proquest_zipfile

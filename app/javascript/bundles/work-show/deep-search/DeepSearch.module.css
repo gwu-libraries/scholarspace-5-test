@@ -1,0 +1,77 @@
+.deepSearch {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.5);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.heading {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.4);
+}
+
+.searchScope {
+  flex: 0 0 auto;
+  min-width: 7.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.4);
+  background: #fff;
+}
+
+.noResults {
+  margin: 0;
+  color: #374151;
+  font-style: italic;
+}
+
+.resultStack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resultSection {
+  margin: 0;
+}
+
+.resultSection h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.resultList {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.resultList li {
+  margin-bottom: 0.35rem;
+}
+
+.timestamp {
+  margin-right: 0.35rem;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.imageSnippet {
+  display: block;
+  width: min(100%, 24rem);
+  height: auto;
+  border: 1px solid rgba(15, 23, 42, 0.25);
+}

@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 class CatalogController < ApplicationController
+  include BlacklightRangeLimit::ControllerOverride
   include Hydra::Catalog
   include Hydra::Controller::ControllerBehavior
 
   # This filter applies the hydra access controls
   before_action :enforce_show_permissions, only: :show
+  before_action :validate_catalog_ranges, only: :index
+  before_action :validate_distribution_range, only: :range_limit
 
   def self.uploaded_field
     'system_create_dtsi'
@@ -19,35 +22,24 @@ class CatalogController < ApplicationController
   include BlacklightIiifSearch::Controller
 
   configure_blacklight do |config|
-    # config.add_index_field "all_text_tsimv",
-    config.add_index_field 'all_text_tsimv',
-                           highlight: true,
-                           helper_method: :render_ocr_snippets
-
     # configuration for Blacklight IIIF Content Search
     config.iiif_search = {
       full_text_field: 'all_text_tsimv',
-      object_relation_field: 'is_page_of_ssim',
-      supported_params: %w[q page ocr_text]
+      object_relation_field: 'parent_work_id_ssim',
+      supported_params: %w[q page hocr_markup]
     }
 
-    config.view.gallery(
-      document_component: Blacklight::Gallery::DocumentComponent
-    )
-    config.view.masonry(
-      document_component: Blacklight::Gallery::DocumentComponent
-    )
-    config.view.slideshow(
-      document_component: Blacklight::Gallery::SlideshowComponent
-    )
+    config.view.gallery.document_component = Blacklight::Gallery::DocumentComponent
+    config.view.masonry.document_component = Blacklight::Gallery::DocumentComponent
+    config.view.slideshow.document_component = Blacklight::Gallery::SlideshowComponent
 
     config.show.tile_source_field = :content_metadata_image_iiif_info_ssm
     config.show.partials.insert(1, :openseadragon)
-    config.search_builder_class = Hyrax::CatalogSearchBuilder
+    config.search_builder_class = CatalogSearchBuilder
 
     # Show gallery view
-    config.view.gallery.partials = %i[index_header index]
-    config.view.slideshow.partials = [:index]
+    # config.view.gallery.partials = %i[index_header index]
+    # config.view.slideshow.partials = [:index]
 
     # Because too many times on Samvera tech people raise a problem regarding a failed query to SOLR.
     # Often, it's because they inadvertently exceeded the character limit of a GET request.
@@ -105,7 +97,7 @@ class CatalogController < ApplicationController
     #   The ordering of the field names is the order of the display
     config.add_facet_field 'human_readable_type_sim', label: 'Type', limit: 5
     config.add_facet_field 'resource_type_sim', label: 'Resource Type', limit: 5
-    config.add_facet_field 'creator_sim', limit: 5
+    config.add_facet_field 'creator_sim', label: 'Creator', limit: 5
     config.add_facet_field 'contributor_sim', label: 'Contributor', limit: 5
     config.add_facet_field 'keyword_sim', limit: 5
     config.add_facet_field 'subject_sim', limit: 5
@@ -117,6 +109,11 @@ class CatalogController < ApplicationController
                            limit: 5,
                            label: 'Collections',
                            helper_method: :collection_title_by_id
+    config.add_facet_field "year_created_isim", label: "Date Created",
+                            range: {
+                              num_segments: 20,
+                              max_value: 2500
+                            }
 
     # The generic_type and depositor are not displayed on the facet list
     # They are used to give a label to the filters that comes from the user profile
@@ -135,8 +132,13 @@ class CatalogController < ApplicationController
                            itemprop: 'name',
                            if: false
     config.add_index_field 'description_tesim',
+                           label: 'Description',
                            itemprop: 'description',
-                           helper_method: :iconify_auto_link
+                           helper_method: :render_catalog_description
+    config.add_index_field 'abstract_tesim',
+                           label: 'Abstract',
+                           itemprop: 'description',
+                           helper_method: :render_catalog_description
     config.add_index_field 'keyword_tesim',
                            itemprop: 'keywords',
                            link_to_facet: 'keyword_sim'
@@ -152,9 +154,6 @@ class CatalogController < ApplicationController
     config.add_index_field 'proxy_depositor_ssim',
                            label: 'Depositor',
                            helper_method: :link_to_profile
-    config.add_index_field 'depositor_tesim',
-                           label: 'Owner',
-                           helper_method: :link_to_profile
     config.add_index_field 'publisher_tesim',
                            itemprop: 'publisher',
                            link_to_facet: 'publisher_sim'
@@ -167,12 +166,7 @@ class CatalogController < ApplicationController
     config.add_index_field 'date_uploaded_dtsi',
                            itemprop: 'datePublished',
                            helper_method: :human_readable_date
-    config.add_index_field 'date_modified_dtsi',
-                           itemprop: 'dateModified',
-                           helper_method: :human_readable_date
     config.add_index_field 'date_created_tesim', itemprop: 'dateCreated'
-    config.add_index_field 'rights_statement_tesim',
-                           helper_method: :rights_statement_links
     config.add_index_field 'license_tesim', helper_method: :license_links
     config.add_index_field 'resource_type_tesim',
                            label: 'Resource Type',
@@ -361,5 +355,62 @@ class CatalogController < ApplicationController
   # this method is not called in that context.
   def render_bookmarks_control?
     false
+  end
+
+  private
+
+  def validate_catalog_ranges
+    return unless params.key?(:range)
+
+    ranges = params[:range]
+    invalid_fields = {}
+    if ranges.is_a?(ActionController::Parameters)
+      ranges.each_pair do |field, bounds|
+        config = blacklight_config.facet_fields[field]
+        if field.start_with?('-') && blacklight_config.facet_fields[field.delete_prefix('-')]&.range
+          invalid_fields[field] = :invalid_year unless bounds.is_a?(Array) && bounds.all? { |value| value.is_a?(String) }
+          next
+        end
+        error = config&.range ? range_validation_error(bounds, config) : :invalid_year
+        invalid_fields[field] = error if error
+      end
+      return if invalid_fields.empty?
+    end
+
+    search_params = params.to_unsafe_h.except('controller', 'action')
+    if invalid_fields.any?
+      invalid_fields.each_key { |field| search_params['range'].delete(field) }
+      search_params.delete('range') if search_params['range'].empty?
+    else
+      search_params.delete('range')
+    end
+    search_params.delete('page')
+    message = I18n.t("catalog.range_validation.#{invalid_fields.values.first || :invalid_year}")
+    redirect_to search_catalog_path(search_params.symbolize_keys), alert: message
+  end
+
+  def validate_distribution_range
+    config = blacklight_config.facet_fields[params[:range_field]]
+    return unless config&.range
+
+    bounds = ActionController::Parameters.new(begin: params[:range_start], end: params[:range_end])
+    error = range_validation_error(bounds, config, required: true)
+    render plain: I18n.t("catalog.range_validation.#{error}"), status: :unprocessable_entity if error
+  end
+
+  def range_validation_error(bounds, config, required: false)
+    return :invalid_year unless bounds.is_a?(ActionController::Parameters)
+
+    years = %w[begin end].map do |key|
+      value = bounds[key]
+      next if !required && (value.nil? || value == '')
+      return :invalid_year unless value.is_a?(String) && value.match?(/\A[+-]?\d+\z/)
+
+      year = value.to_i
+      return :invalid_year unless year.between?(config.range_config[:min_value], config.range_config[:max_value])
+
+      year
+    end
+    :reversed if years.all? && years.first > years.last
   end
 end

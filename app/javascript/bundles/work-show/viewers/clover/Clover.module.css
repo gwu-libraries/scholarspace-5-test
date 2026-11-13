@@ -1,0 +1,23 @@
+.viewer {
+	width: 100%;
+	height: var(--work-show-viewer-height);
+	min-height: var(--work-show-viewer-height);
+	position: relative;
+}
+
+.viewer :global(.openseadragon-container),
+.viewer :global(.clover-iiif-viewer),
+.viewer :global(.clover-viewer),
+.viewer :global(canvas) {
+	width: 100%;
+	height: 100%;
+}
+
+.ocrHighlight {
+	background: rgba(245, 158, 11, 0.28);
+	box-sizing: border-box;
+	pointer-events: none;
+}
+.viewer :global(.clover-viewer-media-wrapper) {
+	display: none !important;
+}

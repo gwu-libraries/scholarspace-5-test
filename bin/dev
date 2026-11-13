@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+##### USAGE ######
+#
+# bin/dev -> docker compose up
+# bin/dev -d -> docker compose up -d
+# bin/dev down -> docker compose down
+# bin/dev logs -f -> docker compose logs -f
+#
+# Uses both docker-compose.yml and docker-compose-dev.yml, as well as optional docker-compose-dev-local.yml, if present
+#
+
+
+RAILS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+APP_UID="${APP_UID:-$(id -u)}"
+APP_GID="${APP_GID:-$(id -g)}"
+COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-dev.env}"
+
+# in dev, this helps with making sure uids/gids are the same when using bind mounts
+export APP_UID APP_GID COMPOSE_ENV_FILE
+
+PARAMS=""
+COMPOSE_COMMAND="up --no-build"
+UP=1
+while (( "$#" )); do
+    case "$1" in
+        down)
+            COMPOSE_COMMAND="down"
+            UP=0
+            shift
+            ;;
+        logs)
+            COMPOSE_COMMAND="logs"
+            UP=0
+            shift
+            ;;
+        *)
+            PARAMS="$PARAMS $1"
+            shift
+            ;;
+    esac
+done
+
+
+COMPOSE_ARGS=(
+  --env-file "$COMPOSE_ENV_FILE"
+  -f "$RAILS_ROOT/docker-compose.yml"
+  -f "$RAILS_ROOT/docker-compose-dev.yml"
+)
+if [ -f "$RAILS_ROOT/docker-compose-dev-local.yml" ]; then
+  echo "Local configuration found"
+  COMPOSE_ARGS+=(-f "$RAILS_ROOT/docker-compose-dev-local.yml")
+fi
+
+if [ $UP -eq 1 ]; then
+    docker compose "${COMPOSE_ARGS[@]}" \
+        run --rm --no-deps -T app-volumes-init
+
+    docker compose "${COMPOSE_ARGS[@]}" build worker fits
+fi
+exec docker compose ${COMPOSE_ARGS[@]} ${COMPOSE_COMMAND} ${PARAMS}

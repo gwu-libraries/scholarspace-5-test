@@ -71,7 +71,7 @@
     </autoCommit>
 
     <autoSoftCommit>
-      <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime>
+      <maxTime>${solr.autoSoftCommit.maxTime:1000}</maxTime>
     </autoSoftCommit>
   </updateHandler>
 
@@ -136,7 +136,7 @@
        </str>
 
        <str name="hl">true</str>
-       <str name="hl.ocr.fl">ocr_text</str>
+      <str name="hl.ocr.fl">hocr_markup</str>
        <str name="facet">true</str>
        <str name="facet.mincount">1</str>
 
@@ -342,7 +342,7 @@
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="suggestAnalyzerFieldType">textSuggest</str>
       <str name="suggestTokenizingAnalyzerFieldType">textSuggestTokenizer</str>
-      <str name="contextField">is_page_of_ssi</str>
+      <str name="contextField">parent_work_id_ssi</str>
       <str name="buildOnCommit">true</str>
       <str name="field">iiif_suggest</str>
     </lst>

@@ -1,0 +1,97 @@
+.viewer {
+  height: var(--work-show-viewer-height);
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.panelBody {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.layoutRow {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  min-height: 0;
+}
+
+.layoutCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.playerCol {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.playerCol :global(.ramp--media_player),
+.playerCol :global(.ramp--media_player > div),
+.playerCol :global(.video-js) {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.playerCol :global(.video-js.vjs-fluid) {
+  height: 100%;
+  padding-top: 0;
+}
+
+.playerCol :global(.video-js .vjs-control-bar),
+.playerCol :global(.video-js .vjs-progress-control) {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.playerCol :global(.video-js .vjs-progress-control) {
+  left: 0 !important;
+  right: 0 !important;
+}
+
+.fileNavRow {
+  margin-bottom: 10px;
+}
+
+.transcriptCol {
+  flex: 0 0 290px;
+  min-height: 0;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.transcriptShell {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.transcriptShell :global(.ramp--transcript_nav) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.transcriptShell :global(.transcript_content) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.transcriptShell :global(.ramp--transcript_selector select),
+.transcriptShell :global(.ramp--transcript_downloader) {
+  display: none;
+}
+

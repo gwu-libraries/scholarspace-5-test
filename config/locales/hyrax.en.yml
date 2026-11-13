@@ -56,3 +56,12 @@ en:
     institution_name_full: The George Washington University
     product_name: Scholarspace
     product_twitter_handle: "@SamveraRepo"
+    select_type:
+      academic_document:
+        description: A non-ETD scholarly work, including research-competition submissions, articles, and reports.
+      archival_document:
+        description: Material managed by Special Collections.
+      etd:
+        description: An electronic thesis or dissertation.
+      journal_issue:
+        description: A journal issue deposited as a single work.
