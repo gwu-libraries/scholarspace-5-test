@@ -280,7 +280,8 @@ Hyrax.config do |config|
   config.collection_model = 'CollectionResource'
   # config.admin_set_model = "AdminSetResource"
   config.admin_set_model = 'Hyrax::AdministrativeSet'
-  config.file_set_model = 'Hyrax::FileSet'
+  #config.file_set_model = 'Hyrax::FileSet'
+  config.file_set_model = 'FileSet'
   Rails.application.config.to_prepare do
     config.file_set_indexer = FileSetIndexer
   end
