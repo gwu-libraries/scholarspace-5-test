@@ -81,8 +81,6 @@ GEM
       timeout (>= 0.4.0)
     activerecord-import (3.0.1)
       activerecord (>= 6.1)
-    activerecord-nulldb-adapter (1.2.2)
-      activerecord (>= 6.1, < 8.2)
     activestorage (7.2.3)
       actionpack (= 7.2.3)
       activejob (= 7.2.3)
@@ -132,9 +130,6 @@ GEM
     aws-sdk-s3 (1.242.0)
       aws-sdk-core (~> 3, >= 3.268.0)
       aws-sdk-kms (~> 1)
-      aws-sigv4 (~> 1.5)
-    aws-sdk-sqs (1.129.0)
-      aws-sdk-core (~> 3, >= 3.268.0)
       aws-sigv4 (~> 1.5)
     aws-sigv4 (1.12.1)
       aws-eventstream (~> 1, >= 1.0.2)
@@ -246,7 +241,6 @@ GEM
     childprocess (5.1.0)
       logger (~> 1.5)
     clipboard-rails (1.7.1)
-    cmdparse (3.0.7)
     coderay (1.1.3)
     coffee-rails (4.2.2)
       coffee-script (>= 2.2.0)
@@ -280,15 +274,6 @@ GEM
       activerecord (>= 4.1.14, < 9.0.0)
     deprecation (1.1.0)
       activesupport
-    derivative-rodeo (0.5.3)
-      activesupport (>= 5)
-      aws-sdk-s3
-      aws-sdk-sqs
-      httparty
-      marcel
-      mime-types
-      mini_magick
-      nokogiri
     devise (5.0.4)
       bcrypt (~> 3.0)
       orm_adapter (~> 0.1)
@@ -417,7 +402,6 @@ GEM
     geocoder (1.8.6)
       base64 (>= 0.1.0)
       csv (>= 3.0.0)
-    geom2d (0.4.1)
     globalid (1.4.0)
       activesupport (>= 6.1)
     google-analytics-data (0.10.0)
@@ -511,18 +495,9 @@ GEM
     hashdiff (1.2.2)
     hashie (5.2.0)
       logger
-    hexapdf (1.11.2)
-      cmdparse (~> 3.0, >= 3.0.3)
-      geom2d (~> 0.4, >= 0.4.1)
-      openssl (>= 2.2.1)
-      strscan (>= 3.1.2)
     hiredis (0.6.3)
     htmlentities (4.4.2)
     http_logger (1.0.3)
-    httparty (0.24.3)
-      csv
-      mini_mime (>= 1.0.0)
-      multi_xml (>= 0.5.2)
     hydra-access-controls (13.2.0)
       active-fedora (>= 10.0.0)
       activesupport (>= 6.1, < 9)
@@ -855,11 +830,8 @@ GEM
       multi_json (~> 1.3)
       multi_xml (~> 0.5)
       rack (>= 1.2, < 4)
-    okcomputer (1.20.0)
-      benchmark
     openseadragon (0.9.0)
       rails (> 6.1.0)
-    openssl (4.0.2)
     orderly (0.1.1)
       capybara (>= 1.1)
       rspec (>= 2.14)
@@ -884,7 +856,6 @@ GEM
       prettyprint
     prettier_print (1.2.1)
     prettyprint (0.2.1)
-    prism (2.1.0)
     prism (2.1.0-aarch64-linux-gnu)
     prism (2.1.0-aarch64-linux-musl)
     prism (2.1.0-arm-linux-gnu)
@@ -1139,7 +1110,6 @@ GEM
       rspec-mocks (>= 3.13.0, < 5.0.0)
       rspec-support (>= 3.13.0, < 5.0.0)
     rspec-support (3.13.8)
-    rtesseract (3.1.4)
     rubocop (1.92.2)
       json (>= 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -1376,7 +1346,6 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  activerecord-nulldb-adapter (~> 1.1)
   awesome_print
   aws-sdk-s3 (~> 1.219)
   better_errors
@@ -1393,13 +1362,11 @@ DEPENDENCIES
   dalli
   database_cleaner
   debug (>= 1.0.0)
-  derivative-rodeo
   devise
   devise-guests (~> 0.8)
   erb (~> 4.0)
   factory_bot_rails
   faker
-  hexapdf
   hydra-access-controls
   hydra-role-management
   hyrax (~> 5.3.1)
@@ -1408,9 +1375,7 @@ DEPENDENCIES
   json (< 3.0)
   launchy
   method_source
-  okcomputer
   orderly
-  package_json
   pg (~> 1.3)
   prettier_print
   pry
@@ -1425,7 +1390,6 @@ DEPENDENCIES
   riiif (~> 2.1)
   rsolr (>= 1.0, < 3)
   rspec-rails
-  rtesseract
   rubocop
   rubocop-capybara
   rubocop-factory_bot
