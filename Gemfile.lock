@@ -224,6 +224,9 @@ GEM
       rubyzip
       simple_form
       ssrf_filter (>= 1.0, < 2.0)
+    bundler-audit (0.9.3)
+      bundler (>= 1.2.0)
+      thor (~> 1.0)
     cancancan (3.7.0)
     capybara (3.40.0)
       addressable
@@ -259,7 +262,7 @@ GEM
       rexml
     crass (1.0.8)
     csv (3.3.7)
-    dalli (4.3.10)
+    dalli (4.3.12)
       logger
     database_cleaner (2.1.0)
       database_cleaner-active_record (>= 2, < 3)
@@ -882,6 +885,14 @@ GEM
     prettier_print (1.2.1)
     prettyprint (0.2.1)
     prism (2.1.0)
+    prism (2.1.0-aarch64-linux-gnu)
+    prism (2.1.0-aarch64-linux-musl)
+    prism (2.1.0-arm-linux-gnu)
+    prism (2.1.0-arm-linux-musl)
+    prism (2.1.0-arm64-darwin)
+    prism (2.1.0-x86_64-darwin)
+    prism (2.1.0-x86_64-linux-gnu)
+    prism (2.1.0-x86_64-linux-musl)
     pry (0.16.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -1376,6 +1387,7 @@ DEPENDENCIES
   bootsnap (>= 1.1.0)
   bootstrap (~> 4.0)
   bulkrax (~> 9.5.2)
+  bundler-audit
   capybara
   coffee-rails (~> 4.2)
   dalli
