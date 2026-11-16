@@ -46,7 +46,7 @@ services:
 
   rails:
     image: scholarspace-worker:${RAILS_TAG:-latest}
-    command: sh -lc 'bundle install && yarn install --force && yarn build:dev && bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails db:seed && rm -f tmp/pids/server.pid && exec ./bin/rails server -p 3000 -b 0.0.0.0'
+    command: sh -lc 'bundle install && yarn install --force --frozen-lockfile && yarn build:dev && bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails db:seed && rm -f tmp/pids/server.pid && exec ./bin/rails server -p 3000 -b 0.0.0.0'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 15s
@@ -71,8 +71,6 @@ services:
       - DB_NAME=${POSTGRES_DB:-scholarspace}
       - DB_USERNAME=${POSTGRES_USER:-hyrax_user}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-hyrax_password}
-      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
-      - CHOKIDAR_USEPOLLING=true # webpacker autorefresh
     ports:
       - "3000:3000"
     volumes:
