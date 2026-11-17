@@ -52,4 +52,7 @@ mount Bulkrax::Engine, at: '/'
       end
     end
   end
+  get '*alias_path', to: 'hyrax/redirects#show',
+                     constraints: ->(_req) { Hyrax.config.redirects_active? },
+                     format: false
 end

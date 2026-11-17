@@ -85,6 +85,8 @@ Rails.application.config.to_prepare do
        # needed for Bulkrax
        'file' => { from: ['file'], split: '\;' },
        'parents' => { from: ['parents'], split: '\;', related_parents_field_mapping: true },
+       'path' => { from: ['redirect_path'], object: 'redirects', nested_attributes: true  },
+       'is_display_url' => { from: ['redirect_is_display_url'], object: 'redirects', nested_attributes: true }
      }
     #
     #
