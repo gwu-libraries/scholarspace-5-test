@@ -6,7 +6,6 @@ mount Bulkrax::Engine, at: '/'
   mount Riiif::Engine => 'images', :as => :riiif if Hyrax.config.iiif_image_server?
 
   mount Blacklight::Engine => '/'
-
   concern :searchable, Blacklight::Routes::Searchable.new
   concern :range_searchable, BlacklightRangeLimit::Routes::RangeSearchable.new
 
@@ -23,6 +22,7 @@ mount Bulkrax::Engine, at: '/'
   mount Hydra::RoleManagement::Engine => '/'
   mount Sidekiq::Web => '/sidekiq'
   mount Qa::Engine => '/authorities'
+  mount BlacklightDynamicSitemap::Engine => '/'
   resources :welcome, only: 'index'
   get '/concern/:work_type/:id/deep_search', to: 'deep_search#deep_search'
   mount Hyrax::Engine, at: '/'
