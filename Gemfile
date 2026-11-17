@@ -21,7 +21,7 @@ gem 'jquery-rails'
 gem 'json', '< 3.0'
 gem 'pg', '~> 1.3'
 gem 'puma'
-gem 'rails', '~> 7.2', '< 8.0'
+gem 'rails', '~> 7.2', '>= 7.2.3.2', '< 8.0'
 gem 'react_on_rails', '= 14.2'
 gem 'redlock', '~> 1.3'
 gem 'riiif', '~> 2.1'
@@ -50,6 +50,7 @@ group :development do
   gem 'rubocop-rspec'
   gem 'rubocop-rspec_rails'
   gem 'bundler-audit'
+  gem 'brakeman', require: false
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem 'web-console', '>= 3.3.0'
   gem 'method_source'
