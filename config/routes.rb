@@ -30,6 +30,7 @@ mount Bulkrax::Engine, at: '/'
   root 'hyrax/homepage#index'
   curation_concerns_basic_routes
   concern :exportable, Blacklight::Routes::Exportable.new
+  get '/archival_document/:id', to: redirect('concern/archival_documents/%{id}')
 
   resources :solr_documents,
             only: [:show],
