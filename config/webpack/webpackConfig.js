@@ -10,8 +10,7 @@ const webpackConfig = (envSpecific) => {
   const clientConfig = clientWebpackConfig();
 
   let result;
-  // For HMR, need to separate the the client and server webpack configurations
-  if (process.env.WEBPACK_SERVE || process.env.CLIENT_BUNDLE_ONLY) {
+  if (process.env.CLIENT_BUNDLE_ONLY) {
     if (envSpecific) {
       envSpecific(clientConfig);
     }

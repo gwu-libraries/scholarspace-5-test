@@ -1,3 +1,5 @@
+return unless Rails.env.development? || Rails.env.test?
+
 # Allows using factories defined in Hyrax gem - maybe a cleaner way to do this is available,
 # but at the moment this works for first loading factory definitions from Hyrax, followed by
 # factory definitions from ScholarSpace
