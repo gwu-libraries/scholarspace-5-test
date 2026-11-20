@@ -67,6 +67,12 @@ class WorkShowPresenter < Hyrax::WorkShowPresenter
     [id, modified_date_value, can_edit, can_view_service_files].join(':')
   end
 
+  def scholarly?
+    (solr_document.resource_type.any? { |resource_type| resource_type == 'Article' } &&
+      solr_document.human_readable_type == 'Academic Document') ||
+      (solr_document.human_readable_type == 'ETD')
+  end
+
   private
 
   def item_members
