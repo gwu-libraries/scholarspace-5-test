@@ -48,7 +48,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "derivative_cache_bucket_lifecy
 
     expiration {
       # any files that have been hanging out in this derivative cache for more than a week
-      # are assumed to have been persisted in Fedora and get deleted. 
+      # are assumed to have been persisted in Fedora and get deleted.
       days = 7
     }
   }

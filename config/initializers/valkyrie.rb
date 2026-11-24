@@ -88,8 +88,8 @@ Valkyrie::StorageAdapter.register(
   :versioned_disk_storage
 )
 
-Valkyrie.config.metadata_adapter = :fedora_metadata
-#Valkyrie.config.metadata_adapter = :pg_metadata
-Valkyrie.config.storage_adapter = :fedora_storage
-#Valkyrie.config.storage_adapter = :versioned_disk_storage
+#Valkyrie.config.metadata_adapter = :fedora_metadata
+Valkyrie.config.metadata_adapter = :pg_metadata
+#Valkyrie.config.storage_adapter = :fedora_storage
+Valkyrie.config.storage_adapter = :versioned_disk_storage
 Valkyrie.config.indexing_adapter = :solr_index

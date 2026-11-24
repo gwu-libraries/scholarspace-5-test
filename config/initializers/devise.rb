@@ -296,7 +296,31 @@ Devise.setup do |config|
   # When using OmniAuth, Devise cannot automatically set OmniAuth path,
   # so you need to do it manually. For the users scope, it would be:
   # config.omniauth_path_prefix = '/my_engine/users/auth'
-
+  #
+  #
+  # for dev environments in production mode, this will create empty cert and key files
+  # The fake values here prevent Rails from throwing an error during asset precompilation in the Docker build
+  if Rails.env.production?
+    config.omniauth :saml,
+                    idp_cert: ENV.fetch('IDP_CERT_PEM', ''),
+                    idp_sso_service_url: ENV.fetch('IDP_SSO_URL', ''), #idp_slo_service_url: ENV['IDP_SLO_URL'],
+                    sp_entity_id: ENV.fetch('ISSUER', '') + 'users/auth/saml',
+                    assertion_consumer_service_url: ENV.fetch('ISSUER', '') + 'users/auth/saml/callback',
+                    private_key: ENV.fetch('SP_KEY', ''),
+                    certificate: ENV.fetch('SP_CERT', ''),
+                    authn_context: nil,
+                    request_attributes: {}
+  else
+    config.omniauth :saml,
+                    idp_cert: 'cert',
+                    idp_sso_service_url: 'https://www.example.com',
+                    idp_slo_service_url: 'https://www.example.com',
+                    sp_entity_id: 'http://localhost:3000/users/auth/saml',
+                    assertion_consumer_service_url: 'http://localhost:3000/users/auth/saml/callback',
+                    private_key: 'key',
+                    certificate: 'cert',
+                    request_attributes: {}
+  end
   # ==> Turbolinks configuration
   # If your app is using Turbolinks, Turbolinks::Controller needs to be included to make redirection work correctly:
   #
@@ -309,4 +333,6 @@ Devise.setup do |config|
   # When set to false, does not sign a user in automatically after their password is
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
+  #
+  #
 end
