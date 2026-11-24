@@ -1396,6 +1396,7 @@ DEPENDENCIES
   omniauth-rails_csrf_protection (~> 2.0.1)
   omniauth-saml (~> 2.2.5)
   orderly
+  package_json
   pg (~> 1.3)
   prettier_print
   pry

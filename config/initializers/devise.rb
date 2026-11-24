@@ -308,6 +308,7 @@ Devise.setup do |config|
                     assertion_consumer_service_url: ENV.fetch('ISSUER', '') + 'users/auth/saml/callback',
                     private_key: ENV.fetch('SP_KEY', ''),
                     certificate: ENV.fetch('SP_CERT', ''),
+                    authn_context: nil,
                     request_attributes: {}
   else
     config.omniauth :saml,
