@@ -190,7 +190,7 @@ GEM
     bootstrap_form (5.6.1)
       actionpack (>= 7.2)
       activemodel (>= 7.2)
-    brakeman (8.1.0)
+    brakeman (8.1.1)
       racc
     breadcrumbs_on_rails (3.0.1)
     browse-everything (1.6.1)
