@@ -34,7 +34,7 @@
     "@rails/ujs": "^7.0.0",
     "@samvera/clover-iiif": "3.17.0",
     "@samvera/ramp": "^4.0.2",
-    "babel-loader": "^9.0.0",
+    "babel-loader": "^10.1.1",
     "babel-plugin-macros": "^3.1.0",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "blacklight-range-limit": "9.3.0",
