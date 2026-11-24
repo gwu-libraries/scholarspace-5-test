@@ -25,8 +25,8 @@ mount Bulkrax::Engine, at: '/'
   mount Qa::Engine => '/authorities'
   resources :welcome, only: 'index'
   get '/concern/:work_type/:id/deep_search', to: 'deep_search#deep_search'
-  mount Hyrax::Engine, at: '/'
   get '/up', to: proc { [200, { 'Content-Type' => 'text/plain' }, ['ok']] }
+  mount Hyrax::Engine, at: '/'
   root 'hyrax/homepage#index'
   curation_concerns_basic_routes
   concern :exportable, Blacklight::Routes::Exportable.new
