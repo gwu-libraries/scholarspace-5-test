@@ -32,7 +32,7 @@
     "@hotwired/turbo": "^8.0.0",
     "@rails/activestorage": "^7.0.0",
     "@rails/ujs": "^7.0.0",
-    "@samvera/clover-iiif": "3.16.1",
+    "@samvera/clover-iiif": "3.17.0",
     "@samvera/ramp": "^4.0.2",
     "babel-loader": "^9.0.0",
     "babel-plugin-macros": "^3.1.0",
@@ -46,7 +46,6 @@
     "jquery": "^3.7.0",
     "jquery-ui": "^1.13.0",
     "mini-css-extract-plugin": "^2.10.0",
-    "morris.js": "^0.5.0",
     "popper.js": "^1.16.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
@@ -62,16 +61,14 @@
     "webpack": "^5.89.0",
     "webpack-assets-manifest": "^5.1.0",
     "webpack-cli": "^5.0.0",
-    "webpack-dev-server": "^4.15.0",
     "webpack-merge": "^5.10.0"
   },
   "resolutions": {
-    "http-status-codes": "^1.4.0"
+    "http-status-codes": "^1.4.0",
+    "underscore": "1.13.8"
   },
   "devDependencies": {
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@swc/core": "^1.15.18",
-    "react-refresh": "^0.18.0",
     "swc-loader": "^0.2.7"
   },
   "packageManager": "yarn@1.22.22"
