@@ -7,7 +7,7 @@ gem 'blacklight_range_limit'
 gem 'blacklight_iiif_search'
 gem 'bootsnap', '>= 1.1.0', require: false
 gem 'bootstrap', '~> 4.0'
-gem 'bulkrax', '~> 9.5.2'
+gem 'bulkrax', '~> 10.0.1'
 gem 'coffee-rails', '~> 4.2'
 gem 'dalli'
 gem 'devise'
