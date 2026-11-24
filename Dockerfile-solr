@@ -1,4 +1,4 @@
-FROM solr:8.11
+FROM solr:10.1
 
 USER root
 
