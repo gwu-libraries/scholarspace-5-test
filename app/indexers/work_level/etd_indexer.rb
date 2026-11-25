@@ -1,13 +1,19 @@
 # frozen_string_literal: true
 
-class ETDIndexer < Hyrax::Indexers.PcdmObjectIndexer(
-  ETD
-)
-  include Hyrax.Indexer(:basic_metadata)
-  include Hyrax.Indexer(:etd)
+#class ETDIndexer < Hyrax::Indexers.PcdmObjectIndexer(
+#  ETD
+#)
+class ETDIndexer < Hyrax::ValkyrieWorkIndexer
+  if Hyrax.config.work_include_metadata?
+    include Hyrax::Indexer(:core_metadata)
+    include Hyrax::Indexer(:basic_metadata)
+    include Hyrax::Indexer(:etd)
+  end
   include MemberFullTextAggregatable
   include ContributorFacetIndexable
   include YearCreatedIndexable
+
+  check_if_flexible(ETD)
 
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr

@@ -5,9 +5,12 @@
 #
 # @see https://github.com/samvera/hyrax/wiki/Hyrax-Valkyrie-Usage-Guide#forms
 # @see https://github.com/samvera/valkyrie/wiki/ChangeSets-and-Dirty-Tracking
-class ArchivalDocumentForm < Hyrax::Forms.PcdmObjectForm(ArchivalDocument)
-  include Hyrax.FormFields(:basic_metadata)
-  include Hyrax.FormFields(:archival_document)
+class ArchivalDocumentForm < Hyrax::Forms::ResourceForm(ArchivalDocument)
+  if Hyrax.config.work_include_metadata?
+    include Hyrax::FormFields(:basic_metadata)
+    include Hyrax::FormFields(:archival_document)
+  end
+  check_if_flexible(ArchivalDocument)
 
   # Define custom form fields using the Valkyrie::ChangeSet interface
   #

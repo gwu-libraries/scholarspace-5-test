@@ -3,9 +3,12 @@
 
 # @see https://github.com/samvera/hyrax/wiki/Hyrax-Valkyrie-Usage-Guide#forms
 # @see https://github.com/samvera/valkyrie/wiki/ChangeSets-and-Dirty-Tracking
-class JournalIssueForm < Hyrax::Forms.PcdmObjectForm(JournalIssue)
-  include Hyrax.FormFields(:basic_metadata)
-  include Hyrax.FormFields(:journal_issue)
+class JournalIssueForm < Hyrax::Forms::ResourceForm(JournalIssue)
+  if Hyrax.config.work_include_metadata?
+    include Hyrax::FormFields(:basic_metadata)
+    include Hyrax::FormFields(:journal_issue)
+  end
+  check_if_flexible(JournalIssue)
 
   # Define custom form fields using the Valkyrie::ChangeSet interface
   #
