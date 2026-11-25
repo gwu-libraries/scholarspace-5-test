@@ -2,15 +2,20 @@
 
 # Generated via
 #  `rails generate hyrax:work_resource AcademicDocument`
-class AcademicDocumentIndexer < Hyrax::Indexers.PcdmObjectIndexer(
-  AcademicDocument
-)
-  include Hyrax.Indexer(:basic_metadata)
-  include Hyrax.Indexer(:academic_document)
+#class AcademicDocumentIndexer < Hyrax::Indexers.PcdmObjectIndexer(
+#  AcademicDocument
+#)
+class AcademicDocumentIndexer < Hyrax::ValkyrieWorkIndexer
+  if Hyrax.config.work_include_metadata?
+    include Hyrax::Indexer(:core_metadata)
+    include Hyrax::Indexer(:basic_metadata)
+    include Hyrax::Indexer(:academic_document)
+  end
   include MemberFullTextAggregatable
   include ContributorFacetIndexable
   include YearCreatedIndexable
 
+  check_if_flexible(AcademicDocument)
   # Uncomment this block if you want to add custom indexing behavior:
   #  def to_solr
   #    super.tap do |index_document|
