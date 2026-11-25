@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_29_000000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_10_144900) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
@@ -103,6 +103,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_000000) do
     t.integer "total_file_set_entries", default: 0
     t.integer "processed_works", default: 0
     t.integer "failed_works", default: 0
+    t.integer "processed_children", default: 0
+    t.integer "failed_children", default: 0
     t.index ["importer_id"], name: "index_bulkrax_importer_runs_on_importer_id"
   end
 
@@ -290,6 +292,25 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_000000) do
     t.boolean "enabled", default: false, null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+  end
+
+  create_table "hyrax_flexible_schemas", force: :cascade do |t|
+    t.text "profile"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "contexts"
+  end
+
+  create_table "hyrax_redirect_paths", force: :cascade do |t|
+    t.string "from_path", null: false
+    t.string "to_path", null: false
+    t.string "permalink_path", null: false
+    t.string "resource_id", null: false
+    t.boolean "is_display_url", default: false, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["from_path"], name: "index_hyrax_redirect_paths_on_from_path", unique: true
+    t.index ["resource_id"], name: "index_hyrax_redirect_paths_on_resource_id"
   end
 
   create_table "job_io_wrappers", force: :cascade do |t|
@@ -701,6 +722,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_29_000000) do
     t.binary "zotero_token"
     t.string "zotero_userid"
     t.string "preferred_locale"
+    t.string "provider"
+    t.string "uid"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
